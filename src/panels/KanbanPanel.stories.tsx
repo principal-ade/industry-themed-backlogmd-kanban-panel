@@ -28,8 +28,8 @@ type Story = StoryObj<typeof meta>;
 const createBacklogFileTreeSlice = (): DataSlice<any> => {
   const mockTasks = generateMockTasks();
   const taskFiles = mockTasks.map(task => ({
-    path: task.filePath,
-    name: task.filePath.split('/').pop(),
+    path: task.filePath!,
+    name: task.filePath!.split('/').pop(),
     type: 'file',
   }));
 
@@ -86,7 +86,9 @@ ${task.implementationPlan || ''}
   console.log('[Mock] Config content being set:', mockConfigContent);
   fileContents.set('backlog/config.yml', mockConfigContent);
   mockTasks.forEach(task => {
-    fileContents.set(task.filePath, createTaskFileContent(task));
+    if (task.filePath) {
+      fileContents.set(task.filePath, createTaskFileContent(task));
+    }
   });
 
   // Active file slice that will be updated by openFile
@@ -102,7 +104,7 @@ ${task.implementationPlan || ''}
     refresh: async () => {},
   };
 
-  const mockSlices = new Map<string, DataSlice>([
+  const mockSlices = new Map<string, DataSlice<any>>([
     ['fileTree', fileTreeSlice],
     ['active-file', activeFileSlice],
   ]);
@@ -120,8 +122,8 @@ ${task.implementationPlan || ''}
       },
     },
     slices: mockSlices,
-    getRepositorySlice: (name: string) => {
-      return mockSlices.get(name);
+    getRepositorySlice: <T = unknown>(name: string) => {
+      return mockSlices.get(name) as DataSlice<T> | undefined;
     },
   });
 

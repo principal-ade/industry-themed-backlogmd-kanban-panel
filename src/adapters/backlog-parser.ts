@@ -4,6 +4,7 @@
  * Functions for parsing Backlog.md YAML frontmatter and markdown content.
  */
 
+import YAML from 'yaml';
 import type {
   Task,
   TaskMetadata,
@@ -13,94 +14,10 @@ import type {
 import { BacklogAdapterError } from './types';
 
 /**
- * Simple YAML parser for Backlog.md frontmatter
- * Handles basic YAML types: strings, numbers, booleans, arrays
+ * Parse YAML string using the yaml library
  */
 export function parseYaml(yamlString: string): Record<string, unknown> {
-  const lines = yamlString.split('\n');
-  const result: Record<string, unknown> = {};
-  let currentKey = '';
-  let isArray = false;
-  let arrayItems: string[] = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Skip empty lines and comments
-    if (!trimmed || trimmed.startsWith('#')) {
-      continue;
-    }
-
-    // Check for array items
-    if (trimmed.startsWith('- ')) {
-      if (isArray) {
-        const value = trimmed.slice(2).trim();
-        // Remove quotes if present
-        arrayItems.push(value.replace(/^["']|["']$/g, ''));
-      }
-      continue;
-    }
-
-    // If we were building an array, save it
-    if (isArray && !trimmed.startsWith('- ')) {
-      result[currentKey] = arrayItems;
-      isArray = false;
-      arrayItems = [];
-      currentKey = '';
-    }
-
-    // Parse key-value pairs
-    const colonIndex = trimmed.indexOf(':');
-    if (colonIndex > 0) {
-      const key = trimmed.slice(0, colonIndex).trim();
-      const valueStr = trimmed.slice(colonIndex + 1).trim();
-
-      // Check if this starts an array
-      if (valueStr === '' || valueStr === '[]') {
-        currentKey = key;
-        if (valueStr === '[]') {
-          result[key] = [];
-        } else {
-          isArray = true;
-          arrayItems = [];
-        }
-        continue;
-      }
-
-      // Parse the value
-      result[key] = parseYamlValue(valueStr);
-    }
-  }
-
-  // Save final array if we were building one
-  if (isArray && arrayItems.length > 0) {
-    result[currentKey] = arrayItems;
-  }
-
-  return result;
-}
-
-/**
- * Parse a single YAML value
- */
-function parseYamlValue(value: string): unknown {
-  // Remove quotes
-  const unquoted = value.replace(/^["']|["']$/g, '');
-
-  // Boolean
-  if (unquoted === 'true') return true;
-  if (unquoted === 'false') return false;
-
-  // Null/undefined
-  if (unquoted === 'null' || unquoted === '~') return null;
-
-  // Number
-  if (/^-?\d+\.?\d*$/.test(unquoted)) {
-    return Number(unquoted);
-  }
-
-  // String
-  return unquoted;
+  return YAML.parse(yamlString) as Record<string, unknown>;
 }
 
 /**
