@@ -1,0 +1,123 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# Panel Extension Starter
+
+Welcome to the **Panel Extension Starter** documentation!
+
+This Storybook provides interactive documentation and examples for building panel extensions compatible with `@principal-ade/panel-framework-core`.
+
+## What Are Panel Extensions?
+
+Panel extensions are React components distributed via NPM that can be dynamically loaded into panel-compatible host applications. They follow the [Panel Extension Store Specification V2](https://github.com/principal-ade/panel-framework/blob/main/PANEL_EXTENSION_STORE_SPECIFICATION_V2.md).
+
+### Key Features
+
+- 📦 **NPM Distribution** - Published and installed like any NPM package
+- 🔌 **Framework Integration** - Full access to host application context, actions, and events
+- 🎨 **Type Safe** - Complete TypeScript support
+- 🚀 **Multi-Panel Support** - Single package can export multiple related panels
+- ⚡ **Dependency Sharing** - React/ReactDOM provided by host, other deps bundled
+
+## Getting Started
+
+### Quick Start
+
+1. **Install dependencies**
+
+   ```bash
+   bun install
+   ```
+
+2. **Customize your panel**
+   - Edit `src/panels/ExamplePanel.tsx`
+   - Update `src/index.tsx` with your panel metadata
+
+3. **Develop with Storybook**
+
+   ```bash
+   bun run storybook
+   ```
+
+4. **Build for production**
+   ```bash
+   bun run build
+   ```
+
+### Project Structure
+
+```
+panel-starter/
+├── src/
+│   ├── panels/           # Your panel components
+│   ├── types/            # TypeScript definitions
+│   ├── mocks/            # Storybook mocks
+│   └── index.tsx         # Main entry - exports panels array
+├── .storybook/           # Storybook configuration
+└── dist/                 # Build output (generated)
+```
+
+## Panel Component API
+
+Every panel component receives these props from the host application:
+
+### Context
+
+Access to shared data and state:
+
+- Repository information
+- Git status
+- File tree
+- Data slices (git, markdown, packages, quality)
+- Loading states
+- Refresh methods
+
+### Actions
+
+Interact with the host application:
+
+- `openFile(path)` - Open a file in the editor
+- `openGitDiff(path, status)` - View git diff
+- `navigateToPanel(id)` - Navigate to another panel
+- `notifyPanels(event)` - Send notifications
+
+### Events
+
+Subscribe to and emit panel events:
+
+- `events.on(type, handler)` - Subscribe to events
+- `events.emit(event)` - Emit custom events
+- `events.off(type, handler)` - Unsubscribe
+
+## Storybook Features
+
+This Storybook includes:
+
+- **📖 Component Documentation** - Auto-generated from TypeScript types
+- **🎮 Interactive Controls** - Adjust props and see changes live
+- **📱 Responsive Preview** - Test different viewport sizes
+- **🎨 Multiple States** - See loading, error, and edge cases
+- **📝 Code Examples** - Copy-paste ready code snippets
+
+## Explore the Panels
+
+Check out the **Panels** section in the sidebar to see:
+
+- **ExamplePanel** - Basic panel with all features demonstrated
+- Multiple story variants showing different states
+- Interactive examples you can modify
+
+## Learn More
+
+- [README.md](https://github.com/your-org/panel-starter) - Full documentation
+- [QUICKSTART.md](https://github.com/your-org/panel-starter/blob/main/QUICKSTART.md) - Get started in 5 steps
+- [Panel Specification V2](https://github.com/principal-ade/panel-framework/blob/main/PANEL_EXTENSION_STORE_SPECIFICATION_V2.md) - Official spec
+
+## Need Help?
+
+- 📖 Check the panel stories for examples
+- 💬 Open an issue on GitHub
+- 🔍 Review the TypeScript types in `src/types/index.ts`
+
+Happy panel building! 🚀
