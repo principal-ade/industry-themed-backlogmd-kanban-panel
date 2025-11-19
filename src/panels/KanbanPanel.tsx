@@ -19,7 +19,6 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
   const {
     statuses,
     tasksByStatus,
-    isLoading,
     error,
     isBacklogProject,
   } = useKanbanData({ context, actions });

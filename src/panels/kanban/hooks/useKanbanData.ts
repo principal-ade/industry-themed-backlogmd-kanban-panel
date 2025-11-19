@@ -139,10 +139,10 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
       console.log('[useKanbanData] Loading Backlog.md data...');
       setIsBacklogProject(true);
 
-      // Load data from Backlog.md
+      // Load data from Backlog.md (excluding completed tasks for performance)
       const [loadedStatuses, tasksByStatus] = await Promise.all([
         adapter.getStatuses(),
-        adapter.getTasksByStatus(true),
+        adapter.getTasksByStatus(false), // false = exclude completed tasks
       ]);
 
       // Flatten tasks from the map
@@ -184,6 +184,7 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
 
   // Group tasks by status
   const tasksByStatus = useMemo(() => {
+    const TASKS_PER_COLUMN_LIMIT = 3; // Temporary limit for performance testing
     const grouped = new Map<string, Task[]>();
 
     // Initialize all status columns
@@ -200,6 +201,13 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
       }
     }
 
+    // Limit each column to N tasks (tasks are already sorted by adapter)
+    grouped.forEach((taskList, status) => {
+      if (taskList.length > TASKS_PER_COLUMN_LIMIT) {
+        grouped.set(status, taskList.slice(0, TASKS_PER_COLUMN_LIMIT));
+      }
+    });
+
     return grouped;
   }, [tasks, statuses]);
 
@@ -210,7 +218,7 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
 
   // Update task status
   const updateTaskStatus = useCallback(
-    async (taskId: string, newStatus: string) => {
+    async (_taskId: string, _newStatus: string) => {
       setError(null);
 
       // TODO: Implement real Backlog.md file updates

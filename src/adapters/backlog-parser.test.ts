@@ -93,27 +93,17 @@ nothing: null
 });
 
 describe('parseBacklogConfig', () => {
-  it('should parse valid config.yml', () => {
+  it('should parse valid config.yml (Backlog.md format)', () => {
     const configContent = `
 project_name: "Backlog.md"
 default_status: "To Do"
-statuses:
-  - To Do
-  - In Progress
-  - Done
+statuses: ["To Do", "In Progress", "Done"]
 labels: []
 milestones: []
 date_format: yyyy-mm-dd hh:mm
-max_column_width: 20
 default_editor: "rider"
-auto_open_browser: true
-default_port: 6420
-remote_operations: true
 auto_commit: false
 zero_padded_ids: 3
-bypass_git_hooks: false
-check_active_branches: true
-active_branch_days: 10
     `.trim();
 
     const config = parseBacklogConfig(configContent);
@@ -130,8 +120,7 @@ active_branch_days: 10
 
   it('should throw error if project_name is missing', () => {
     const configContent = `
-statuses:
-  - To Do
+statuses: ["To Do"]
     `.trim();
 
     expect(() => parseBacklogConfig(configContent)).toThrow(BacklogAdapterError);
@@ -140,22 +129,22 @@ statuses:
     );
   });
 
-  it('should throw error if statuses is missing', () => {
+  it('should use default statuses if statuses is missing', () => {
     const configContent = `
 project_name: "Test"
     `.trim();
 
-    expect(() => parseBacklogConfig(configContent)).toThrow(BacklogAdapterError);
-    expect(() => parseBacklogConfig(configContent)).toThrow(
-      'Invalid config.yml: missing or invalid statuses array'
-    );
+    const config = parseBacklogConfig(configContent);
+
+    // Official Backlog.md parser provides default statuses
+    expect(config.statuses).toEqual(['To Do', 'In Progress', 'Done']);
+    expect(config.project_name).toBe('Test');
   });
 
   it('should use defaults for optional fields', () => {
     const configContent = `
 project_name: "Test"
-statuses:
-  - To Do
+statuses: ["To Do"]
     `.trim();
 
     const config = parseBacklogConfig(configContent);

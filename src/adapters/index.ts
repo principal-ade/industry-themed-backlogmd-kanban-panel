@@ -20,3 +20,4 @@ export {
   parseTaskFile,
   sortTasks,
 } from './backlog-parser';
+export { serializeBacklogConfig } from './backlog-config-parser';

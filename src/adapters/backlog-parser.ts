@@ -12,9 +12,10 @@ import type {
   AcceptanceCriterion,
 } from './types';
 import { BacklogAdapterError } from './types';
+import { parseBacklogConfig as parseConfigWithOfficialParser } from './backlog-config-parser';
 
 /**
- * Parse YAML string using the yaml library
+ * Parse YAML string using the yaml library (for task frontmatter only)
  */
 export function parseYaml(yamlString: string): Record<string, unknown> {
   return YAML.parse(yamlString) as Record<string, unknown>;
@@ -22,39 +23,42 @@ export function parseYaml(yamlString: string): Record<string, unknown> {
 
 /**
  * Parse Backlog.md config.yml file
+ * Uses the official Backlog.md parser implementation
  */
 export function parseBacklogConfig(content: string): BacklogConfig {
-  const parsed = parseYaml(content);
+  console.log('[parseBacklogConfig] Using official Backlog.md parser');
 
-  console.log('[parseBacklogConfig] Parsed YAML:', JSON.stringify(parsed, null, 2));
-  console.log('[parseBacklogConfig] project_name value:', parsed.project_name);
-  console.log('[parseBacklogConfig] project_name type:', typeof parsed.project_name);
+  try {
+    const config = parseConfigWithOfficialParser(content);
 
-  // Validate required fields
-  if (!parsed.project_name || typeof parsed.project_name !== 'string') {
-    console.error('[parseBacklogConfig] Validation failed - parsed keys:', Object.keys(parsed));
-    throw new BacklogAdapterError(
-      'Invalid config.yml: missing or invalid project_name'
-    );
+    console.log('[parseBacklogConfig] Parsed config:', {
+      project_name: config.project_name,
+      statuses: config.statuses,
+      labels: config.labels?.length || 0,
+    });
+
+    // Validate required fields
+    if (!config.project_name) {
+      throw new BacklogAdapterError(
+        'Invalid config.yml: missing or invalid project_name'
+      );
+    }
+
+    if (!config.statuses || config.statuses.length === 0) {
+      throw new BacklogAdapterError(
+        'Invalid config.yml: missing or invalid statuses array'
+      );
+    }
+
+    return config;
+  } catch (error) {
+    console.error('[parseBacklogConfig] Failed to parse config:', error);
+    throw error instanceof BacklogAdapterError
+      ? error
+      : new BacklogAdapterError(
+          `Failed to parse config.yml: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
   }
-
-  if (!parsed.statuses || !Array.isArray(parsed.statuses)) {
-    throw new BacklogAdapterError(
-      'Invalid config.yml: missing or invalid statuses array'
-    );
-  }
-
-  return {
-    project_name: parsed.project_name as string,
-    default_status: (parsed.default_status as string) || 'To Do',
-    statuses: parsed.statuses as string[],
-    labels: (parsed.labels as string[]) || [],
-    milestones: (parsed.milestones as string[]) || [],
-    date_format: (parsed.date_format as string) || 'yyyy-mm-dd hh:mm',
-    default_editor: parsed.default_editor as string | undefined,
-    auto_commit: parsed.auto_commit as boolean | undefined,
-    zero_padded_ids: parsed.zero_padded_ids as number | undefined,
-  };
 }
 
 /**
