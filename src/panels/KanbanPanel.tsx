@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Kanban, RefreshCw, AlertCircle } from 'lucide-react';
+import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import { useKanbanData } from './kanban/hooks/useKanbanData';
@@ -22,7 +22,6 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     isLoading,
     error,
     isBacklogProject,
-    refreshData,
   } = useKanbanData({ context, actions });
 
   const handleTaskClick = (task: Task) => {
@@ -31,14 +30,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     // Task click logged for development
   };
 
-  const handleRefresh = async () => {
-    await refreshData();
-  };
-
   return (
     <div
       style={{
-        padding: '20px',
+        padding: 'clamp(12px, 3vw, 20px)', // Responsive padding for mobile
         fontFamily: theme.fonts.body,
         height: '100%',
         display: 'flex',
@@ -49,7 +44,12 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        flexWrap: 'wrap',
+      }}>
         <Kanban size={24} color={theme.colors.primary} />
         <h2
           style={{
@@ -60,37 +60,6 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
         >
           Kanban Board
         </h2>
-        {context.currentScope.repository && (
-          <span
-            style={{
-              marginLeft: 'auto',
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.textSecondary,
-              fontFamily: theme.fonts.monospace,
-            }}
-          >
-            {context.currentScope.repository.name}
-          </span>
-        )}
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          style={{
-            padding: '8px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: theme.radii[1],
-            background: theme.colors.surface,
-            color: theme.colors.text,
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.6 : 1,
-          }}
-        >
-          <RefreshCw size={16} style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
-          Refresh
-        </button>
       </div>
 
       {/* Error Message */}
@@ -105,6 +74,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
             alignItems: 'center',
             gap: '8px',
             color: theme.colors.error,
+            fontSize: theme.fontSizes[1],
           }}
         >
           <AlertCircle size={16} />
@@ -122,7 +92,9 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
             display: 'flex',
             gap: '16px',
             overflowX: 'auto',
+            overflowY: 'hidden',
             paddingBottom: '8px',
+            WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
           }}
         >
           {statuses.map((status) => {

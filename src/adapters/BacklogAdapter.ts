@@ -32,7 +32,19 @@ export class BacklogAdapter implements IBacklogAdapter {
    */
   public isBacklogProject(): boolean {
     const files = this.fileAccess.listFiles();
-    return files.some((path) => path === 'backlog/config.yml');
+    const hasConfig = files.some((path) => path === 'backlog/config.yml');
+
+    console.log('[BacklogAdapter] Checking if Backlog.md project...');
+    console.log('[BacklogAdapter] Total files:', files.length);
+    console.log('[BacklogAdapter] Has config.yml:', hasConfig);
+
+    if (!hasConfig) {
+      // Log first 50 files to help debug
+      const backlogFiles = files.filter(f => f.startsWith('backlog/')).slice(0, 50);
+      console.log('[BacklogAdapter] Backlog directory files:', backlogFiles);
+    }
+
+    return hasConfig;
   }
 
   /**
@@ -46,21 +58,39 @@ export class BacklogAdapter implements IBacklogAdapter {
 
     // Check if config file exists
     if (!this.isBacklogProject()) {
+      const files = this.fileAccess.listFiles();
+      const backlogFiles = files.filter(f => f.startsWith('backlog/'));
+
       throw new BacklogAdapterError(
-        'Not a Backlog.md project: backlog/config.yml not found'
+        `Not a Backlog.md project: backlog/config.yml not found. ` +
+        `Found ${backlogFiles.length} files in backlog/ directory. ` +
+        `Ensure your repository has a backlog/config.yml file at the root.`
       );
     }
 
     try {
+      console.log('[BacklogAdapter] Fetching config.yml...');
+
       // Fetch and parse config
       const content = await this.fileAccess.fetchFile('backlog/config.yml');
+
+      console.log('[BacklogAdapter] Config content length:', content.length);
+
       const config = parseBacklogConfig(content);
+
+      console.log('[BacklogAdapter] Parsed config:', {
+        project: config.project_name,
+        statuses: config.statuses,
+        labels: config.labels?.length || 0,
+      });
 
       // Cache the config
       this.configCache = config;
 
       return config;
     } catch (error) {
+      console.error('[BacklogAdapter] Failed to load config:', error);
+
       if (error instanceof BacklogAdapterError) {
         throw error;
       }
@@ -84,6 +114,7 @@ export class BacklogAdapter implements IBacklogAdapter {
   public async getTasks(includeCompleted = true): Promise<Task[]> {
     // Return cached tasks if available
     if (this.tasksCache) {
+      console.log('[BacklogAdapter] Returning cached tasks:', this.tasksCache.length);
       return this.tasksCache;
     }
 
@@ -92,7 +123,10 @@ export class BacklogAdapter implements IBacklogAdapter {
     // Find all task files
     const taskPaths = this.findTaskFiles(files, includeCompleted);
 
+    console.log('[BacklogAdapter] Found task files:', taskPaths.length);
+
     if (taskPaths.length === 0) {
+      console.log('[BacklogAdapter] No task files found');
       return [];
     }
 
@@ -100,10 +134,11 @@ export class BacklogAdapter implements IBacklogAdapter {
       // Fetch all task files
       const taskPromises = taskPaths.map(async (path) => {
         try {
+          console.log('[BacklogAdapter] Fetching task:', path);
           const content = await this.fileAccess.fetchFile(path);
           return parseTaskFile(content, path);
         } catch (error) {
-          console.error(`Failed to parse task file ${path}:`, error);
+          console.error(`[BacklogAdapter] Failed to parse task file ${path}:`, error);
           return null;
         }
       });
@@ -113,11 +148,14 @@ export class BacklogAdapter implements IBacklogAdapter {
       // Filter out failed parses
       const tasks = taskResults.filter((task): task is Task => task !== null);
 
+      console.log('[BacklogAdapter] Successfully parsed tasks:', tasks.length);
+
       // Cache the tasks
       this.tasksCache = tasks;
 
       return tasks;
     } catch (error) {
+      console.error('[BacklogAdapter] Failed to load tasks:', error);
       throw new BacklogAdapterError(
         `Failed to load tasks: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

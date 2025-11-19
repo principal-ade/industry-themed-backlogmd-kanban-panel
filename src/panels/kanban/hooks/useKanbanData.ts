@@ -36,10 +36,23 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
   // Keep track of active file fetches to avoid duplicate fetches
   const activeFilePathRef = useRef<string | null>(null);
 
-  // Helper function to fetch file content
+  // Store stable references to context and actions to avoid recreating fetchFileContent
+  const contextRef = useRef(context);
+  const actionsRef = useRef(actions);
+
+  // Update refs when context/actions change
+  useEffect(() => {
+    contextRef.current = context;
+    actionsRef.current = actions;
+  }, [context, actions]);
+
+  // Helper function to fetch file content - memoized without context/actions dependencies
   const fetchFileContent = useCallback(
     async (path: string): Promise<string> => {
-      if (!actions || !context) {
+      const currentContext = contextRef.current;
+      const currentActions = actionsRef.current;
+
+      if (!currentActions || !currentContext) {
         throw new Error('PanelContext not available');
       }
 
@@ -52,14 +65,18 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
 
       try {
         // Use panel actions to open the file
-        if (actions.openFile) {
-          await actions.openFile(path);
+        if (currentActions.openFile) {
+          const result = await currentActions.openFile(path);
+          // If openFile returns content directly (e.g., in mock), use it
+          if (typeof result === 'string') {
+            return result;
+          }
         } else {
           throw new Error('openFile action not available');
         }
 
-        // Get the active file data from the slice
-        const activeFileSlice = context.getRepositorySlice('active-file');
+        // Otherwise, get the active file data from the slice
+        const activeFileSlice = currentContext.getRepositorySlice('active-file');
         const fileData = activeFileSlice?.data as any;
 
         if (!fileData?.content) {
@@ -71,7 +88,7 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
         activeFilePathRef.current = null;
       }
     },
-    [actions, context]
+    [] // No dependencies - uses refs instead
   );
 
   // Load Backlog.md data

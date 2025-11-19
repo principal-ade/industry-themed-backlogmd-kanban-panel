@@ -31,13 +31,15 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       style={{
-        flex: '0 0 320px',
+        flex: '1',
+        minWidth: 'min(280px, 85vw)', // Responsive width for mobile
+        maxWidth: '400px',
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
         background: theme.colors.backgroundSecondary,
         borderRadius: theme.radii[2],
-        padding: '16px',
+        padding: 'clamp(12px, 3vw, 16px)', // Responsive padding for mobile
         border: `1px solid ${theme.colors.border}`,
       }}
     >
@@ -80,6 +82,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
           flexDirection: 'column',
           gap: '8px',
           overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         {tasks.map((task) => (
@@ -94,6 +97,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
               borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
               cursor: onTaskClick ? 'pointer' : 'default',
               transition: 'all 0.2s ease',
+              minHeight: '44px', // Minimum touch target size for mobile
             }}
             onMouseEnter={(e) => {
               if (onTaskClick) {

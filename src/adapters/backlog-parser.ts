@@ -109,8 +109,13 @@ function parseYamlValue(value: string): unknown {
 export function parseBacklogConfig(content: string): BacklogConfig {
   const parsed = parseYaml(content);
 
+  console.log('[parseBacklogConfig] Parsed YAML:', JSON.stringify(parsed, null, 2));
+  console.log('[parseBacklogConfig] project_name value:', parsed.project_name);
+  console.log('[parseBacklogConfig] project_name type:', typeof parsed.project_name);
+
   // Validate required fields
   if (!parsed.project_name || typeof parsed.project_name !== 'string') {
+    console.error('[parseBacklogConfig] Validation failed - parsed keys:', Object.keys(parsed));
     throw new BacklogAdapterError(
       'Invalid config.yml: missing or invalid project_name'
     );

@@ -24,7 +24,7 @@ export function generateMockTasks(): Task[] {
       description: 'Add OAuth2 authentication flow with support for multiple providers (Google, GitHub). Include session management and token refresh logic.',
       priority: 'high',
       ordinal: 1,
-      filePath: 'backlog/task-001.md',
+      filePath: 'backlog/tasks/task-001.md',
       source: 'local' as const,
     },
     {
@@ -38,7 +38,7 @@ export function generateMockTasks(): Task[] {
       description: 'Create normalized database schema for user data, tasks, and relationships. Include migration scripts.',
       priority: 'high',
       ordinal: 2,
-      filePath: 'backlog/task-002.md',
+      filePath: 'backlog/tasks/task-002.md',
       source: 'local' as const,
     },
     {
@@ -62,7 +62,7 @@ export function generateMockTasks(): Task[] {
       `.trim(),
       priority: 'high',
       ordinal: 1,
-      filePath: 'backlog/task-003.md',
+      filePath: 'backlog/tasks/task-003.md',
       source: 'local' as const,
     },
     {
@@ -83,7 +83,7 @@ export function generateMockTasks(): Task[] {
         { index: 2, text: 'Storybook stories for each component', checked: false },
         { index: 3, text: 'Accessibility audit passes', checked: false },
       ],
-      filePath: 'backlog/task-004.md',
+      filePath: 'backlog/tasks/task-004.md',
       source: 'local' as const,
     },
     {
@@ -98,7 +98,7 @@ export function generateMockTasks(): Task[] {
       description: 'Configure GitHub Actions for automated testing, building, and deployment.',
       priority: 'medium',
       ordinal: 1,
-      filePath: 'backlog/task-005.md',
+      filePath: 'backlog/completed/task-005.md',
       source: 'completed' as const,
     },
     {
@@ -113,7 +113,7 @@ export function generateMockTasks(): Task[] {
       description: 'Add comprehensive unit tests for all API endpoints and utility functions. Aim for 80%+ coverage.',
       priority: 'medium',
       ordinal: 2,
-      filePath: 'backlog/task-006.md',
+      filePath: 'backlog/completed/task-006.md',
       source: 'completed' as const,
     },
     {
@@ -127,7 +127,7 @@ export function generateMockTasks(): Task[] {
       description: 'Profile and optimize slow database queries. Add indexes where needed.',
       priority: 'low',
       ordinal: 3,
-      filePath: 'backlog/task-007.md',
+      filePath: 'backlog/tasks/task-007.md',
       source: 'local' as const,
     },
     {
@@ -141,7 +141,7 @@ export function generateMockTasks(): Task[] {
       description: 'Add WebSocket support for real-time notifications when tasks are updated or assigned.',
       priority: 'low',
       ordinal: 4,
-      filePath: 'backlog/task-008.md',
+      filePath: 'backlog/tasks/task-008.md',
       source: 'local' as const,
     },
   ];
