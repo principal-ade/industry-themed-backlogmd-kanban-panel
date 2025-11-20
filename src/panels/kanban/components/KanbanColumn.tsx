@@ -33,7 +33,6 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       style={{
         flex: '1',
         minWidth: 'min(280px, 85vw)', // Responsive width for mobile
-        maxWidth: '400px',
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
