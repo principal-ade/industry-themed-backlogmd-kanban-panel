@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { KanbanPanel } from './KanbanPanel';
 import { createMockContext, createMockActions, createMockEvents } from '../mocks/panelContext';
 import { generateMockTasks } from './kanban/mocks/mockData';

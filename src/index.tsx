@@ -1,5 +1,6 @@
 import { KanbanPanel } from './panels/KanbanPanel';
 import type { PanelDefinition, PanelContextValue } from './types';
+import { kanbanPanelTools, kanbanPanelToolsMetadata } from './tools';
 
 /**
  * Export array of panel definitions.
@@ -15,6 +16,7 @@ export const panels: PanelDefinition[] = [
       author: 'Principal ADE',
       description: 'Kanban board for visualizing Backlog.md tasks',
       slices: ['fileTree'], // Data slices this panel depends on
+      tools: kanbanPanelTools,
     },
     component: KanbanPanel,
 
@@ -52,3 +54,16 @@ export const onPackageUnload = async () => {
   // eslint-disable-next-line no-console
   console.log('Panel package unloading - Kanban Panel Extension');
 };
+
+/**
+ * Export tools for server-safe imports.
+ * Use '@industry-theme/backlogmd-kanban-panel/tools' to import without React dependencies.
+ */
+export {
+  kanbanPanelTools,
+  kanbanPanelToolsMetadata,
+  moveTaskTool,
+  selectTaskTool,
+  refreshBoardTool,
+  filterTasksTool,
+} from './tools';
