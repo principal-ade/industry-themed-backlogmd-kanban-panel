@@ -106,6 +106,7 @@ The copied code is temporary. Once Backlog.md publishes `@backlog/core` or simil
 ## Development Roadmap
 
 ### ✅ Phase 1: Foundation (Complete)
+
 - [x] Set up panel structure and basic layout
 - [x] Create mock data generator for testing
 - [x] Implement basic board component with static columns
@@ -113,6 +114,7 @@ The copied code is temporary. Once Backlog.md publishes `@backlog/core` or simil
 - [x] Adapt to industry theme colors and typography
 
 ### ✅ Phase 2: Core Functionality (Complete)
+
 - [x] Add data fetching hook (`useKanbanData`)
 - [x] Implement task sorting and filtering (by priority, ordinal, date)
 - [x] Create reusable `KanbanColumn` component
@@ -124,6 +126,7 @@ The copied code is temporary. Once Backlog.md publishes `@backlog/core` or simil
 - [ ] Handle status updates with file writes (Future)
 
 ### 📋 Phase 3: Advanced Features
+
 - [ ] Task creation and editing
 - [ ] Support for labels, assignees, priority
 - [ ] Implement subtask relationships
@@ -131,6 +134,7 @@ The copied code is temporary. Once Backlog.md publishes `@backlog/core` or simil
 - [ ] Handle dependencies visualization
 
 ### 🎨 Phase 4: Polish & Integration
+
 - [ ] Responsive design improvements
 - [ ] Error handling and loading states
 - [ ] Data persistence (write back to markdown)

@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import type { Task } from '../backlog-types';
-import { createBacklogAdapter, BacklogAdapterError } from '../../../adapters';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Core, type Task } from '@backlog-md/core';
+import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
 import type { PanelContextValue, PanelActions } from '../../../types';
 
 export interface UseKanbanDataResult {
@@ -19,86 +19,86 @@ interface UseKanbanDataOptions {
   actions?: PanelActions;
 }
 
+const DEFAULT_STATUSES = ['To Do', 'In Progress', 'Done'];
+
 /**
  * Hook for managing kanban board data
- * Integrates with Backlog.md via the BacklogAdapter
- * Falls back to mock data if no Backlog.md project is detected
+ * Integrates with Backlog.md via @backlog-md/core
  */
-export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResult {
+export function useKanbanData(
+  options?: UseKanbanDataOptions
+): UseKanbanDataResult {
   const { context, actions } = options || {};
 
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [statuses, setStatuses] = useState<string[]>(['To Do', 'In Progress', 'Done']);
+  const [statuses, setStatuses] = useState<string[]>(DEFAULT_STATUSES);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBacklogProject, setIsBacklogProject] = useState(false);
+  const [tasksByStatus, setTasksByStatus] = useState<Map<string, Task[]>>(
+    new Map()
+  );
 
   // Keep track of active file fetches to avoid duplicate fetches
   const activeFilePathRef = useRef<string | null>(null);
 
-  // Store stable references to context and actions to avoid recreating fetchFileContent
+  // Store stable references to context and actions
   const contextRef = useRef(context);
   const actionsRef = useRef(actions);
 
-  // Update refs when context/actions change
   useEffect(() => {
     contextRef.current = context;
     actionsRef.current = actions;
   }, [context, actions]);
 
-  // Helper function to fetch file content - memoized without context/actions dependencies
-  const fetchFileContent = useCallback(
-    async (path: string): Promise<string> => {
-      const currentContext = contextRef.current;
-      const currentActions = actionsRef.current;
+  // Helper function to fetch file content
+  const fetchFileContent = useCallback(async (path: string): Promise<string> => {
+    const currentContext = contextRef.current;
+    const currentActions = actionsRef.current;
 
-      if (!currentActions || !currentContext) {
-        throw new Error('PanelContext not available');
-      }
+    if (!currentActions || !currentContext) {
+      throw new Error('PanelContext not available');
+    }
 
-      // Avoid duplicate fetches for the same file
-      if (activeFilePathRef.current === path) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+    // Avoid duplicate fetches for the same file
+    if (activeFilePathRef.current === path) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
-      activeFilePathRef.current = path;
+    activeFilePathRef.current = path;
 
-      try {
-        // Use panel actions to open the file
-        if (currentActions.openFile) {
-          const result = await currentActions.openFile(path);
-          // If openFile returns content directly (e.g., in mock), use it
-          if (typeof result === 'string') {
-            return result;
-          }
-        } else {
-          throw new Error('openFile action not available');
+    try {
+      if (currentActions.openFile) {
+        const result = await currentActions.openFile(path);
+        if (typeof result === 'string') {
+          return result;
         }
-
-        // Otherwise, get the active file data from the slice
-        const activeFileSlice = currentContext.getRepositorySlice('active-file');
-        const fileData = activeFileSlice?.data as any;
-
-        if (!fileData?.content) {
-          throw new Error(`Failed to fetch content for ${path}`);
-        }
-
-        return fileData.content;
-      } finally {
-        activeFilePathRef.current = null;
+      } else {
+        throw new Error('openFile action not available');
       }
-    },
-    [] // No dependencies - uses refs instead
-  );
 
-  // Load Backlog.md data
+      // Get the active file data from the slice
+      const activeFileSlice = currentContext.getRepositorySlice('active-file');
+      const fileData = activeFileSlice?.data as { content?: string };
+
+      if (!fileData?.content) {
+        throw new Error(`Failed to fetch content for ${path}`);
+      }
+
+      return fileData.content;
+    } finally {
+      activeFilePathRef.current = null;
+    }
+  }, []);
+
+  // Load Backlog.md data using Core
   const loadBacklogData = useCallback(async () => {
     if (!context || !actions) {
-      // No context/actions provided
       console.log('[useKanbanData] No context provided');
       setIsBacklogProject(false);
       setTasks([]);
-      setStatuses(['To Do', 'In Progress', 'Done']);
+      setStatuses(DEFAULT_STATUSES);
+      setTasksByStatus(new Map());
       setIsLoading(false);
       return;
     }
@@ -108,70 +108,69 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
 
     try {
       // Get fileTree slice
-      const fileTreeSlice = context.getRepositorySlice<any>('fileTree');
+      const fileTreeSlice = context.getRepositorySlice('fileTree') as
+        | { data?: { files?: Array<{ path: string }> } }
+        | undefined;
 
-      if (!fileTreeSlice?.data) {
+      if (!fileTreeSlice?.data?.files) {
         console.log('[useKanbanData] FileTree not available');
         setIsBacklogProject(false);
         setTasks([]);
-        setStatuses(['To Do', 'In Progress', 'Done']);
+        setStatuses(DEFAULT_STATUSES);
+        setTasksByStatus(new Map());
         return;
       }
 
-      const files = fileTreeSlice.data.files || [];
-      const filePaths = files.map((f: any) => f.path);
+      const files = fileTreeSlice.data.files;
+      const filePaths = files.map((f: { path: string }) => f.path);
 
-      // Create adapter
-      const adapter = createBacklogAdapter({
+      // Create FileSystemAdapter for the panel
+      const fs = new PanelFileSystemAdapter({
         fetchFile: fetchFileContent,
-        listFiles: () => filePaths,
+        filePaths,
+      });
+
+      // Create Core instance
+      const core = new Core({
+        projectRoot: '',
+        adapters: { fs },
       });
 
       // Check if this is a Backlog.md project
-      if (!adapter.isBacklogProject()) {
+      const isProject = await core.isBacklogProject();
+      if (!isProject) {
         console.log('[useKanbanData] Not a Backlog.md project');
         setIsBacklogProject(false);
         setTasks([]);
-        setStatuses(['To Do', 'In Progress', 'Done']);
+        setStatuses(DEFAULT_STATUSES);
+        setTasksByStatus(new Map());
         return;
       }
 
       console.log('[useKanbanData] Loading Backlog.md data...');
       setIsBacklogProject(true);
 
-      // Load data from Backlog.md (excluding completed tasks for performance)
-      const [loadedStatuses, tasksByStatus] = await Promise.all([
-        adapter.getStatuses(),
-        adapter.getTasksByStatus(false), // false = exclude completed tasks
-      ]);
+      // Initialize and load data
+      await core.initialize();
 
-      // Flatten tasks from the map
-      const allTasks: Task[] = [];
-      tasksByStatus.forEach((tasks) => {
-        allTasks.push(...tasks);
-      });
+      const config = core.getConfig();
+      const grouped = core.getTasksByStatus();
+      const allTasks = core.listTasks();
 
       console.log(
-        `[useKanbanData] Loaded ${allTasks.length} tasks with ${loadedStatuses.length} statuses`
+        `[useKanbanData] Loaded ${allTasks.length} tasks with ${config.statuses.length} statuses`
       );
 
-      setStatuses(loadedStatuses);
+      setStatuses(config.statuses);
       setTasks(allTasks);
+      setTasksByStatus(grouped);
     } catch (err) {
       console.error('[useKanbanData] Failed to load Backlog.md data:', err);
-
-      if (err instanceof BacklogAdapterError) {
-        setError(err.message);
-      } else {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load backlog data'
-        );
-      }
-
-      // On error, show empty state
+      setError(err instanceof Error ? err.message : 'Failed to load backlog data');
       setIsBacklogProject(false);
       setTasks([]);
-      setStatuses(['To Do', 'In Progress', 'Done']);
+      setStatuses(DEFAULT_STATUSES);
+      setTasksByStatus(new Map());
     } finally {
       setIsLoading(false);
     }
@@ -182,51 +181,15 @@ export function useKanbanData(options?: UseKanbanDataOptions): UseKanbanDataResu
     loadBacklogData();
   }, [loadBacklogData]);
 
-  // Group tasks by status
-  const tasksByStatus = useMemo(() => {
-    const TASKS_PER_COLUMN_LIMIT = 3; // Temporary limit for performance testing
-    const grouped = new Map<string, Task[]>();
-
-    // Initialize all status columns
-    for (const status of statuses) {
-      grouped.set(status, []);
-    }
-
-    // Group tasks by status
-    for (const task of tasks) {
-      const statusKey = task.status ?? '';
-      const list = grouped.get(statusKey);
-      if (list) {
-        list.push(task);
-      }
-    }
-
-    // Limit each column to N tasks (tasks are already sorted by adapter)
-    grouped.forEach((taskList, status) => {
-      if (taskList.length > TASKS_PER_COLUMN_LIMIT) {
-        grouped.set(status, taskList.slice(0, TASKS_PER_COLUMN_LIMIT));
-      }
-    });
-
-    return grouped;
-  }, [tasks, statuses]);
-
   // Refresh data
   const refreshData = useCallback(async () => {
     await loadBacklogData();
   }, [loadBacklogData]);
 
-  // Update task status
+  // Update task status (not yet implemented)
   const updateTaskStatus = useCallback(
     async (_taskId: string, _newStatus: string) => {
       setError(null);
-
-      // TODO: Implement real Backlog.md file updates
-      // This would require:
-      // 1. Find the task file
-      // 2. Parse the YAML frontmatter
-      // 3. Update the status field
-      // 4. Write back to the file (via GitHub API)
       console.warn(
         '[useKanbanData] Task status updates not yet implemented for Backlog.md'
       );

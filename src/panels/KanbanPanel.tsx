@@ -5,7 +5,7 @@ import type { PanelComponentProps } from '../types';
 import { useKanbanData } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { EmptyState } from './kanban/components/EmptyState';
-import type { Task } from './kanban/backlog-types';
+import type { Task } from '@backlog-md/core';
 
 /**
  * KanbanPanelContent - Internal component that uses theme
@@ -16,12 +16,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const {
-    statuses,
-    tasksByStatus,
-    error,
-    isBacklogProject,
-  } = useKanbanData({ context, actions });
+  const { statuses, tasksByStatus, error, isBacklogProject } = useKanbanData({
+    context,
+    actions,
+  });
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -43,12 +41,14 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
       }}
     >
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        flexWrap: 'wrap',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
         <Kanban size={24} color={theme.colors.primary} />
         <h2
           style={{

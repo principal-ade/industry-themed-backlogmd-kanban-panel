@@ -1,23 +1,26 @@
 /**
- * Backlog.md Adapter Module
+ * Adapters Module
  *
- * Exports all adapter-related types and utilities.
+ * Provides the PanelFileSystemAdapter for integrating @backlog-md/core
+ * with the panel framework's file access APIs.
  */
 
-export { BacklogAdapter, createBacklogAdapter } from './BacklogAdapter';
+export { PanelFileSystemAdapter, type PanelFileAccess } from './PanelFileSystemAdapter';
+
+// Re-export commonly used types from @backlog-md/core for convenience
 export type {
-  FileAccessFunctions,
-  IBacklogAdapter,
-  BacklogConfig,
   Task,
-  TaskMetadata,
+  BacklogConfig,
   AcceptanceCriterion,
-} from './types';
-export { BacklogAdapterError } from './types';
+  FileSystemAdapter,
+} from '@backlog-md/core';
+
 export {
-  parseYaml,
+  Core,
+  parseTaskMarkdown,
+  serializeTaskMarkdown,
   parseBacklogConfig,
-  parseTaskFile,
+  serializeBacklogConfig,
   sortTasks,
-} from './backlog-parser';
-export { serializeBacklogConfig } from './backlog-config-parser';
+  groupTasksByStatus,
+} from '@backlog-md/core';

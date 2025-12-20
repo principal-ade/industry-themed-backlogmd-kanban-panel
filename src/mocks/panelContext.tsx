@@ -121,9 +121,7 @@ export const createMockContext = (
     },
     getWorkspaceSlice: <T,>(name: string): DataSlice<T> | undefined => {
       const slice = mockSlices.get(name);
-      return slice?.scope === 'workspace'
-        ? (slice as DataSlice<T>)
-        : undefined;
+      return slice?.scope === 'workspace' ? (slice as DataSlice<T>) : undefined;
     },
     getRepositorySlice: <T,>(name: string): DataSlice<T> | undefined => {
       const slice = mockSlices.get(name);

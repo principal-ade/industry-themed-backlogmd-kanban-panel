@@ -50,18 +50,19 @@ Backlog.md organizes files in a `/backlog/` directory at the root of the reposit
 The `config.yml` file defines project-wide settings:
 
 ```yaml
-project_name: "My Project"
-default_status: "To Do"
-statuses: ["To Do", "In Progress", "Done"]
-labels: ["bug", "enhancement", "feature"]
+project_name: 'My Project'
+default_status: 'To Do'
+statuses: ['To Do', 'In Progress', 'Done']
+labels: ['bug', 'enhancement', 'feature']
 milestones: []
 date_format: yyyy-mm-dd hh:mm
-default_editor: "code"
+default_editor: 'code'
 auto_commit: false
 zero_padded_ids: 3
 ```
 
 **Key fields for Kanban Panel:**
+
 - `statuses` - Array of status column names
 - `project_name` - Project identifier
 - `default_status` - Initial status for new tasks
@@ -77,6 +78,7 @@ task-<id> - <title-slug>.md
 ```
 
 Examples:
+
 - `task-200 - Add-Claude-Code-integration.md`
 - `task-24.1 - CLI-Kanban-board-milestone-view.md` (subtask)
 - `task-172 - Order-tasks-by-status.md`
@@ -88,7 +90,7 @@ Examples:
 id: task-200
 title: Add Claude Code integration with workflow commands during init
 status: To Do
-assignee: ["@codex"]
+assignee: ['@codex']
 created_date: '2025-07-23'
 updated_date: '2025-09-06 21:22'
 labels:
@@ -105,7 +107,9 @@ priority: medium
 Enable users to leverage Claude Code's custom commands feature...
 
 ## Acceptance Criteria
+
 <!-- AC:BEGIN -->
+
 - [ ] #1 Claude Code template files are stored in src/templates/claude/
 - [ ] #2 backlog init copies .claude directory to user's project
 - [x] #3 Commands include: parse-prd, plan-task, etc.
@@ -120,23 +124,24 @@ Enable users to leverage Claude Code's custom commands feature...
 
 ### YAML Frontmatter Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | Yes | Unique task identifier (e.g., "task-200") |
-| `title` | string | Yes | Task title |
-| `status` | string | Yes | Current status (must match a status from config.yml) |
-| `assignee` | string[] | No | Array of assignees (e.g., ["@codex", "@claude"]) |
-| `created_date` | string | Yes | Creation date (YYYY-MM-DD or YYYY-MM-DD HH:mm) |
-| `updated_date` | string | No | Last update date |
-| `labels` | string[] | No | Array of labels (e.g., ["bug", "enhancement"]) |
-| `dependencies` | string[] | No | Array of task IDs this task depends on |
-| `priority` | string | No | Priority level: "low", "medium", "high", "critical" |
-| `ordinal` | number | No | Sort order within status column |
-| `parent` | string | No | Parent task ID for subtasks |
+| Field          | Type     | Required | Description                                          |
+| -------------- | -------- | -------- | ---------------------------------------------------- |
+| `id`           | string   | Yes      | Unique task identifier (e.g., "task-200")            |
+| `title`        | string   | Yes      | Task title                                           |
+| `status`       | string   | Yes      | Current status (must match a status from config.yml) |
+| `assignee`     | string[] | No       | Array of assignees (e.g., ["@codex", "@claude"])     |
+| `created_date` | string   | Yes      | Creation date (YYYY-MM-DD or YYYY-MM-DD HH:mm)       |
+| `updated_date` | string   | No       | Last update date                                     |
+| `labels`       | string[] | No       | Array of labels (e.g., ["bug", "enhancement"])       |
+| `dependencies` | string[] | No       | Array of task IDs this task depends on               |
+| `priority`     | string   | No       | Priority level: "low", "medium", "high", "critical"  |
+| `ordinal`      | number   | No       | Sort order within status column                      |
+| `parent`       | string   | No       | Parent task ID for subtasks                          |
 
 ### Subtasks
 
 Subtasks use a dotted ID convention:
+
 - Parent: `task-24`
 - Subtask: `task-24.1`, `task-24.2`, etc.
 
@@ -197,19 +202,19 @@ Filter the fileTree to find relevant Backlog.md files:
 
 ```typescript
 // Find config file
-const configFile = files.find(f => f.path === 'backlog/config.yml');
+const configFile = files.find((f) => f.path === 'backlog/config.yml');
 
 // Find task files (active tasks)
-const taskFiles = files.filter(f =>
-  f.path.startsWith('backlog/tasks/') &&
-  f.path.endsWith('.md') &&
-  f.path.match(/task-\d+/)
+const taskFiles = files.filter(
+  (f) =>
+    f.path.startsWith('backlog/tasks/') &&
+    f.path.endsWith('.md') &&
+    f.path.match(/task-\d+/)
 );
 
 // Find completed tasks
-const completedFiles = files.filter(f =>
-  f.path.startsWith('backlog/completed/') &&
-  f.path.endsWith('.md')
+const completedFiles = files.filter(
+  (f) => f.path.startsWith('backlog/completed/') && f.path.endsWith('.md')
 );
 ```
 
@@ -223,9 +228,7 @@ const configContent = await fetchFileContent('backlog/config.yml');
 const config = parseYaml(configContent);
 
 // Fetch all task files
-const taskPromises = taskFiles.map(file =>
-  fetchFileContent(file.path)
-);
+const taskPromises = taskFiles.map((file) => fetchFileContent(file.path));
 const taskContents = await Promise.all(taskPromises);
 ```
 
@@ -250,7 +253,7 @@ function parseTaskFile(content: string) {
 
   return {
     ...frontmatter,
-    body
+    body,
   };
 }
 ```
@@ -263,12 +266,12 @@ Organize tasks into kanban columns:
 const tasksByStatus = new Map<string, Task[]>();
 
 // Initialize columns from config
-config.statuses.forEach(status => {
+config.statuses.forEach((status) => {
   tasksByStatus.set(status, []);
 });
 
 // Group tasks
-tasks.forEach(task => {
+tasks.forEach((task) => {
   const statusKey = task.status || config.default_status;
   const column = tasksByStatus.get(statusKey);
   if (column) {
@@ -294,7 +297,9 @@ tasksByStatus.forEach((tasks, status) => {
     }
 
     // Finally by creation date (newest first)
-    return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
+    return (
+      new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
+    );
   });
 });
 ```
@@ -346,7 +351,9 @@ function parseTaskFile(content: string, filepath: string): Task {
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
 
   if (!frontmatterMatch) {
-    throw new Error(`Invalid task file: ${filepath} - missing YAML frontmatter`);
+    throw new Error(
+      `Invalid task file: ${filepath} - missing YAML frontmatter`
+    );
   }
 
   // Parse YAML frontmatter
@@ -361,23 +368,27 @@ function parseTaskFile(content: string, filepath: string): Task {
   const body = content.slice(frontmatterMatch[0].length).trim();
 
   // Extract description (## Description section)
-  const descriptionMatch = body.match(/## Description\n\n([\s\S]*?)(?=\n## |$)/);
+  const descriptionMatch = body.match(
+    /## Description\n\n([\s\S]*?)(?=\n## |$)/
+  );
   const description = descriptionMatch ? descriptionMatch[1].trim() : undefined;
 
   // Extract acceptance criteria
-  const acMatch = body.match(/## Acceptance Criteria\n<!-- AC:BEGIN -->\n([\s\S]*?)\n<!-- AC:END -->/);
+  const acMatch = body.match(
+    /## Acceptance Criteria\n<!-- AC:BEGIN -->\n([\s\S]*?)\n<!-- AC:END -->/
+  );
   const acceptanceCriteria = acMatch
     ? acMatch[1]
         .split('\n')
-        .filter(line => line.trim().startsWith('- ['))
-        .map(line => line.trim())
+        .filter((line) => line.trim().startsWith('- ['))
+        .map((line) => line.trim())
     : undefined;
 
   return {
     ...metadata,
     body,
     description,
-    acceptanceCriteria
+    acceptanceCriteria,
   };
 }
 ```
@@ -416,7 +427,8 @@ export function useBacklogData() {
 
     try {
       // Get fileTree slice
-      const fileTreeSlice = context.getRepositorySlice<FileTreeData>('fileTree');
+      const fileTreeSlice =
+        context.getRepositorySlice<FileTreeData>('fileTree');
 
       if (!fileTreeSlice?.data) {
         throw new Error('FileTree data not available');
@@ -425,9 +437,11 @@ export function useBacklogData() {
       const files = fileTreeSlice.data.files;
 
       // Find config file
-      const configFile = files.find(f => f.path === 'backlog/config.yml');
+      const configFile = files.find((f) => f.path === 'backlog/config.yml');
       if (!configFile) {
-        throw new Error('No backlog/config.yml found - is this a Backlog.md project?');
+        throw new Error(
+          'No backlog/config.yml found - is this a Backlog.md project?'
+        );
       }
 
       // Fetch and parse config
@@ -436,17 +450,19 @@ export function useBacklogData() {
       setStatuses(config.statuses || ['To Do', 'In Progress', 'Done']);
 
       // Find all task files
-      const taskFiles = files.filter(f =>
-        (f.path.startsWith('backlog/tasks/') || f.path.startsWith('backlog/completed/')) &&
-        f.path.endsWith('.md') &&
-        f.path.match(/task-[\d.]+/)
+      const taskFiles = files.filter(
+        (f) =>
+          (f.path.startsWith('backlog/tasks/') ||
+            f.path.startsWith('backlog/completed/')) &&
+          f.path.endsWith('.md') &&
+          f.path.match(/task-[\d.]+/)
       );
 
       // Fetch all task contents
-      const taskPromises = taskFiles.map(file =>
-        fetchFileContent(file.path).then(content => ({
+      const taskPromises = taskFiles.map((file) =>
+        fetchFileContent(file.path).then((content) => ({
           content,
-          filepath: file.path
+          filepath: file.path,
         }))
       );
 
@@ -465,7 +481,6 @@ export function useBacklogData() {
         .filter((task): task is Task => task !== null);
 
       setTasks(parsedTasks);
-
     } catch (err) {
       console.error('Failed to load backlog data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load backlog');
@@ -501,12 +516,12 @@ export function useBacklogData() {
     const grouped = new Map<string, Task[]>();
 
     // Initialize all columns
-    statuses.forEach(status => {
+    statuses.forEach((status) => {
       grouped.set(status, []);
     });
 
     // Group tasks
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       const column = grouped.get(task.status);
       if (column) {
         column.push(task);
@@ -528,7 +543,10 @@ export function useBacklogData() {
           return bPriority - aPriority;
         }
 
-        return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
+        return (
+          new Date(b.created_date).getTime() -
+          new Date(a.created_date).getTime()
+        );
       });
     });
 
@@ -541,7 +559,7 @@ export function useBacklogData() {
     tasksByStatus,
     isLoading,
     error,
-    refreshData: loadBacklogData
+    refreshData: loadBacklogData,
   };
 }
 ```

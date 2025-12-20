@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import type { Task } from '../backlog-types';
+import type { Task } from '@backlog-md/core';
 
 interface KanbanColumnProps {
   status: string;
@@ -193,7 +193,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                     color: theme.colors.textSecondary,
                   }}
                 >
-                  {task.assignee.length} assignee{task.assignee.length !== 1 ? 's' : ''}
+                  {task.assignee.length} assignee
+                  {task.assignee.length !== 1 ? 's' : ''}
                 </span>
               )}
             </div>

@@ -14,7 +14,10 @@ Once Backlog.md publishes `@backlog/core`, this directory will be removed
 and replaced with:
 
 ```typescript
-import { buildKanbanStatusGroups, sortTasksByOrdinalAndDate } from '@backlog/core'
+import {
+  buildKanbanStatusGroups,
+  sortTasksByOrdinalAndDate,
+} from '@backlog/core';
 ```
 
 **Status:** Tracking migration opportunity. See KANBAN_PANEL_DESIGN.md for details.

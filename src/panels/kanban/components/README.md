@@ -17,7 +17,7 @@ Once Backlog.md publishes `@backlog/components` or similar, this directory may b
 replaced with official React components:
 
 ```typescript
-import { Board, TaskCard, TaskColumn } from '@backlog/components'
+import { Board, TaskCard, TaskColumn } from '@backlog/components';
 ```
 
 **Status:** Tracking migration opportunity. See KANBAN_PANEL_DESIGN.md for details.

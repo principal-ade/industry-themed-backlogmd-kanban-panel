@@ -5,7 +5,7 @@
  * for testing and development purposes.
  */
 
-import type { Task } from '../backlog-types';
+import type { Task } from '@backlog-md/core';
 
 /**
  * Generate mock tasks for testing the kanban board
@@ -21,7 +21,8 @@ export function generateMockTasks(): Task[] {
       updatedDate: '2025-11-15T14:30:00Z',
       labels: ['feature', 'security'],
       dependencies: [],
-      description: 'Add OAuth2 authentication flow with support for multiple providers (Google, GitHub). Include session management and token refresh logic.',
+      description:
+        'Add OAuth2 authentication flow with support for multiple providers (Google, GitHub). Include session management and token refresh logic.',
       priority: 'high',
       ordinal: 1,
       filePath: 'backlog/tasks/task-001.md',
@@ -35,7 +36,8 @@ export function generateMockTasks(): Task[] {
       createdDate: '2025-11-02T09:15:00Z',
       labels: ['database', 'architecture'],
       dependencies: [],
-      description: 'Create normalized database schema for user data, tasks, and relationships. Include migration scripts.',
+      description:
+        'Create normalized database schema for user data, tasks, and relationships. Include migration scripts.',
       priority: 'high',
       ordinal: 2,
       filePath: 'backlog/tasks/task-002.md',
@@ -50,7 +52,8 @@ export function generateMockTasks(): Task[] {
       updatedDate: '2025-11-16T09:00:00Z',
       labels: ['backend', 'api'],
       dependencies: ['task-002'],
-      description: 'Implement RESTful API endpoints for CRUD operations. Include validation, error handling, and rate limiting.',
+      description:
+        'Implement RESTful API endpoints for CRUD operations. Include validation, error handling, and rate limiting.',
       implementationPlan: `
 ## Implementation Steps
 1. Set up Express/Fastify server
@@ -74,13 +77,22 @@ export function generateMockTasks(): Task[] {
       updatedDate: '2025-11-17T16:20:00Z',
       labels: ['frontend', 'ui'],
       dependencies: [],
-      description: 'Build reusable React components with TypeScript. Include buttons, forms, modals, and data tables.',
+      description:
+        'Build reusable React components with TypeScript. Include buttons, forms, modals, and data tables.',
       priority: 'medium',
       ordinal: 2,
       acceptanceCriteriaItems: [
         { index: 0, text: 'All components are fully typed', checked: true },
-        { index: 1, text: 'Components support theme customization', checked: true },
-        { index: 2, text: 'Storybook stories for each component', checked: false },
+        {
+          index: 1,
+          text: 'Components support theme customization',
+          checked: true,
+        },
+        {
+          index: 2,
+          text: 'Storybook stories for each component',
+          checked: false,
+        },
         { index: 3, text: 'Accessibility audit passes', checked: false },
       ],
       filePath: 'backlog/tasks/task-004.md',
@@ -95,7 +107,8 @@ export function generateMockTasks(): Task[] {
       updatedDate: '2025-11-10T17:00:00Z',
       labels: ['devops', 'automation'],
       dependencies: [],
-      description: 'Configure GitHub Actions for automated testing, building, and deployment.',
+      description:
+        'Configure GitHub Actions for automated testing, building, and deployment.',
       priority: 'medium',
       ordinal: 1,
       filePath: 'backlog/completed/task-005.md',
@@ -110,7 +123,8 @@ export function generateMockTasks(): Task[] {
       updatedDate: '2025-11-12T14:30:00Z',
       labels: ['testing', 'quality'],
       dependencies: ['task-003'],
-      description: 'Add comprehensive unit tests for all API endpoints and utility functions. Aim for 80%+ coverage.',
+      description:
+        'Add comprehensive unit tests for all API endpoints and utility functions. Aim for 80%+ coverage.',
       priority: 'medium',
       ordinal: 2,
       filePath: 'backlog/completed/task-006.md',
@@ -124,7 +138,8 @@ export function generateMockTasks(): Task[] {
       createdDate: '2025-11-07T15:20:00Z',
       labels: ['performance', 'database'],
       dependencies: ['task-002', 'task-003'],
-      description: 'Profile and optimize slow database queries. Add indexes where needed.',
+      description:
+        'Profile and optimize slow database queries. Add indexes where needed.',
       priority: 'low',
       ordinal: 3,
       filePath: 'backlog/tasks/task-007.md',
@@ -138,7 +153,8 @@ export function generateMockTasks(): Task[] {
       createdDate: '2025-11-08T09:45:00Z',
       labels: ['feature', 'realtime'],
       dependencies: ['task-003'],
-      description: 'Add WebSocket support for real-time notifications when tasks are updated or assigned.',
+      description:
+        'Add WebSocket support for real-time notifications when tasks are updated or assigned.',
       priority: 'low',
       ordinal: 4,
       filePath: 'backlog/tasks/task-008.md',

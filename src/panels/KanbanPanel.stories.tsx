@@ -1,7 +1,11 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { KanbanPanel } from './KanbanPanel';
-import { createMockContext, createMockActions, createMockEvents } from '../mocks/panelContext';
+import {
+  createMockContext,
+  createMockActions,
+  createMockEvents,
+} from '../mocks/panelContext';
 import { generateMockTasks } from './kanban/mocks/mockData';
 import type { DataSlice } from '../types';
 
@@ -13,7 +17,9 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+      >
         <Story />
       </div>
     ),
@@ -27,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 // Helper to create a mock file tree slice with backlog files
 const createBacklogFileTreeSlice = (): DataSlice<any> => {
   const mockTasks = generateMockTasks();
-  const taskFiles = mockTasks.map(task => ({
+  const taskFiles = mockTasks.map((task) => ({
     path: task.filePath!,
     name: task.filePath!.split('/').pop(),
     type: 'file',
@@ -63,17 +69,18 @@ statuses:
   - Done
 default_status: To Do`;
 
-  const createTaskFileContent = (task: typeof mockTasks[0]) => `
+  const createTaskFileContent = (task: (typeof mockTasks)[0]) =>
+    `
 ---
 id: ${task.id}
 title: ${task.title}
 status: ${task.status}
-${task.assignee && task.assignee.length > 0 ? `assignee: [${task.assignee.map(a => `"${a}"`).join(', ')}]` : ''}
+${task.assignee && task.assignee.length > 0 ? `assignee: [${task.assignee.map((a) => `"${a}"`).join(', ')}]` : ''}
 created_date: ${task.createdDate}
 ${task.updatedDate ? `updated_date: ${task.updatedDate}` : ''}
-${task.labels && task.labels.length > 0 ? `labels: [${task.labels.map(l => `"${l}"`).join(', ')}]` : ''}
+${task.labels && task.labels.length > 0 ? `labels: [${task.labels.map((l) => `"${l}"`).join(', ')}]` : ''}
 ${task.priority ? `priority: ${task.priority}` : ''}
-${task.dependencies && task.dependencies.length > 0 ? `dependencies: [${task.dependencies.map(d => `"${d}"`).join(', ')}]` : ''}
+${task.dependencies && task.dependencies.length > 0 ? `dependencies: [${task.dependencies.map((d) => `"${d}"`).join(', ')}]` : ''}
 ---
 
 ${task.description || ''}
@@ -85,7 +92,7 @@ ${task.implementationPlan || ''}
   const fileContents = new Map<string, string>();
   console.log('[Mock] Config content being set:', mockConfigContent);
   fileContents.set('backlog/config.yml', mockConfigContent);
-  mockTasks.forEach(task => {
+  mockTasks.forEach((task) => {
     if (task.filePath) {
       fileContents.set(task.filePath, createTaskFileContent(task));
     }
@@ -122,7 +129,7 @@ ${task.implementationPlan || ''}
       },
     },
     slices: mockSlices,
-    getRepositorySlice: <T = unknown>(name: string) => {
+    getRepositorySlice: <T = unknown,>(name: string) => {
       return mockSlices.get(name) as DataSlice<T> | undefined;
     },
   });
@@ -136,7 +143,14 @@ ${task.implementationPlan || ''}
         path: filePath,
         content,
       };
-      console.log('[Mock] Opening file:', filePath, 'Content available:', fileContents.has(filePath), 'Length:', content.length);
+      console.log(
+        '[Mock] Opening file:',
+        filePath,
+        'Content available:',
+        fileContents.has(filePath),
+        'Length:',
+        content.length
+      );
       return content as any; // Return content directly
     },
   });
@@ -165,7 +179,8 @@ export const EmptyState: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Empty state shown when the repository is not a Backlog.md project.',
+        story:
+          'Empty state shown when the repository is not a Backlog.md project.',
       },
     },
   },
@@ -183,7 +198,8 @@ export const WithMockData: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Kanban board showing tasks organized by status columns with mock data.',
+        story:
+          'Kanban board showing tasks organized by status columns with mock data.',
       },
     },
   },

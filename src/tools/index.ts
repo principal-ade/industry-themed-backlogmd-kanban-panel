@@ -9,7 +9,10 @@
  * Use the './tools' subpath export for server-safe imports.
  */
 
-import type { PanelTool, PanelToolsMetadata } from '@principal-ade/utcp-panel-event';
+import type {
+  PanelTool,
+  PanelToolsMetadata,
+} from '@principal-ade/utcp-panel-event';
 
 /**
  * Tool: Move Task
@@ -26,7 +29,8 @@ export const moveTaskTool: PanelTool = {
       },
       targetStatus: {
         type: 'string',
-        description: 'The target status column (e.g., "To Do", "In Progress", "Done")',
+        description:
+          'The target status column (e.g., "To Do", "In Progress", "Done")',
       },
     },
     required: ['taskId', 'targetStatus'],
@@ -103,7 +107,8 @@ export const refreshBoardTool: PanelTool = {
  */
 export const filterTasksTool: PanelTool = {
   name: 'filter_tasks',
-  description: 'Filters tasks on the kanban board by labels, assignee, or priority',
+  description:
+    'Filters tasks on the kanban board by labels, assignee, or priority',
   inputs: {
     type: 'object',
     properties: {
