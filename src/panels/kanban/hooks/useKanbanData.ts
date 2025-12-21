@@ -133,6 +133,9 @@ export function useKanbanData(
     }
   }, []);
 
+  // Track the file tree version to detect when we need to reload
+  const fileTreeVersionRef = useRef<string | null>(null);
+
   // Load Backlog.md data using Core with lazy loading
   const loadBacklogData = useCallback(async () => {
     if (!context || !actions) {
@@ -143,6 +146,34 @@ export function useKanbanData(
       setColumnStates(new Map());
       setIsLoading(false);
       coreRef.current = null;
+      fileTreeVersionRef.current = null;
+      return;
+    }
+
+    // Get fileTree slice - FileTree uses allFiles (not files)
+    const fileTreeSlice = context.getRepositorySlice('fileTree') as
+      | { data?: { allFiles?: Array<{ path: string }>; sha?: string; metadata?: { sourceSha?: string } } }
+      | undefined;
+
+    if (!fileTreeSlice?.data?.allFiles) {
+      console.log('[useKanbanData] FileTree not available');
+      setIsBacklogProject(false);
+      setTasks([]);
+      setTasksBySource(new Map());
+      setColumnStates(new Map());
+      coreRef.current = null;
+      fileTreeVersionRef.current = null;
+      return;
+    }
+
+    // Get file tree version (SHA) to detect changes
+    const currentVersion = fileTreeSlice.data.sha || fileTreeSlice.data.metadata?.sourceSha || 'unknown';
+
+    // Skip if we already have data for this file tree version
+    // Use ref to track version to avoid triggering reloads when context changes for unrelated reasons
+    if (coreRef.current && fileTreeVersionRef.current === currentVersion) {
+      console.log('[useKanbanData] Data already loaded for this file tree version, skipping');
+      setIsLoading(false);
       return;
     }
 
@@ -150,21 +181,6 @@ export function useKanbanData(
     setError(null);
 
     try {
-      // Get fileTree slice - FileTree uses allFiles (not files)
-      const fileTreeSlice = context.getRepositorySlice('fileTree') as
-        | { data?: { allFiles?: Array<{ path: string }> } }
-        | undefined;
-
-      if (!fileTreeSlice?.data?.allFiles) {
-        console.log('[useKanbanData] FileTree not available');
-        setIsBacklogProject(false);
-        setTasks([]);
-        setTasksBySource(new Map());
-        setColumnStates(new Map());
-        coreRef.current = null;
-        return;
-      }
-
       const files = fileTreeSlice.data.allFiles;
       const filePaths = files.map((f: { path: string }) => f.path);
 
@@ -247,6 +263,9 @@ export function useKanbanData(
         `[useKanbanData] Loaded ${allTasks.length}/${totalTasks} tasks (active: ${tasksLimit}, completed: ${completedLimit})`
       );
 
+      // Store the file tree version to prevent redundant reloads
+      fileTreeVersionRef.current = currentVersion;
+
       setTasks(allTasks);
       setTasksBySource(newTasksBySource);
       setColumnStates(newColumnStates);
@@ -258,6 +277,7 @@ export function useKanbanData(
       setTasksBySource(new Map());
       setColumnStates(new Map());
       coreRef.current = null;
+      fileTreeVersionRef.current = null;
     } finally {
       setIsLoading(false);
     }
