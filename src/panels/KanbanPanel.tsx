@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import { useKanbanData } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { EmptyState } from './kanban/components/EmptyState';
-import type { Task } from '@backlog-md/core';
+import { Core, type Task } from '@backlog-md/core';
 
 /**
  * KanbanPanelContent - Internal component that uses theme
@@ -16,7 +16,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { statuses, tasksByStatus, error, isBacklogProject } = useKanbanData({
+  const { statuses, tasksByStatus, error, isBacklogProject, refreshData } = useKanbanData({
     context,
     actions,
   });
@@ -26,6 +26,73 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     // In the future, this will open a task detail modal
     // Task click logged for development
   };
+
+  // Check if we can initialize (need file system adapter with write capability)
+  const fileSystem = context.adapters?.fileSystem;
+  const canInitialize = Boolean(
+    fileSystem?.writeFile && fileSystem?.createDir && context.currentScope.repository?.path
+  );
+
+  // Initialize Backlog.md project
+  const handleInitialize = useCallback(async () => {
+    if (!fileSystem?.writeFile || !fileSystem?.createDir) {
+      throw new Error('File system adapter not available');
+    }
+
+    const repoPath = context.currentScope.repository?.path;
+    if (!repoPath) {
+      throw new Error('Repository path not available');
+    }
+
+    // Create a minimal adapter for Core that wraps the panel's fileSystem
+    // Only the methods used by initProject need real implementations
+    const notImplemented = () => { throw new Error('Not implemented'); };
+    const fsAdapter = {
+      // Used by initProject
+      exists: async (path: string) => {
+        try {
+          await fileSystem.readFile(path);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      writeFile: async (path: string, content: string) => { await fileSystem.writeFile(path, content); },
+      createDir: async (path: string, _options?: { recursive?: boolean }) => { await fileSystem.createDir!(path); },
+      join: (...paths: string[]) => paths.join('/').replace(/\/+/g, '/'),
+      // Not used by initProject - stubs
+      readFile: async (path: string) => fileSystem.readFile(path) as Promise<string>,
+      deleteFile: async () => notImplemented(),
+      readDir: async () => [] as string[],
+      isDirectory: async () => false,
+      rename: async () => notImplemented(),
+      stat: async () => ({ mtime: new Date(), isDirectory: false, size: 0 }),
+      dirname: (path: string) => path.split('/').slice(0, -1).join('/') || '/',
+      basename: (path: string) => path.split('/').pop() || '',
+      extname: (path: string) => {
+        const base = path.split('/').pop() || '';
+        const dot = base.lastIndexOf('.');
+        return dot > 0 ? base.slice(dot) : '';
+      },
+      relative: (_from: string, to: string) => to,
+      isAbsolute: (path: string) => path.startsWith('/'),
+      normalize: (path: string) => path.replace(/\/+/g, '/'),
+      homedir: () => '/',
+    };
+
+    const core = new Core({
+      projectRoot: repoPath,
+      adapters: { fs: fsAdapter },
+    });
+
+    // Get project name from repo
+    const projectName = context.currentScope.repository?.name || 'Backlog';
+
+    await core.initProject({ projectName });
+
+    // Refresh to pick up the new project
+    await refreshData();
+  }, [fileSystem, context.currentScope.repository, refreshData]);
 
   return (
     <div
@@ -83,7 +150,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 
       {/* Board Container or Empty State */}
       {!isBacklogProject ? (
-        <EmptyState />
+        <EmptyState
+          canInitialize={canInitialize}
+          onInitialize={handleInitialize}
+        />
       ) : (
         <div
           style={{

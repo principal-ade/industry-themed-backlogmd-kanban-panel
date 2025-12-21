@@ -10,6 +10,56 @@ import type {
 } from '../types';
 
 /**
+ * Create a mock file system adapter for Storybook
+ * Stores files in memory and logs operations
+ */
+export const createMockFileSystemAdapter = () => {
+  const files = new Map<string, string>();
+
+  return {
+    exists: async (path: string) => files.has(path),
+    readFile: async (path: string) => {
+      const content = files.get(path);
+      if (content === undefined) throw new Error(`File not found: ${path}`);
+      return content;
+    },
+    writeFile: async (path: string, content: string) => {
+      console.log('[Mock FS] Writing file:', path);
+      files.set(path, content);
+    },
+    deleteFile: async (path: string) => {
+      console.log('[Mock FS] Deleting file:', path);
+      files.delete(path);
+    },
+    createDir: async (path: string) => {
+      console.log('[Mock FS] Creating directory:', path);
+      // Directories are implicit in the Map-based storage
+    },
+    readDir: async (path: string) => {
+      const prefix = path.endsWith('/') ? path : path + '/';
+      const entries = new Set<string>();
+      for (const key of files.keys()) {
+        if (key.startsWith(prefix)) {
+          const rest = key.slice(prefix.length);
+          const firstSegment = rest.split('/')[0];
+          if (firstSegment) entries.add(firstSegment);
+        }
+      }
+      return Array.from(entries);
+    },
+    isDirectory: async (path: string) => {
+      const prefix = path.endsWith('/') ? path : path + '/';
+      for (const key of files.keys()) {
+        if (key.startsWith(prefix)) return true;
+      }
+      return false;
+    },
+    // Expose the internal files map for testing
+    _files: files,
+  };
+};
+
+/**
  * Mock Git Status data for Storybook
  */
 const mockGitStatusData = {
@@ -103,6 +153,9 @@ export const createMockContext = (
     ],
   ]);
 
+  // Create mock file system adapter
+  const mockFileSystem = createMockFileSystemAdapter();
+
   const defaultContext: PanelContextValue = {
     currentScope: {
       type: 'repository',
@@ -116,6 +169,9 @@ export const createMockContext = (
       },
     },
     slices: mockSlices,
+    adapters: {
+      fileSystem: mockFileSystem,
+    },
     getSlice: <T,>(name: string): DataSlice<T> | undefined => {
       return mockSlices.get(name) as DataSlice<T> | undefined;
     },
