@@ -1,4 +1,5 @@
 import { KanbanPanel } from './panels/KanbanPanel';
+import { TaskDetailPanel } from './panels/TaskDetailPanel';
 import type { PanelDefinition, PanelContextValue } from './types';
 import { kanbanPanelTools, kanbanPanelToolsMetadata } from './tools';
 
@@ -33,6 +34,33 @@ export const panels: PanelDefinition[] = [
     onUnmount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('Kanban Panel unmounting');
+    },
+  },
+  {
+    metadata: {
+      id: 'principal-ade.task-detail-panel',
+      name: 'Task Details',
+      icon: '📄',
+      version: '0.1.0',
+      author: 'Principal ADE',
+      description: 'Detailed view of Backlog.md tasks with markdown rendering',
+      slices: ['fileTree'], // Data slices this panel depends on
+    },
+    component: TaskDetailPanel,
+
+    // Optional: Called when this specific panel is mounted
+    onMount: async (context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log(
+        'Task Detail Panel mounted',
+        context.currentScope.repository?.path
+      );
+    },
+
+    // Optional: Called when this specific panel is unmounted
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Task Detail Panel unmounting');
     },
   },
 ];

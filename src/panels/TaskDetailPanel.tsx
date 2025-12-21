@@ -1,0 +1,441 @@
+import React, { useState, useEffect } from 'react';
+import { FileText, Tag, User, Calendar, Flag, GitBranch, ArrowLeft } from 'lucide-react';
+import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { DocumentView } from 'themed-markdown';
+import type { PanelComponentProps, PanelEventEmitter } from '../types';
+import type { Task } from '@backlog-md/core';
+
+/**
+ * Extract the markdown body from a Task object for rendering.
+ * This is a local implementation until @backlog-md/core exports getTaskBodyMarkdown.
+ */
+function getTaskBodyMarkdown(task: Task, options: { includeTitle?: boolean } = {}): string {
+  const { includeTitle = false } = options;
+
+  // If we have rawContent, use it (stripping title if needed)
+  if (task.rawContent) {
+    let body = task.rawContent;
+
+    if (!includeTitle && task.title) {
+      // Remove the h1 title line
+      const escapedTitle = task.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      body = body.replace(new RegExp(`^#\\s+${escapedTitle}\\s*\\n?`, 'm'), '');
+    }
+
+    return body.trim();
+  }
+
+  // Reconstruct from parsed fields if no rawContent
+  const sections: string[] = [];
+
+  if (includeTitle && task.title) {
+    sections.push(`# ${task.title}`);
+    sections.push('');
+  }
+
+  if (task.description) {
+    sections.push(task.description);
+    sections.push('');
+  }
+
+  if (task.acceptanceCriteriaItems && task.acceptanceCriteriaItems.length > 0) {
+    sections.push('## Acceptance Criteria');
+    sections.push('');
+    for (const criterion of task.acceptanceCriteriaItems) {
+      const checkbox = criterion.checked ? '[x]' : '[ ]';
+      sections.push(`- ${checkbox} ${criterion.text}`);
+    }
+    sections.push('');
+  }
+
+  if (task.implementationPlan) {
+    sections.push('## Implementation Plan');
+    sections.push('');
+    sections.push(task.implementationPlan);
+    sections.push('');
+  }
+
+  if (task.implementationNotes) {
+    sections.push('## Implementation Notes');
+    sections.push('');
+    sections.push(task.implementationNotes);
+    sections.push('');
+  }
+
+  return sections.join('\n').trim();
+}
+
+/**
+ * Event payload for task selection
+ */
+interface TaskSelectedPayload {
+  taskId: string;
+  task: Task;
+}
+
+/**
+ * Priority badge colors
+ */
+const getPriorityStyles = (theme: ReturnType<typeof useTheme>['theme'], priority?: string) => {
+  const baseStyles = {
+    padding: '2px 8px',
+    borderRadius: theme.radii[1],
+    fontSize: theme.fontSizes[0],
+    fontWeight: theme.fontWeights.medium,
+  };
+
+  switch (priority) {
+    case 'high':
+      return { ...baseStyles, background: `${theme.colors.error}20`, color: theme.colors.error };
+    case 'medium':
+      return { ...baseStyles, background: `${theme.colors.warning}20`, color: theme.colors.warning };
+    case 'low':
+      return { ...baseStyles, background: `${theme.colors.info}20`, color: theme.colors.info };
+    default:
+      return { ...baseStyles, background: theme.colors.backgroundSecondary, color: theme.colors.textSecondary };
+  }
+};
+
+/**
+ * Status badge component
+ */
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const { theme } = useTheme();
+  return (
+    <span
+      style={{
+        padding: '4px 12px',
+        borderRadius: theme.radii[2],
+        fontSize: theme.fontSizes[1],
+        fontWeight: theme.fontWeights.medium,
+        background: `${theme.colors.primary}20`,
+        color: theme.colors.primary,
+        textTransform: 'capitalize',
+      }}
+    >
+      {status}
+    </span>
+  );
+};
+
+/**
+ * Metadata row component
+ */
+const MetadataRow: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}> = ({ icon, label, value }) => {
+  const { theme } = useTheme();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        fontSize: theme.fontSizes[1],
+      }}
+    >
+      <span style={{ color: theme.colors.textMuted, display: 'flex', alignItems: 'center' }}>
+        {icon}
+      </span>
+      <span style={{ color: theme.colors.textSecondary }}>{label}:</span>
+      <span style={{ color: theme.colors.text }}>{value}</span>
+    </div>
+  );
+};
+
+/**
+ * TaskDetailPanelContent - Internal component that uses theme
+ */
+const TaskDetailPanelContent: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
+  const { theme } = useTheme();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Listen for task:selected events
+  useEffect(() => {
+    if (!events) return;
+
+    const handleTaskSelected = (event: { payload: TaskSelectedPayload }) => {
+      setSelectedTask(event.payload.task);
+    };
+
+    // Subscribe to task:selected events
+    const unsubscribe = (events as PanelEventEmitter).on('task:selected', handleTaskSelected);
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [events]);
+
+  // Handle back/close
+  const handleBack = () => {
+    setSelectedTask(null);
+    // Optionally emit an event to notify other panels
+    if (events) {
+      (events as PanelEventEmitter).emit({
+        type: 'task:deselected',
+        source: 'task-detail-panel',
+        timestamp: Date.now(),
+        payload: {},
+      });
+    }
+  };
+
+  // Empty state when no task is selected
+  if (!selectedTask) {
+    return (
+      <div
+        style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          backgroundColor: theme.colors.background,
+          color: theme.colors.textSecondary,
+          gap: '16px',
+        }}
+      >
+        <FileText size={48} color={theme.colors.textMuted} />
+        <div style={{ textAlign: 'center' }}>
+          <h3
+            style={{
+              margin: '0 0 8px 0',
+              fontSize: theme.fontSizes[3],
+              color: theme.colors.text,
+              fontWeight: theme.fontWeights.semibold,
+            }}
+          >
+            No Task Selected
+          </h3>
+          <p
+            style={{
+              margin: 0,
+              fontSize: theme.fontSizes[1],
+              color: theme.colors.textSecondary,
+            }}
+          >
+            Click on a task in the Kanban board to view its details
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get markdown body for rendering
+  const bodyMarkdown = getTaskBodyMarkdown(selectedTask, { includeTitle: false });
+
+  return (
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: theme.colors.background,
+        color: theme.colors.text,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: '16px 20px',
+          borderBottom: `1px solid ${theme.colors.border}`,
+          backgroundColor: theme.colors.backgroundSecondary,
+        }}
+      >
+        {/* Back button and ID */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '12px',
+          }}
+        >
+          <button
+            onClick={handleBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii[1],
+              background: theme.colors.surface,
+              cursor: 'pointer',
+              color: theme.colors.textSecondary,
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              e.currentTarget.style.color = theme.colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = theme.colors.surface;
+              e.currentTarget.style.color = theme.colors.textSecondary;
+            }}
+            title="Back"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <span
+            style={{
+              fontFamily: theme.fonts.monospace,
+              fontSize: theme.fontSizes[0],
+              color: theme.colors.textMuted,
+            }}
+          >
+            {selectedTask.id}
+          </span>
+          <StatusBadge status={selectedTask.status} />
+        </div>
+
+        {/* Title */}
+        <h1
+          style={{
+            margin: '0 0 16px 0',
+            fontSize: theme.fontSizes[5],
+            fontWeight: theme.fontWeights.bold,
+            color: theme.colors.text,
+            lineHeight: 1.3,
+          }}
+        >
+          {selectedTask.title}
+        </h1>
+
+        {/* Metadata grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px',
+          }}
+        >
+          {selectedTask.priority && (
+            <MetadataRow
+              icon={<Flag size={14} />}
+              label="Priority"
+              value={
+                <span style={getPriorityStyles(theme, selectedTask.priority)}>
+                  {selectedTask.priority}
+                </span>
+              }
+            />
+          )}
+
+          {selectedTask.assignee && selectedTask.assignee.length > 0 && (
+            <MetadataRow
+              icon={<User size={14} />}
+              label="Assignee"
+              value={selectedTask.assignee.join(', ')}
+            />
+          )}
+
+          {selectedTask.createdDate && (
+            <MetadataRow
+              icon={<Calendar size={14} />}
+              label="Created"
+              value={selectedTask.createdDate}
+            />
+          )}
+
+          {selectedTask.branch && (
+            <MetadataRow
+              icon={<GitBranch size={14} />}
+              label="Branch"
+              value={selectedTask.branch}
+            />
+          )}
+        </div>
+
+        {/* Labels */}
+        {selectedTask.labels && selectedTask.labels.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginTop: '12px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <Tag size={14} color={theme.colors.textMuted} />
+            {selectedTask.labels.map((label) => (
+              <span
+                key={label}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: theme.radii[1],
+                  fontSize: theme.fontSizes[0],
+                  fontWeight: theme.fontWeights.medium,
+                  background: `${theme.colors.primary}15`,
+                  color: theme.colors.primary,
+                }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Body Content */}
+      <div
+        style={{
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {bodyMarkdown ? (
+          <DocumentView
+            content={bodyMarkdown}
+            theme={theme}
+            maxWidth="100%"
+            transparentBackground
+          />
+        ) : (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: theme.colors.textMuted,
+              fontStyle: 'italic',
+              padding: '40px',
+            }}
+          >
+            No description or content available
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * TaskDetailPanel - A panel for viewing task details from Backlog.md
+ *
+ * This panel shows:
+ * - Task header with title, status, and metadata
+ * - Frontmatter fields (priority, assignee, labels, dates)
+ * - Markdown body content (description, acceptance criteria, etc.)
+ *
+ * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
+ */
+export const TaskDetailPanel: React.FC<PanelComponentProps> = (props) => {
+  return (
+    <ThemeProvider>
+      <TaskDetailPanelContent {...props} />
+    </ThemeProvider>
+  );
+};

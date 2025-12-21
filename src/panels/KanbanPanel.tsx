@@ -13,6 +13,7 @@ import { Core, type Task } from '@backlog-md/core';
 const KanbanPanelContent: React.FC<PanelComponentProps> = ({
   context,
   actions,
+  events,
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -25,8 +26,15 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
-    // In the future, this will open a task detail modal
-    // Task click logged for development
+    // Emit task:selected event for other panels (e.g., TaskDetailPanel)
+    if (events) {
+      events.emit({
+        type: 'task:selected',
+        source: 'kanban-panel',
+        timestamp: Date.now(),
+        payload: { taskId: task.id, task },
+      });
+    }
   };
 
   // Check if we can initialize (need file system adapter with write capability)
