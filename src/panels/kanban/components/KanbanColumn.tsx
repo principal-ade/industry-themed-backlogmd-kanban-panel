@@ -45,8 +45,11 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       style={{
-        flex: '1',
-        minWidth: 'min(280px, 85vw)', // Responsive width for mobile
+        flex: '1 1 0', // Grow to fill available width equally
+        minWidth: '280px',
+        maxWidth: '500px', // Cap max width for readability
+        height: '100%', // Fill parent height
+        minHeight: 0, // Allow shrinking
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
@@ -91,6 +94,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       <div
         style={{
           flex: 1,
+          minHeight: 0, // Critical: allows flex child to shrink and scroll
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
@@ -103,6 +107,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             key={task.id}
             onClick={() => onTaskClick?.(task)}
             style={{
+              flexShrink: 0, // Prevent card from shrinking
               background: theme.colors.surface,
               borderRadius: theme.radii[2],
               padding: '12px',

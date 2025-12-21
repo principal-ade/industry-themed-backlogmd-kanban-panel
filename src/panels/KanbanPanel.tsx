@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
-import { useKanbanData } from './kanban/hooks/useKanbanData';
+import { useKanbanData, SOURCE_DISPLAY_LABELS, type SourceColumn } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { EmptyState } from './kanban/components/EmptyState';
 import { Core, type Task } from '@backlog-md/core';
@@ -16,10 +16,11 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { statuses, tasksByStatus, columnStates, loadMore, error, isBacklogProject, refreshData } = useKanbanData({
+  const { sources, tasksBySource, columnStates, loadMore, error, isBacklogProject, refreshData } = useKanbanData({
     context,
     actions,
-    pageSize: 10,
+    tasksLimit: 20,
+    completedLimit: 5,
   });
 
   const handleTaskClick = (task: Task) => {
@@ -101,9 +102,11 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
         padding: 'clamp(12px, 3vw, 20px)', // Responsive padding for mobile
         fontFamily: theme.fonts.body,
         height: '100%',
+        boxSizing: 'border-box', // Include padding in height calculation
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
+        overflow: 'hidden', // Prevent outer scrolling
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
       }}
@@ -111,6 +114,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
       {/* Header */}
       <div
         style={{
+          flexShrink: 0, // Don't shrink header
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -133,6 +137,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
       {error && (
         <div
           style={{
+            flexShrink: 0, // Don't shrink error message
             padding: '12px',
             background: `${theme.colors.error}20`,
             border: `1px solid ${theme.colors.error}`,
@@ -161,24 +166,26 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
             flex: 1,
             display: 'flex',
             gap: '16px',
+            justifyContent: 'center', // Center columns when they hit max-width
             overflowX: 'auto',
             overflowY: 'hidden',
             paddingBottom: '8px',
+            minHeight: 0, // Allow flex child to shrink below content size
             WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
           }}
         >
-          {statuses.map((status) => {
-            const columnTasks = tasksByStatus.get(status) || [];
-            const columnState = columnStates.get(status);
+          {sources.map((source) => {
+            const columnTasks = tasksBySource.get(source) || [];
+            const columnState = columnStates.get(source);
             return (
               <KanbanColumn
-                key={status}
-                status={status}
+                key={source}
+                status={SOURCE_DISPLAY_LABELS[source as SourceColumn]}
                 tasks={columnTasks}
                 total={columnState?.total}
                 hasMore={columnState?.hasMore}
                 isLoadingMore={columnState?.isLoadingMore}
-                onLoadMore={() => loadMore(status)}
+                onLoadMore={() => loadMore(source as SourceColumn)}
                 onTaskClick={handleTaskClick}
               />
             );

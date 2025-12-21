@@ -46,7 +46,7 @@ const createBacklogFileTreeSlice = (): DataSlice<any> => {
       name: 'my-kanban-project',
       path: '/Users/developer/projects/my-kanban-project',
       type: 'directory',
-      files: [
+      allFiles: [
         { path: 'backlog/config.yml', name: 'config.yml', type: 'file' },
         ...taskFiles,
       ],

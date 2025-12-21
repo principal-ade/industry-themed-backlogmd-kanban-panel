@@ -7,160 +7,131 @@
 
 import type { Task } from '@backlog-md/core';
 
+// Sample task titles for generating mock data
+const activeTitles = [
+  'Implement user authentication',
+  'Design database schema',
+  'Build REST API endpoints',
+  'Create UI component library',
+  'Optimize database queries',
+  'Implement real-time notifications',
+  'Add search functionality',
+  'Create admin dashboard',
+  'Implement file upload system',
+  'Add email notifications',
+  'Build reporting module',
+  'Create user settings page',
+  'Implement dark mode',
+  'Add keyboard shortcuts',
+  'Create mobile responsive layout',
+  'Implement caching layer',
+  'Add analytics tracking',
+  'Create onboarding flow',
+  'Implement export to PDF',
+  'Add multi-language support',
+  'Create API documentation',
+  'Implement rate limiting',
+  'Add two-factor authentication',
+  'Create backup system',
+  'Implement audit logging',
+];
+
+const completedTitles = [
+  'Set up CI CD pipeline',
+  'Write unit tests',
+  'Configure linting rules',
+  'Set up development environment',
+  'Create project structure',
+  'Implement logging system',
+  'Add error tracking',
+  'Configure deployment scripts',
+  'Write integration tests',
+  'Set up monitoring',
+];
+
+const assignees = [
+  'alice@example.com',
+  'bob@example.com',
+  'charlie@example.com',
+  'diana@example.com',
+  'eve@example.com',
+  'frank@example.com',
+  'grace@example.com',
+  'henry@example.com',
+];
+
+const labelSets = [
+  ['feature', 'security'],
+  ['database', 'architecture'],
+  ['backend', 'api'],
+  ['frontend', 'ui'],
+  ['devops', 'automation'],
+  ['testing', 'quality'],
+  ['performance', 'database'],
+  ['feature', 'realtime'],
+  ['documentation'],
+  ['infrastructure'],
+];
+
+const priorities: Array<'high' | 'medium' | 'low'> = ['high', 'medium', 'low'];
+
 /**
  * Generate mock tasks for testing the kanban board
+ * Creates 25 active tasks and 10 completed tasks to test pagination
  */
 export function generateMockTasks(): Task[] {
-  return [
-    {
-      id: 'task-001',
-      title: 'Implement user authentication',
-      status: 'To Do',
-      assignee: ['alice@example.com'],
-      createdDate: '2025-11-01T10:00:00Z',
-      updatedDate: '2025-11-15T14:30:00Z',
-      labels: ['feature', 'security'],
+  const tasks: Task[] = [];
+
+  // Generate active tasks (in tasks/ directory)
+  activeTitles.forEach((title, index) => {
+    const id = String(index + 1).padStart(3, '0');
+    const assigneeIndex = index % assignees.length;
+    const labelIndex = index % labelSets.length;
+    const priorityIndex = index % priorities.length;
+
+    tasks.push({
+      id,
+      title,
+      status: index % 3 === 0 ? 'To Do' : 'In Progress',
+      assignee: index % 4 === 0 ? [] : [assignees[assigneeIndex]],
+      createdDate: `2025-11-${String((index % 28) + 1).padStart(2, '0')}T10:00:00Z`,
+      updatedDate: index % 2 === 0 ? `2025-11-${String((index % 28) + 1).padStart(2, '0')}T14:30:00Z` : undefined,
+      labels: labelSets[labelIndex],
       dependencies: [],
-      description:
-        'Add OAuth2 authentication flow with support for multiple providers (Google, GitHub). Include session management and token refresh logic.',
-      priority: 'high',
-      ordinal: 1,
-      filePath: 'backlog/tasks/task-001.md',
+      description: `Description for ${title}. This is a sample task for testing purposes.`,
+      priority: priorities[priorityIndex],
+      ordinal: index + 1,
+      filePath: `backlog/tasks/${id} - ${title}.md`,
       source: 'local' as const,
-    },
-    {
-      id: 'task-002',
-      title: 'Design database schema',
-      status: 'To Do',
-      assignee: ['bob@example.com'],
-      createdDate: '2025-11-02T09:15:00Z',
-      labels: ['database', 'architecture'],
-      dependencies: [],
-      description:
-        'Create normalized database schema for user data, tasks, and relationships. Include migration scripts.',
-      priority: 'high',
-      ordinal: 2,
-      filePath: 'backlog/tasks/task-002.md',
-      source: 'local' as const,
-    },
-    {
-      id: 'task-003',
-      title: 'Build REST API endpoints',
-      status: 'In Progress',
-      assignee: ['charlie@example.com'],
-      createdDate: '2025-11-03T11:20:00Z',
-      updatedDate: '2025-11-16T09:00:00Z',
-      labels: ['backend', 'api'],
-      dependencies: ['task-002'],
-      description:
-        'Implement RESTful API endpoints for CRUD operations. Include validation, error handling, and rate limiting.',
-      implementationPlan: `
-## Implementation Steps
-1. Set up Express/Fastify server
-2. Define API routes and handlers
-3. Add request validation middleware
-4. Implement error handling
-5. Add rate limiting
-6. Write API documentation
-      `.trim(),
-      priority: 'high',
-      ordinal: 1,
-      filePath: 'backlog/tasks/task-003.md',
-      source: 'local' as const,
-    },
-    {
-      id: 'task-004',
-      title: 'Create UI component library',
-      status: 'In Progress',
-      assignee: ['diana@example.com', 'eve@example.com'],
-      createdDate: '2025-11-04T13:45:00Z',
-      updatedDate: '2025-11-17T16:20:00Z',
-      labels: ['frontend', 'ui'],
-      dependencies: [],
-      description:
-        'Build reusable React components with TypeScript. Include buttons, forms, modals, and data tables.',
-      priority: 'medium',
-      ordinal: 2,
-      acceptanceCriteriaItems: [
-        { index: 0, text: 'All components are fully typed', checked: true },
-        {
-          index: 1,
-          text: 'Components support theme customization',
-          checked: true,
-        },
-        {
-          index: 2,
-          text: 'Storybook stories for each component',
-          checked: false,
-        },
-        { index: 3, text: 'Accessibility audit passes', checked: false },
-      ],
-      filePath: 'backlog/tasks/task-004.md',
-      source: 'local' as const,
-    },
-    {
-      id: 'task-005',
-      title: 'Set up CI/CD pipeline',
+    });
+  });
+
+  // Generate completed tasks (in completed/ directory)
+  // Use higher IDs so they sort as "most recent" when sorted by ID desc
+  completedTitles.forEach((title, index) => {
+    const id = String(100 + index + 1).padStart(3, '0'); // 101, 102, 103...
+    const assigneeIndex = index % assignees.length;
+    const labelIndex = index % labelSets.length;
+    const priorityIndex = index % priorities.length;
+
+    tasks.push({
+      id,
+      title,
       status: 'Done',
-      assignee: ['frank@example.com'],
-      createdDate: '2025-11-05T08:30:00Z',
-      updatedDate: '2025-11-10T17:00:00Z',
-      labels: ['devops', 'automation'],
+      assignee: [assignees[assigneeIndex]],
+      createdDate: `2025-11-${String((index % 28) + 1).padStart(2, '0')}T08:30:00Z`,
+      updatedDate: `2025-11-${String((index % 28) + 5).padStart(2, '0')}T17:00:00Z`,
+      labels: labelSets[labelIndex],
       dependencies: [],
-      description:
-        'Configure GitHub Actions for automated testing, building, and deployment.',
-      priority: 'medium',
-      ordinal: 1,
-      filePath: 'backlog/completed/task-005.md',
+      description: `Description for ${title}. This task has been completed.`,
+      priority: priorities[priorityIndex],
+      ordinal: index + 1,
+      filePath: `backlog/completed/${id} - ${title}.md`,
       source: 'completed' as const,
-    },
-    {
-      id: 'task-006',
-      title: 'Write unit tests',
-      status: 'Done',
-      assignee: ['grace@example.com'],
-      createdDate: '2025-11-06T10:00:00Z',
-      updatedDate: '2025-11-12T14:30:00Z',
-      labels: ['testing', 'quality'],
-      dependencies: ['task-003'],
-      description:
-        'Add comprehensive unit tests for all API endpoints and utility functions. Aim for 80%+ coverage.',
-      priority: 'medium',
-      ordinal: 2,
-      filePath: 'backlog/completed/task-006.md',
-      source: 'completed' as const,
-    },
-    {
-      id: 'task-007',
-      title: 'Optimize database queries',
-      status: 'To Do',
-      assignee: ['henry@example.com'],
-      createdDate: '2025-11-07T15:20:00Z',
-      labels: ['performance', 'database'],
-      dependencies: ['task-002', 'task-003'],
-      description:
-        'Profile and optimize slow database queries. Add indexes where needed.',
-      priority: 'low',
-      ordinal: 3,
-      filePath: 'backlog/tasks/task-007.md',
-      source: 'local' as const,
-    },
-    {
-      id: 'task-008',
-      title: 'Implement real-time notifications',
-      status: 'To Do',
-      assignee: [],
-      createdDate: '2025-11-08T09:45:00Z',
-      labels: ['feature', 'realtime'],
-      dependencies: ['task-003'],
-      description:
-        'Add WebSocket support for real-time notifications when tasks are updated or assigned.',
-      priority: 'low',
-      ordinal: 4,
-      filePath: 'backlog/tasks/task-008.md',
-      source: 'local' as const,
-    },
-  ];
+    });
+  });
+
+  return tasks;
 }
 
 /**
