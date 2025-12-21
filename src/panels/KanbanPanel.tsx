@@ -16,9 +16,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { statuses, tasksByStatus, error, isBacklogProject, refreshData } = useKanbanData({
+  const { statuses, tasksByStatus, columnStates, loadMore, error, isBacklogProject, refreshData } = useKanbanData({
     context,
     actions,
+    pageSize: 10,
   });
 
   const handleTaskClick = (task: Task) => {
@@ -168,11 +169,16 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
         >
           {statuses.map((status) => {
             const columnTasks = tasksByStatus.get(status) || [];
+            const columnState = columnStates.get(status);
             return (
               <KanbanColumn
                 key={status}
                 status={status}
                 tasks={columnTasks}
+                total={columnState?.total}
+                hasMore={columnState?.hasMore}
+                isLoadingMore={columnState?.isLoadingMore}
+                onLoadMore={() => loadMore(status)}
                 onTaskClick={handleTaskClick}
               />
             );

@@ -5,12 +5,24 @@ import type { Task } from '@backlog-md/core';
 interface KanbanColumnProps {
   status: string;
   tasks: Task[];
+  /** Total number of tasks in this column (for pagination) */
+  total?: number;
+  /** Whether more tasks are available to load */
+  hasMore?: boolean;
+  /** Whether more tasks are currently being loaded */
+  isLoadingMore?: boolean;
+  /** Callback to load more tasks */
+  onLoadMore?: () => void;
   onTaskClick?: (task: Task) => void;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   status,
   tasks,
+  total,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
   onTaskClick,
 }) => {
   const { theme } = useTheme();
@@ -27,6 +39,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         return theme.colors.border;
     }
   };
+
+  const remaining = total !== undefined ? total - tasks.length : 0;
 
   return (
     <div
@@ -69,7 +83,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             borderRadius: theme.radii[1],
           }}
         >
-          {tasks.length}
+          {total !== undefined ? `${tasks.length}/${total}` : tasks.length}
         </span>
       </div>
 
@@ -200,7 +214,71 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Load More Button */}
+        {hasMore && onLoadMore && (
+          <button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            style={{
+              background: theme.colors.background,
+              border: `1px dashed ${theme.colors.border}`,
+              borderRadius: theme.radii[2],
+              padding: '12px',
+              cursor: isLoadingMore ? 'wait' : 'pointer',
+              color: theme.colors.textSecondary,
+              fontSize: theme.fontSizes[1],
+              fontWeight: theme.fontWeights.medium,
+              transition: 'all 0.2s ease',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoadingMore) {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+                e.currentTarget.style.borderColor = theme.colors.primary;
+                e.currentTarget.style.color = theme.colors.primary;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = theme.colors.background;
+              e.currentTarget.style.borderColor = theme.colors.border;
+              e.currentTarget.style.color = theme.colors.textSecondary;
+            }}
+          >
+            {isLoadingMore ? (
+              <>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '14px',
+                    height: '14px',
+                    border: `2px solid ${theme.colors.border}`,
+                    borderTopColor: theme.colors.primary,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                />
+                Loading...
+              </>
+            ) : (
+              `Load more (${remaining} remaining)`
+            )}
+          </button>
+        )}
       </div>
+
+      {/* Inline keyframes for spinner animation */}
+      <style>
+        {`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </div>
   );
 };
