@@ -99,7 +99,11 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
           flexDirection: 'column',
           gap: '8px',
           overflowY: 'auto',
+          overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          // Add padding for scroll content, use margin trick to prevent clipping
+          paddingRight: '4px',
+          marginRight: '-4px',
         }}
       >
         {tasks.map((task) => (
@@ -274,6 +278,9 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             )}
           </button>
         )}
+
+        {/* Bottom spacer to prevent last item from being cut off */}
+        <div style={{ flexShrink: 0, height: '4px' }} />
       </div>
 
       {/* Inline keyframes for spinner animation */}

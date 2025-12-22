@@ -2,7 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
-import { useKanbanData, SOURCE_DISPLAY_LABELS, type SourceColumn } from './kanban/hooks/useKanbanData';
+import {
+  useKanbanData,
+  STATUS_DISPLAY_LABELS,
+  type StatusColumn,
+} from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { EmptyState } from './kanban/components/EmptyState';
 import { Core, type Task } from '@backlog-md/core';
@@ -17,7 +21,17 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { sources, tasksBySource, columnStates, loadMore, error, isBacklogProject, refreshData } = useKanbanData({
+  const {
+    statusColumns,
+    tasksByStatus,
+    columnStates,
+    loadMore,
+    activeTasksState,
+    loadMoreActive,
+    error,
+    isBacklogProject,
+    refreshData,
+  } = useKanbanData({
     context,
     actions,
     tasksLimit: 20,
@@ -125,20 +139,80 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
           flexShrink: 0, // Don't shrink header
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: '12px',
           flexWrap: 'wrap',
         }}
       >
-        <Kanban size={24} color={theme.colors.primary} />
-        <h2
-          style={{
-            margin: 0,
-            fontSize: theme.fontSizes[4],
-            color: theme.colors.text,
-          }}
-        >
-          Kanban Board
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Kanban size={24} color={theme.colors.primary} />
+          <h2
+            style={{
+              margin: 0,
+              fontSize: theme.fontSizes[4],
+              color: theme.colors.text,
+            }}
+          >
+            Kanban Board
+          </h2>
+        </div>
+
+        {/* Status counts and Load more active button */}
+        {isBacklogProject && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            {/* Status counts */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {statusColumns.map((status) => {
+                const statusState = tasksByStatus.get(status);
+                const count = statusState?.count || 0;
+                // For completed, show loaded/total
+                const completedState = columnStates.get('completed');
+                const displayCount = status === 'completed' && completedState
+                  ? `${count}/${completedState.total}`
+                  : count;
+                return (
+                  <span
+                    key={status}
+                    style={{
+                      fontSize: theme.fontSizes[1],
+                      color: theme.colors.textSecondary,
+                      background: theme.colors.backgroundSecondary,
+                      padding: '4px 10px',
+                      borderRadius: theme.radii[1],
+                      fontWeight: theme.fontWeights.medium,
+                    }}
+                  >
+                    {STATUS_DISPLAY_LABELS[status]}: {displayCount}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Load more active button */}
+            {activeTasksState.hasMore && (
+              <button
+                onClick={loadMoreActive}
+                disabled={activeTasksState.isLoadingMore}
+                style={{
+                  background: theme.colors.primary,
+                  color: theme.colors.background,
+                  border: 'none',
+                  borderRadius: theme.radii[2],
+                  padding: '6px 12px',
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  cursor: activeTasksState.isLoadingMore ? 'wait' : 'pointer',
+                  opacity: activeTasksState.isLoadingMore ? 0.7 : 1,
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                {activeTasksState.isLoadingMore
+                  ? 'Loading...'
+                  : `Load more active (${activeTasksState.total - activeTasksState.loaded} remaining)`}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
@@ -182,18 +256,21 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
             WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
           }}
         >
-          {sources.map((source) => {
-            const columnTasks = tasksBySource.get(source) || [];
-            const columnState = columnStates.get(source);
+          {statusColumns.map((status) => {
+            const statusState = tasksByStatus.get(status);
+            const columnTasks = statusState?.tasks || [];
+            // Only completed column has its own load more
+            const isCompleted = status === 'completed';
+            const completedState = columnStates.get('completed');
             return (
               <KanbanColumn
-                key={source}
-                status={SOURCE_DISPLAY_LABELS[source as SourceColumn]}
+                key={status}
+                status={STATUS_DISPLAY_LABELS[status]}
                 tasks={columnTasks}
-                total={columnState?.total}
-                hasMore={columnState?.hasMore}
-                isLoadingMore={columnState?.isLoadingMore}
-                onLoadMore={() => loadMore(source as SourceColumn)}
+                total={isCompleted ? completedState?.total : undefined}
+                hasMore={isCompleted ? completedState?.hasMore : false}
+                isLoadingMore={isCompleted ? completedState?.isLoadingMore : false}
+                onLoadMore={isCompleted ? () => loadMore('completed') : undefined}
                 onTaskClick={handleTaskClick}
               />
             );

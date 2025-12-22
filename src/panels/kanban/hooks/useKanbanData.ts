@@ -14,11 +14,42 @@ export interface ColumnState {
 /** Source column names (directory-based) */
 export type SourceColumn = 'tasks' | 'completed';
 
-/** Display labels for source columns */
+/** Status column names (for 3-column view) */
+export type StatusColumn = 'todo' | 'in-progress' | 'completed';
+
+/** Display labels for status columns */
+export const STATUS_DISPLAY_LABELS: Record<StatusColumn, string> = {
+  'todo': 'To Do',
+  'in-progress': 'In Progress',
+  'completed': 'Completed',
+};
+
+/** Map task status field values to StatusColumn keys */
+const STATUS_TO_COLUMN: Record<string, StatusColumn> = {
+  'To Do': 'todo',
+  'In Progress': 'in-progress',
+  'Done': 'completed',
+};
+
+/** Display labels for source columns (legacy) */
 export const SOURCE_DISPLAY_LABELS: Record<SourceColumn, string> = {
   tasks: 'Active',
   completed: 'Completed',
 };
+
+/** Status-based column state (computed from source data) */
+export interface StatusColumnState {
+  tasks: Task[];
+  count: number;
+}
+
+/** Active tasks pagination state */
+export interface ActiveTasksState {
+  total: number;
+  loaded: number;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+}
 
 export interface UseKanbanDataResult {
   tasks: Task[];
@@ -34,6 +65,14 @@ export interface UseKanbanDataResult {
   loadMore: (source: SourceColumn) => Promise<void>;
   refreshData: () => Promise<void>;
   updateTaskStatus: (taskId: string, newStatus: string) => Promise<void>;
+  /** Status columns for 3-column view */
+  statusColumns: StatusColumn[];
+  /** Tasks grouped by status (To Do, In Progress, Completed) */
+  tasksByStatus: Map<StatusColumn, StatusColumnState>;
+  /** Active tasks (To Do + In Progress) pagination state */
+  activeTasksState: ActiveTasksState;
+  /** Load more active tasks */
+  loadMoreActive: () => Promise<void>;
 }
 
 interface UseKanbanDataOptions {
@@ -390,6 +429,44 @@ export function useKanbanData(
     []
   );
 
+  // Status columns for 3-column view
+  const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'completed'];
+
+  // Compute tasks grouped by status (splitting active tasks by their status field)
+  const tasksByStatus = (() => {
+    const result = new Map<StatusColumn, StatusColumnState>();
+
+    // Get active tasks and split by status
+    const activeTasks = tasksBySource.get('tasks') || [];
+    const completedTasks = tasksBySource.get('completed') || [];
+
+    // Split active tasks by status field
+    const todoTasks = activeTasks.filter(t => t.status === 'To Do');
+    const inProgressTasks = activeTasks.filter(t => t.status === 'In Progress');
+
+    result.set('todo', { tasks: todoTasks, count: todoTasks.length });
+    result.set('in-progress', { tasks: inProgressTasks, count: inProgressTasks.length });
+    result.set('completed', { tasks: completedTasks, count: completedTasks.length });
+
+    return result;
+  })();
+
+  // Compute active tasks pagination state
+  const activeTasksState: ActiveTasksState = (() => {
+    const activeColumnState = columnStates.get('tasks');
+    return {
+      total: activeColumnState?.total || 0,
+      loaded: activeColumnState?.tasks.length || 0,
+      hasMore: activeColumnState?.hasMore || false,
+      isLoadingMore: activeColumnState?.isLoadingMore || false,
+    };
+  })();
+
+  // Load more active tasks (wrapper around loadMore)
+  const loadMoreActive = useCallback(async () => {
+    await loadMore('tasks');
+  }, [loadMore]);
+
   return {
     tasks,
     sources,
@@ -401,5 +478,10 @@ export function useKanbanData(
     loadMore,
     refreshData,
     updateTaskStatus,
+    // New 3-column view exports
+    statusColumns,
+    tasksByStatus,
+    activeTasksState,
+    loadMoreActive,
   };
 }
