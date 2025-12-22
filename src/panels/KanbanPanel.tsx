@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
@@ -21,6 +21,26 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [_selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTab, setSelectedTab] = useState<StatusColumn>('todo');
+  const [isNarrowView, setIsNarrowView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Detect narrow viewport using ResizeObserver
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Switch to tabs when width is less than 768px
+        setIsNarrowView(entry.contentRect.width < 768);
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   const {
     statusColumns,
     tasksByStatus,
@@ -120,6 +140,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 
   return (
     <div
+      ref={containerRef}
       style={{
         padding: 'clamp(12px, 3vw, 20px)', // Responsive padding for mobile
         fontFamily: theme.fonts.body,
@@ -160,33 +181,35 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
         {/* Status counts and Load more active button */}
         {isBacklogProject && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            {/* Status counts */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {statusColumns.map((status) => {
-                const statusState = tasksByStatus.get(status);
-                const count = statusState?.count || 0;
-                // For completed, show loaded/total
-                const completedState = columnStates.get('completed');
-                const displayCount = status === 'completed' && completedState
-                  ? `${count}/${completedState.total}`
-                  : count;
-                return (
-                  <span
-                    key={status}
-                    style={{
-                      fontSize: theme.fontSizes[1],
-                      color: theme.colors.textSecondary,
-                      background: theme.colors.backgroundSecondary,
-                      padding: '4px 10px',
-                      borderRadius: theme.radii[1],
-                      fontWeight: theme.fontWeights.medium,
-                    }}
-                  >
-                    {STATUS_DISPLAY_LABELS[status]}: {displayCount}
-                  </span>
-                );
-              })}
-            </div>
+            {/* Status counts - hidden in narrow view since tabs show counts */}
+            {!isNarrowView && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {statusColumns.map((status) => {
+                  const statusState = tasksByStatus.get(status);
+                  const count = statusState?.count || 0;
+                  // For completed, show loaded/total
+                  const completedState = columnStates.get('completed');
+                  const displayCount = status === 'completed' && completedState
+                    ? `${count}/${completedState.total}`
+                    : count;
+                  return (
+                    <span
+                      key={status}
+                      style={{
+                        fontSize: theme.fontSizes[1],
+                        color: theme.colors.textSecondary,
+                        background: theme.colors.backgroundSecondary,
+                        padding: '4px 10px',
+                        borderRadius: theme.radii[1],
+                        fontWeight: theme.fontWeights.medium,
+                      }}
+                    >
+                      {STATUS_DISPLAY_LABELS[status]}: {displayCount}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Load more active button */}
             {activeTasksState.hasMore && (
@@ -243,39 +266,108 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
           onInitialize={handleInitialize}
         />
       ) : (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            gap: '16px',
-            justifyContent: 'center', // Center columns when they hit max-width
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            paddingBottom: '8px',
-            minHeight: 0, // Allow flex child to shrink below content size
-            WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-          }}
-        >
-          {statusColumns.map((status) => {
-            const statusState = tasksByStatus.get(status);
-            const columnTasks = statusState?.tasks || [];
-            // Only completed column has its own load more
-            const isCompleted = status === 'completed';
-            const completedState = columnStates.get('completed');
-            return (
-              <KanbanColumn
-                key={status}
-                status={STATUS_DISPLAY_LABELS[status]}
-                tasks={columnTasks}
-                total={isCompleted ? completedState?.total : undefined}
-                hasMore={isCompleted ? completedState?.hasMore : false}
-                isLoadingMore={isCompleted ? completedState?.isLoadingMore : false}
-                onLoadMore={isCompleted ? () => loadMore('completed') : undefined}
-                onTaskClick={handleTaskClick}
-              />
-            );
-          })}
-        </div>
+        <>
+          {/* Tab bar for narrow screens */}
+          {isNarrowView && (
+            <div
+              style={{
+                flexShrink: 0,
+                display: 'flex',
+                gap: '4px',
+                background: theme.colors.backgroundSecondary,
+                borderRadius: theme.radii[2],
+                padding: '4px',
+              }}
+            >
+              {statusColumns.map((status) => {
+                const isSelected = status === selectedTab;
+                const statusState = tasksByStatus.get(status);
+                const count = statusState?.count || 0;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setSelectedTab(status)}
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      border: 'none',
+                      borderRadius: theme.radii[1],
+                      background: isSelected ? theme.colors.primary : 'transparent',
+                      color: isSelected ? theme.colors.background : theme.colors.textSecondary,
+                      fontSize: theme.fontSizes[1],
+                      fontWeight: theme.fontWeights.medium,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    {STATUS_DISPLAY_LABELS[status]}
+                    <span
+                      style={{
+                        background: isSelected ? 'rgba(255,255,255,0.2)' : theme.colors.background,
+                        padding: '2px 6px',
+                        borderRadius: theme.radii[1],
+                        fontSize: theme.fontSizes[0],
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Columns scroll container */}
+          <div
+            style={{
+              flex: 1,
+              overflowX: isNarrowView ? 'hidden' : 'auto',
+              overflowY: 'hidden',
+              minHeight: 0, // Allow flex child to shrink below content size
+              WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+            }}
+          >
+            {/* Inner flex container for columns - uses margin auto for centering */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '16px',
+                height: '100%',
+                paddingBottom: '8px',
+                width: 'fit-content',
+                minWidth: '100%',
+                margin: '0 auto', // Center when columns don't fill width
+              }}
+            >
+              {statusColumns
+                .filter((status) => !isNarrowView || status === selectedTab)
+                .map((status) => {
+                  const statusState = tasksByStatus.get(status);
+                  const columnTasks = statusState?.tasks || [];
+                  // Only completed column has its own load more
+                  const isCompleted = status === 'completed';
+                  const completedState = columnStates.get('completed');
+                  return (
+                    <KanbanColumn
+                      key={status}
+                      status={STATUS_DISPLAY_LABELS[status]}
+                      tasks={columnTasks}
+                      total={isCompleted ? completedState?.total : undefined}
+                      hasMore={isCompleted ? completedState?.hasMore : false}
+                      isLoadingMore={isCompleted ? completedState?.isLoadingMore : false}
+                      onLoadMore={isCompleted ? () => loadMore('completed') : undefined}
+                      onTaskClick={handleTaskClick}
+                      fullWidth={isNarrowView}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

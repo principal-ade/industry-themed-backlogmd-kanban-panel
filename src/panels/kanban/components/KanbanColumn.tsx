@@ -14,6 +14,8 @@ interface KanbanColumnProps {
   /** Callback to load more tasks */
   onLoadMore?: () => void;
   onTaskClick?: (task: Task) => void;
+  /** Whether column should take full width (for narrow/mobile views) */
+  fullWidth?: boolean;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -24,6 +26,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   isLoadingMore = false,
   onLoadMore,
   onTaskClick,
+  fullWidth = false,
 }) => {
   const { theme } = useTheme();
 
@@ -46,8 +49,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
     <div
       style={{
         flex: '1 1 0', // Grow to fill available width equally
-        minWidth: '280px',
-        maxWidth: '500px', // Cap max width for readability
+        minWidth: fullWidth ? undefined : '280px',
+        maxWidth: fullWidth ? undefined : '500px', // Cap max width for readability
         height: '100%', // Fill parent height
         minHeight: 0, // Allow shrinking
         display: 'flex',
