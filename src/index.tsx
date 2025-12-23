@@ -1,5 +1,6 @@
 import { KanbanPanel } from './panels/KanbanPanel';
 import { TaskDetailPanel } from './panels/TaskDetailPanel';
+import { MilestonePanel } from './panels/MilestonePanel';
 import type { PanelDefinition, PanelContextValue } from './types';
 import { kanbanPanelTools, kanbanPanelToolsMetadata } from './tools';
 
@@ -61,6 +62,31 @@ export const panels: PanelDefinition[] = [
     onUnmount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('Task Detail Panel unmounting');
+    },
+  },
+  {
+    metadata: {
+      id: 'principal-ade.milestone-panel',
+      name: 'Milestones',
+      icon: '🎯',
+      version: '0.1.0',
+      author: 'Principal ADE',
+      description: 'View and manage Backlog.md milestones with progress tracking',
+      slices: ['fileTree'],
+    },
+    component: MilestonePanel,
+
+    onMount: async (context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log(
+        'Milestone Panel mounted',
+        context.currentScope.repository?.path
+      );
+    },
+
+    onUnmount: async (_context: PanelContextValue) => {
+      // eslint-disable-next-line no-console
+      console.log('Milestone Panel unmounting');
     },
   },
 ];

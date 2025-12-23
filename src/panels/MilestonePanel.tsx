@@ -1,0 +1,268 @@
+import React, { useState } from 'react';
+import { Target, AlertCircle, RefreshCw } from 'lucide-react';
+import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import type { PanelComponentProps } from '../types';
+import { useMilestoneData } from './milestone/hooks/useMilestoneData';
+import { MilestoneCard } from './milestone/components/MilestoneCard';
+import type { Task } from '@backlog-md/core';
+
+/**
+ * MilestonePanelContent - Internal component that uses theme
+ */
+const MilestonePanelContent: React.FC<PanelComponentProps> = ({
+  context,
+  actions,
+  events,
+}) => {
+  const { theme } = useTheme();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const {
+    milestones,
+    isLoading,
+    error,
+    isBacklogProject,
+    toggleMilestone,
+    refreshData,
+  } = useMilestoneData({
+    context,
+    actions,
+  });
+
+  const handleTaskClick = (task: Task) => {
+    // Emit task:selected event for other panels
+    if (events) {
+      events.emit({
+        type: 'task:selected',
+        source: 'milestone-panel',
+        timestamp: Date.now(),
+        payload: { taskId: task.id, task },
+      });
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Calculate totals
+  const totalMilestones = milestones.length;
+  const totalTasks = milestones.reduce((sum, m) => sum + m.milestone.tasks.length, 0);
+
+  return (
+    <div
+      style={{
+        padding: 'clamp(12px, 3vw, 20px)',
+        fontFamily: theme.fonts.body,
+        height: '100%',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        overflow: 'hidden',
+        backgroundColor: theme.colors.background,
+        color: theme.colors.text,
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Target size={24} color={theme.colors.primary} />
+          <h2
+            style={{
+              margin: 0,
+              fontSize: theme.fontSizes[4],
+              color: theme.colors.text,
+            }}
+          >
+            Milestones
+          </h2>
+        </div>
+
+        {isBacklogProject && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Stats */}
+            <span
+              style={{
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.textSecondary,
+                background: theme.colors.backgroundSecondary,
+                padding: '4px 10px',
+                borderRadius: theme.radii[1],
+              }}
+            >
+              {totalMilestones} milestone{totalMilestones !== 1 ? 's' : ''} · {totalTasks} task{totalTasks !== 1 ? 's' : ''}
+            </span>
+
+            {/* Refresh button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing || isLoading}
+              style={{
+                background: theme.colors.backgroundSecondary,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[1],
+                padding: '6px',
+                cursor: isRefreshing ? 'wait' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              title="Refresh milestones"
+            >
+              <RefreshCw
+                size={16}
+                color={theme.colors.textSecondary}
+                style={{
+                  animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+                }}
+              />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div
+          style={{
+            flexShrink: 0,
+            padding: '12px',
+            background: `${theme.colors.error}20`,
+            border: `1px solid ${theme.colors.error}`,
+            borderRadius: theme.radii[2],
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: theme.colors.error,
+            fontSize: theme.fontSizes[1],
+          }}
+        >
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Content */}
+      {isLoading ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: theme.colors.textSecondary,
+          }}
+        >
+          Loading milestones...
+        </div>
+      ) : !isBacklogProject ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            color: theme.colors.textSecondary,
+          }}
+        >
+          <Target size={48} color={theme.colors.border} />
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: theme.fontSizes[2] }}>
+              No Backlog.md project found
+            </p>
+            <p style={{ margin: '8px 0 0 0', fontSize: theme.fontSizes[1] }}>
+              Initialize a project from the Kanban Board panel
+            </p>
+          </div>
+        </div>
+      ) : milestones.length === 0 ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            color: theme.colors.textSecondary,
+          }}
+        >
+          <Target size={48} color={theme.colors.border} />
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: theme.fontSizes[2] }}>
+              No milestones yet
+            </p>
+            <p style={{ margin: '8px 0 0 0', fontSize: theme.fontSizes[1] }}>
+              Create milestones to organize your tasks into releases or sprints
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            paddingRight: '4px',
+            marginRight: '-4px',
+          }}
+        >
+          {milestones.map((milestoneState) => (
+            <MilestoneCard
+              key={milestoneState.milestone.id}
+              milestoneState={milestoneState}
+              onToggle={() => toggleMilestone(milestoneState.milestone.id)}
+              onTaskClick={handleTaskClick}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Spinner animation */}
+      <style>
+        {`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  );
+};
+
+/**
+ * MilestonePanel - A panel for viewing and managing Backlog.md milestones.
+ *
+ * Features:
+ * - List of milestones with progress bars
+ * - Expandable milestone cards with lazy-loaded tasks
+ * - Click tasks to view details in TaskDetailPanel
+ */
+export const MilestonePanel: React.FC<PanelComponentProps> = (props) => {
+  return (
+    <ThemeProvider>
+      <MilestonePanelContent {...props} />
+    </ThemeProvider>
+  );
+};
