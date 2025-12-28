@@ -1,8 +1,14 @@
 import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { Task } from '@backlog-md/core';
+import { TaskCard } from './TaskCard';
+import type { StatusColumn } from '../hooks/useKanbanData';
 
 interface KanbanColumnProps {
+  /** The column status key (used as droppable ID) */
+  columnId: StatusColumn;
+  /** Display label for the column */
   status: string;
   tasks: Task[];
   /** Total number of tasks in this column (for pagination) */
@@ -19,6 +25,7 @@ interface KanbanColumnProps {
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
+  columnId,
   status,
   tasks,
   total,
@@ -30,36 +37,33 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'high':
-        return theme.colors.error;
-      case 'medium':
-        return theme.colors.warning;
-      case 'low':
-        return theme.colors.info;
-      default:
-        return theme.colors.border;
-    }
-  };
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnId,
+  });
 
   const remaining = total !== undefined ? total - tasks.length : 0;
 
   return (
     <div
+      ref={setNodeRef}
       style={{
-        flex: '1 1 0', // Grow to fill available width equally
+        flex: fullWidth ? '1 1 auto' : '1 1 0', // Grow to fill available width equally
         minWidth: fullWidth ? undefined : '280px',
         maxWidth: fullWidth ? undefined : '500px', // Cap max width for readability
-        height: '100%', // Fill parent height
+        alignSelf: 'stretch', // Fill parent height via flexbox
         minHeight: 0, // Allow shrinking
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
-        background: theme.colors.backgroundSecondary,
+        background: isOver
+          ? `${theme.colors.primary}10`
+          : theme.colors.backgroundSecondary,
         borderRadius: theme.radii[2],
         padding: 'clamp(12px, 3vw, 16px)', // Responsive padding for mobile
-        border: `1px solid ${theme.colors.border}`,
+        border: isOver
+          ? `2px dashed ${theme.colors.primary}`
+          : `1px solid ${theme.colors.border}`,
+        transition: 'background-color 0.2s ease, border 0.2s ease',
       }}
     >
       {/* Column Header */}
@@ -110,121 +114,11 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         }}
       >
         {tasks.map((task) => (
-          <div
+          <TaskCard
             key={task.id}
-            onClick={() => onTaskClick?.(task)}
-            style={{
-              flexShrink: 0, // Prevent card from shrinking
-              background: theme.colors.surface,
-              borderRadius: theme.radii[2],
-              padding: '12px',
-              border: `1px solid ${theme.colors.border}`,
-              borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
-              cursor: onTaskClick ? 'pointer' : 'default',
-              transition: 'all 0.2s ease',
-              minHeight: '44px', // Minimum touch target size for mobile
-            }}
-            onMouseEnter={(e) => {
-              if (onTaskClick) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = `0 4px 8px ${theme.colors.border}`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (onTaskClick) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }
-            }}
-          >
-            {/* Task Title */}
-            <h4
-              style={{
-                margin: '0 0 8px 0',
-                fontSize: theme.fontSizes[2],
-                color: theme.colors.text,
-                fontWeight: theme.fontWeights.medium,
-              }}
-            >
-              {task.title}
-            </h4>
-
-            {/* Task Description */}
-            {task.description && (
-              <p
-                style={{
-                  margin: '0 0 8px 0',
-                  fontSize: theme.fontSizes[1],
-                  color: theme.colors.textSecondary,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  lineHeight: '1.4',
-                }}
-              >
-                {task.description}
-              </p>
-            )}
-
-            {/* Task Labels */}
-            {task.labels && task.labels.length > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '4px',
-                  flexWrap: 'wrap',
-                  marginBottom: '8px',
-                }}
-              >
-                {task.labels.map((label) => (
-                  <span
-                    key={label}
-                    style={{
-                      fontSize: theme.fontSizes[0],
-                      color: theme.colors.primary,
-                      background: `${theme.colors.primary}20`,
-                      padding: '2px 8px',
-                      borderRadius: theme.radii[1],
-                      fontWeight: theme.fontWeights.medium,
-                    }}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Task Footer */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: theme.fontSizes[0],
-                color: theme.colors.textMuted,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: theme.fonts.monospace,
-                }}
-              >
-                {task.id}
-              </span>
-              {task.assignee && task.assignee.length > 0 && (
-                <span
-                  style={{
-                    color: theme.colors.textSecondary,
-                  }}
-                >
-                  {task.assignee.length} assignee
-                  {task.assignee.length !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          </div>
+            task={task}
+            onClick={onTaskClick}
+          />
         ))}
 
         {/* Load More Button */}

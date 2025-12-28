@@ -1,4 +1,15 @@
 import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  MeasuringStrategy,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 import { Kanban, AlertCircle } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
@@ -8,6 +19,7 @@ import {
   type StatusColumn,
 } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
+import { TaskCard } from './kanban/components/TaskCard';
 import { EmptyState } from './kanban/components/EmptyState';
 import { Core, type Task } from '@backlog-md/core';
 
@@ -24,6 +36,27 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
   const [selectedTab, setSelectedTab] = useState<StatusColumn>('todo');
   const [isNarrowView, setIsNarrowView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Drag-and-drop state
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Configure sensors for drag detection
+  // PointerSensor requires a small drag distance before activating
+  // to allow clicks to work properly
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement before drag starts
+      },
+    })
+  );
+
+  // Measuring configuration to prevent layout shifts during drag
+  const measuringConfig = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  };
 
   // Detect narrow viewport using ResizeObserver
   useLayoutEffect(() => {
@@ -51,12 +84,51 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     error,
     isBacklogProject,
     refreshData,
+    moveTaskOptimistic,
+    getTaskById,
   } = useKanbanData({
     context,
     actions,
     tasksLimit: 20,
     completedLimit: 5,
   });
+
+  // Drag event handlers
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    const task = getTaskById(active.id as string);
+    if (task) {
+      setActiveTask(task);
+    }
+  }, [getTaskById]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const targetColumn = over.id as StatusColumn;
+
+    // Find current column for the task
+    const task = getTaskById(taskId);
+    if (!task) return;
+
+    // Determine current column from task status
+    const statusToColumn: Record<string, StatusColumn> = {
+      'To Do': 'todo',
+      'In Progress': 'in-progress',
+      'Done': 'completed',
+    };
+    const currentColumn = statusToColumn[task.status] || 'todo';
+
+    // Only move if dropping in a different column
+    if (currentColumn !== targetColumn) {
+      moveTaskOptimistic(taskId, targetColumn);
+    }
+  }, [getTaskById, moveTaskOptimistic]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -266,9 +338,24 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
           onInitialize={handleInitialize}
         />
       ) : (
-        <>
-          {/* Tab bar for narrow screens */}
-          {isNarrowView && (
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          measuring={measuringConfig}
+        >
+          {/* Flex wrapper to maintain layout - DndContext is just a provider */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+              gap: '16px',
+            }}
+          >
+            {/* Tab bar for narrow screens */}
+            {isNarrowView && (
             <div
               style={{
                 flexShrink: 0,
@@ -324,7 +411,8 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
           {/* Columns scroll container */}
           <div
             style={{
-              flex: 1,
+              flex: '1 1 0',
+              display: 'flex',
               overflowX: isNarrowView ? 'hidden' : 'auto',
               overflowY: 'hidden',
               minHeight: 0, // Allow flex child to shrink below content size
@@ -336,11 +424,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
               style={{
                 display: 'flex',
                 gap: '16px',
-                height: '100%',
+                flex: '1 0 auto',
                 paddingBottom: '8px',
-                width: 'fit-content',
                 minWidth: '100%',
-                margin: '0 auto', // Center when columns don't fill width
+                alignItems: 'stretch',
               }}
             >
               {statusColumns
@@ -354,6 +441,7 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
                   return (
                     <KanbanColumn
                       key={status}
+                      columnId={status}
                       status={STATUS_DISPLAY_LABELS[status]}
                       tasks={columnTasks}
                       total={isCompleted ? completedState?.total : undefined}
@@ -367,7 +455,24 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
                 })}
             </div>
           </div>
-        </>
+          </div>
+
+          {/* Drag overlay - rendered in portal to avoid layout shifts */}
+          {typeof document !== 'undefined' &&
+            createPortal(
+              <DragOverlay
+                dropAnimation={{
+                  duration: 200,
+                  easing: 'ease',
+                }}
+              >
+                {activeTask ? (
+                  <TaskCard task={activeTask} isDragOverlay />
+                ) : null}
+              </DragOverlay>,
+              document.body
+            )}
+        </DndContext>
       )}
     </div>
   );

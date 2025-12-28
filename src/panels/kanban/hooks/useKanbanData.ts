@@ -31,6 +31,13 @@ const STATUS_TO_COLUMN: Record<string, StatusColumn> = {
   'Done': 'completed',
 };
 
+/** Map StatusColumn keys back to task status field values */
+const COLUMN_TO_STATUS: Record<StatusColumn, string> = {
+  'todo': 'To Do',
+  'in-progress': 'In Progress',
+  'completed': 'Done',
+};
+
 /** Display labels for source columns (legacy) */
 export const SOURCE_DISPLAY_LABELS: Record<SourceColumn, string> = {
   tasks: 'Active',
@@ -73,6 +80,10 @@ export interface UseKanbanDataResult {
   activeTasksState: ActiveTasksState;
   /** Load more active tasks */
   loadMoreActive: () => Promise<void>;
+  /** Move task to a new status column (optimistic update - no persistence) */
+  moveTaskOptimistic: (taskId: string, toColumn: StatusColumn) => void;
+  /** Find a task by ID */
+  getTaskById: (taskId: string) => Task | undefined;
 }
 
 interface UseKanbanDataOptions {
@@ -417,7 +428,7 @@ export function useKanbanData(
     await loadBacklogData();
   }, [loadBacklogData]);
 
-  // Update task status (not yet implemented)
+  // Update task status (not yet implemented - requires persistence layer)
   const updateTaskStatus = useCallback(
     async (_taskId: string, _newStatus: string) => {
       setError(null);
@@ -427,6 +438,83 @@ export function useKanbanData(
       setError('Task editing is not yet supported');
     },
     []
+  );
+
+  // Move task to a new column (optimistic update - no persistence)
+  const moveTaskOptimistic = useCallback(
+    (taskId: string, toColumn: StatusColumn) => {
+      const newStatus = COLUMN_TO_STATUS[toColumn];
+      const isMovingToCompleted = toColumn === 'completed';
+      const isMovingFromCompleted = !isMovingToCompleted;
+
+      // Update tasksBySource (the source of truth for UI)
+      setTasksBySource((prev) => {
+        const newMap = new Map(prev);
+
+        // Find the task in either source
+        const activeTasks = [...(newMap.get('tasks') || [])];
+        const completedTasks = [...(newMap.get('completed') || [])];
+
+        let taskToMove: Task | undefined;
+        let fromSource: SourceColumn | undefined;
+
+        // Check active tasks
+        const activeIndex = activeTasks.findIndex(t => t.id === taskId);
+        if (activeIndex !== -1) {
+          taskToMove = activeTasks[activeIndex];
+          fromSource = 'tasks';
+          activeTasks.splice(activeIndex, 1);
+        }
+
+        // Check completed tasks
+        if (!taskToMove) {
+          const completedIndex = completedTasks.findIndex(t => t.id === taskId);
+          if (completedIndex !== -1) {
+            taskToMove = completedTasks[completedIndex];
+            fromSource = 'completed';
+            completedTasks.splice(completedIndex, 1);
+          }
+        }
+
+        if (!taskToMove) {
+          console.warn(`[useKanbanData] Task ${taskId} not found for move`);
+          return prev;
+        }
+
+        // Create updated task with new status
+        const updatedTask: Task = { ...taskToMove, status: newStatus };
+
+        // Add to appropriate source
+        if (isMovingToCompleted) {
+          // Add to beginning of completed (most recent first)
+          completedTasks.unshift(updatedTask);
+        } else {
+          // Add to end of active tasks
+          activeTasks.push(updatedTask);
+        }
+
+        newMap.set('tasks', activeTasks);
+        newMap.set('completed', completedTasks);
+
+        console.log(`[useKanbanData] Moved task ${taskId} to ${toColumn} (${newStatus})`);
+
+        return newMap;
+      });
+
+      // Also update the flat tasks array for consistency
+      setTasks((prev) =>
+        prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t)
+      );
+    },
+    []
+  );
+
+  // Find a task by ID
+  const getTaskById = useCallback(
+    (taskId: string): Task | undefined => {
+      return tasks.find(t => t.id === taskId);
+    },
+    [tasks]
   );
 
   // Status columns for 3-column view
@@ -483,5 +571,8 @@ export function useKanbanData(
     tasksByStatus,
     activeTasksState,
     loadMoreActive,
+    // Drag-and-drop support
+    moveTaskOptimistic,
+    getTaskById,
   };
 }
