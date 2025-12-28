@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Kanban, AlertCircle } from 'lucide-react';
+import { Kanban, AlertCircle, Plus } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import {
@@ -21,7 +21,8 @@ import {
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { TaskCard } from './kanban/components/TaskCard';
 import { EmptyState } from './kanban/components/EmptyState';
-import { Core, type Task } from '@backlog-md/core';
+import { TaskModal } from './kanban/components/TaskModal';
+import { Core, type Task, type TaskCreateInput, type TaskUpdateInput } from '@backlog-md/core';
 
 /**
  * KanbanPanelContent - Internal component that uses theme
@@ -39,6 +40,10 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
 
   // Drag-and-drop state
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Task modal state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
   // Configure sensors for drag detection
   // PointerSensor requires a small drag distance before activating
@@ -86,6 +91,8 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     refreshData,
     moveTaskOptimistic,
     getTaskById,
+    canWrite,
+    core,
   } = useKanbanData({
     context,
     actions,
@@ -210,6 +217,42 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
     await refreshData();
   }, [fileSystem, context.currentScope.repository, refreshData]);
 
+  // Task modal handlers
+  const handleOpenNewTask = useCallback(() => {
+    setEditingTask(undefined);
+    setIsTaskModalOpen(true);
+  }, []);
+
+  const handleEditTask = useCallback((task: Task) => {
+    setEditingTask(task);
+    setIsTaskModalOpen(true);
+  }, []);
+
+  const handleCloseTaskModal = useCallback(() => {
+    setIsTaskModalOpen(false);
+    setEditingTask(undefined);
+  }, []);
+
+  const handleSaveTask = useCallback(async (input: TaskCreateInput | TaskUpdateInput) => {
+    if (!core) {
+      throw new Error('Backlog not loaded');
+    }
+
+    if (editingTask) {
+      // Update existing task
+      await core.updateTask(editingTask.id, input as TaskUpdateInput);
+    } else {
+      // Create new task
+      await core.createTask(input as TaskCreateInput);
+    }
+
+    // Refresh to show the new/updated task
+    await refreshData();
+  }, [core, editingTask, refreshData]);
+
+  // Get available statuses and milestones for task modal
+  const availableStatuses = ['To Do', 'In Progress', 'Done'];
+
   return (
     <div
       ref={containerRef}
@@ -283,15 +326,39 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
               </div>
             )}
 
+            {/* Add Task button - only shown when write operations are available */}
+            {canWrite && (
+              <button
+                onClick={handleOpenNewTask}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: theme.colors.primary,
+                  color: theme.colors.background,
+                  border: 'none',
+                  borderRadius: theme.radii[2],
+                  padding: '6px 12px',
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                <Plus size={14} />
+                Add Task
+              </button>
+            )}
+
             {/* Load more active button */}
             {activeTasksState.hasMore && (
               <button
                 onClick={loadMoreActive}
                 disabled={activeTasksState.isLoadingMore}
                 style={{
-                  background: theme.colors.primary,
-                  color: theme.colors.background,
-                  border: 'none',
+                  background: theme.colors.backgroundSecondary,
+                  color: theme.colors.text,
+                  border: `1px solid ${theme.colors.border}`,
                   borderRadius: theme.radii[2],
                   padding: '6px 12px',
                   fontSize: theme.fontSizes[1],
@@ -474,6 +541,16 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
             )}
         </DndContext>
       )}
+
+      {/* Task Modal */}
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        onClose={handleCloseTaskModal}
+        onSave={handleSaveTask}
+        task={editingTask}
+        defaultStatus="To Do"
+        availableStatuses={availableStatuses}
+      />
     </div>
   );
 };

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Target, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Target, AlertCircle, RefreshCw, Plus } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { MilestoneCard } from './milestone/components/MilestoneCard';
-import type { Task } from '@backlog-md/core';
+import { MilestoneModal } from './milestone/components/MilestoneModal';
+import type { Task, Milestone, MilestoneCreateInput, MilestoneUpdateInput } from '@backlog-md/core';
 
 /**
  * MilestonePanelContent - Internal component that uses theme
@@ -17,6 +18,10 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
   const { theme } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Milestone modal state
+  const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | undefined>(undefined);
+
   const {
     milestones,
     isLoading,
@@ -24,6 +29,8 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
     isBacklogProject,
     toggleMilestone,
     refreshData,
+    canWrite,
+    core,
   } = useMilestoneData({
     context,
     actions,
@@ -49,6 +56,39 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
       setIsRefreshing(false);
     }
   };
+
+  // Milestone modal handlers
+  const handleOpenNewMilestone = useCallback(() => {
+    setEditingMilestone(undefined);
+    setIsMilestoneModalOpen(true);
+  }, []);
+
+  const handleEditMilestone = useCallback((milestone: Milestone) => {
+    setEditingMilestone(milestone);
+    setIsMilestoneModalOpen(true);
+  }, []);
+
+  const handleCloseMilestoneModal = useCallback(() => {
+    setIsMilestoneModalOpen(false);
+    setEditingMilestone(undefined);
+  }, []);
+
+  const handleSaveMilestone = useCallback(async (input: MilestoneCreateInput | MilestoneUpdateInput) => {
+    if (!core) {
+      throw new Error('Backlog not loaded');
+    }
+
+    if (editingMilestone) {
+      // Update existing milestone
+      await core.updateMilestone(editingMilestone.id, input as MilestoneUpdateInput);
+    } else {
+      // Create new milestone
+      await core.createMilestone(input as MilestoneCreateInput);
+    }
+
+    // Refresh to show the new/updated milestone
+    await refreshData();
+  }, [core, editingMilestone, refreshData]);
 
   // Calculate totals
   const totalMilestones = milestones.length;
@@ -107,6 +147,30 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
             >
               {totalMilestones} milestone{totalMilestones !== 1 ? 's' : ''} · {totalTasks} task{totalTasks !== 1 ? 's' : ''}
             </span>
+
+            {/* Add Milestone button - only shown when write operations are available */}
+            {canWrite && (
+              <button
+                onClick={handleOpenNewMilestone}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: theme.colors.primary,
+                  color: theme.colors.background,
+                  border: 'none',
+                  borderRadius: theme.radii[2],
+                  padding: '6px 12px',
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                <Plus size={14} />
+                Add Milestone
+              </button>
+            )}
 
             {/* Refresh button */}
             <button
@@ -247,6 +311,14 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
           }
         `}
       </style>
+
+      {/* Milestone Modal */}
+      <MilestoneModal
+        isOpen={isMilestoneModalOpen}
+        onClose={handleCloseMilestoneModal}
+        onSave={handleSaveMilestone}
+        milestone={editingMilestone}
+      />
     </div>
   );
 };
