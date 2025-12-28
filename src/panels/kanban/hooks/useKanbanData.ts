@@ -84,6 +84,10 @@ export interface UseKanbanDataResult {
   moveTaskOptimistic: (taskId: string, toColumn: StatusColumn) => void;
   /** Find a task by ID */
   getTaskById: (taskId: string) => Task | undefined;
+  /** Whether write operations are available */
+  canWrite: boolean;
+  /** Core instance for advanced operations (create/update tasks) */
+  core: Core | null;
 }
 
 interface UseKanbanDataOptions {
@@ -121,6 +125,7 @@ export function useKanbanData(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBacklogProject, setIsBacklogProject] = useState(false);
+  const [canWrite, setCanWrite] = useState(false);
   const [tasksBySource, setTasksBySource] = useState<Map<string, Task[]>>(
     new Map()
   );
@@ -128,7 +133,7 @@ export function useKanbanData(
     new Map()
   );
 
-  // Keep reference to Core instance for loadMore
+  // Keep reference to Core instance for loadMore and write operations
   const coreRef = useRef<Core | null>(null);
 
   // Keep track of active file fetches to avoid duplicate fetches
@@ -235,9 +240,11 @@ export function useKanbanData(
       const filePaths = files.map((f: { path: string }) => f.path);
 
       // Create FileSystemAdapter for the panel
+      // Pass host file system for write operations (if available)
       const fs = new PanelFileSystemAdapter({
         fetchFile: fetchFileContent,
         filePaths,
+        hostFileSystem: context.adapters?.fileSystem,
       });
 
       // Create Core instance
@@ -260,6 +267,7 @@ export function useKanbanData(
 
       console.log('[useKanbanData] Loading Backlog.md data with lazy loading...');
       setIsBacklogProject(true);
+      setCanWrite(fs.canWrite);
 
       // Initialize with lazy loading - only reads config, builds index from paths
       await core.initializeLazy(filePaths);
@@ -428,16 +436,36 @@ export function useKanbanData(
     await loadBacklogData();
   }, [loadBacklogData]);
 
-  // Update task status (not yet implemented - requires persistence layer)
+  // Update task status with persistence
   const updateTaskStatus = useCallback(
-    async (_taskId: string, _newStatus: string) => {
+    async (taskId: string, newStatus: string) => {
+      const core = coreRef.current;
+      if (!core) {
+        console.warn('[useKanbanData] Core not available for updateTaskStatus');
+        setError('Cannot update task - backlog not loaded');
+        return;
+      }
+
       setError(null);
-      console.warn(
-        '[useKanbanData] Task status updates not yet implemented for Backlog.md'
-      );
-      setError('Task editing is not yet supported');
+
+      try {
+        console.log(`[useKanbanData] Updating task ${taskId} status to "${newStatus}"`);
+        const updatedTask = await core.updateTask(taskId, { status: newStatus });
+
+        if (!updatedTask) {
+          throw new Error(`Task ${taskId} not found`);
+        }
+
+        console.log(`[useKanbanData] Task ${taskId} updated successfully`);
+
+        // Refresh data to reflect changes
+        await loadBacklogData();
+      } catch (err) {
+        console.error('[useKanbanData] Failed to update task status:', err);
+        setError(err instanceof Error ? err.message : 'Failed to update task');
+      }
     },
-    []
+    [loadBacklogData]
   );
 
   // Move task to a new column (optimistic update - no persistence)
@@ -574,5 +602,8 @@ export function useKanbanData(
     // Drag-and-drop support
     moveTaskOptimistic,
     getTaskById,
+    // Write support
+    canWrite,
+    core: coreRef.current,
   };
 }

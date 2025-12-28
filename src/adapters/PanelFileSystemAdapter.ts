@@ -3,15 +3,30 @@
  *
  * Implements FileSystemAdapter interface by wrapping the panel framework's
  * file access APIs (fileTree slice and openFile action).
+ *
+ * For read operations: Uses the fileTree slice and fetchFile function
+ * For write operations: Delegates to the host's fileSystem adapter (if available)
  */
 
 import type { FileSystemAdapter } from '@backlog-md/core';
+
+/**
+ * Host file system adapter interface (subset of what web-ade provides)
+ * Uses void | Promise<void> to match the panel-framework-core FileSystemAdapter
+ */
+export interface HostFileSystemAdapter {
+  writeFile?: (path: string, content: string) => void | Promise<void>;
+  createDir?: (path: string) => void | Promise<void>;
+  deleteFile?: (path: string) => void | Promise<void>;
+}
 
 export interface PanelFileAccess {
   /** Function to fetch file content by path */
   fetchFile: (path: string) => Promise<string>;
   /** List of all file paths in the repository */
   filePaths: string[];
+  /** Optional host file system adapter for write operations */
+  hostFileSystem?: HostFileSystemAdapter;
 }
 
 /**
@@ -24,10 +39,12 @@ export class PanelFileSystemAdapter implements FileSystemAdapter {
   private readonly filePaths: Set<string>;
   private readonly directories: Set<string>;
   private readonly fetchFile: (path: string) => Promise<string>;
+  private readonly hostFileSystem?: HostFileSystemAdapter;
 
   constructor(access: PanelFileAccess) {
     this.fetchFile = access.fetchFile;
     this.filePaths = new Set(access.filePaths);
+    this.hostFileSystem = access.hostFileSystem;
 
     // Build directory set from file paths
     this.directories = new Set<string>();
@@ -40,6 +57,13 @@ export class PanelFileSystemAdapter implements FileSystemAdapter {
     }
     // Root directory
     this.directories.add('');
+  }
+
+  /**
+   * Check if write operations are available
+   */
+  get canWrite(): boolean {
+    return !!(this.hostFileSystem?.writeFile && this.hostFileSystem?.createDir);
   }
 
   async exists(path: string): Promise<boolean> {
@@ -55,16 +79,39 @@ export class PanelFileSystemAdapter implements FileSystemAdapter {
     return this.fetchFile(normalized);
   }
 
-  async writeFile(_path: string, _content: string): Promise<void> {
-    throw new Error('Write operations not supported in panel context');
+  async writeFile(path: string, content: string): Promise<void> {
+    if (!this.hostFileSystem?.writeFile) {
+      throw new Error('Write operations not available - host adapter not configured');
+    }
+    const normalized = this.normalizePath(path);
+    await this.hostFileSystem.writeFile(normalized, content);
+    // Add to local cache so subsequent reads work
+    this.filePaths.add(normalized);
+    // Add parent directories
+    const parts = normalized.split('/');
+    for (let i = 1; i < parts.length; i++) {
+      this.directories.add(parts.slice(0, i).join('/'));
+    }
   }
 
-  async deleteFile(_path: string): Promise<void> {
-    throw new Error('Delete operations not supported in panel context');
+  async deleteFile(path: string): Promise<void> {
+    if (!this.hostFileSystem?.deleteFile) {
+      throw new Error('Delete operations not available - host adapter not configured');
+    }
+    const normalized = this.normalizePath(path);
+    await this.hostFileSystem.deleteFile(normalized);
+    // Remove from local cache
+    this.filePaths.delete(normalized);
   }
 
-  async createDir(_path: string, _options?: { recursive?: boolean }): Promise<void> {
-    throw new Error('Directory creation not supported in panel context');
+  async createDir(path: string, _options?: { recursive?: boolean }): Promise<void> {
+    if (!this.hostFileSystem?.createDir) {
+      throw new Error('Directory creation not available - host adapter not configured');
+    }
+    const normalized = this.normalizePath(path);
+    await this.hostFileSystem.createDir(normalized);
+    // Add to local cache
+    this.directories.add(normalized);
   }
 
   async readDir(path: string): Promise<string[]> {

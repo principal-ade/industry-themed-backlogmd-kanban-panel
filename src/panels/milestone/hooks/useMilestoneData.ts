@@ -24,6 +24,10 @@ export interface UseMilestoneDataResult {
   toggleMilestone: (milestoneId: string) => Promise<void>;
   /** Refresh all data */
   refreshData: () => Promise<void>;
+  /** Whether write operations are available */
+  canWrite: boolean;
+  /** Core instance for advanced operations */
+  core: Core | null;
 }
 
 interface UseMilestoneDataOptions {
@@ -46,8 +50,9 @@ export function useMilestoneData(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBacklogProject, setIsBacklogProject] = useState(false);
+  const [canWrite, setCanWrite] = useState(false);
 
-  // Keep reference to Core instance for lazy loading
+  // Keep reference to Core instance for lazy loading and write operations
   const coreRef = useRef<Core | null>(null);
 
   // Track active file fetches
@@ -143,9 +148,11 @@ export function useMilestoneData(
       const files = fileTreeSlice.data.allFiles;
       const filePaths = files.map((f: { path: string }) => f.path);
 
+      // Create FileSystemAdapter with host file system for write operations
       const fs = new PanelFileSystemAdapter({
         fetchFile: fetchFileContent,
         filePaths,
+        hostFileSystem: context.adapters?.fileSystem,
       });
 
       const core = new Core({
@@ -164,6 +171,7 @@ export function useMilestoneData(
 
       console.log('[useMilestoneData] Loading milestone data...');
       setIsBacklogProject(true);
+      setCanWrite(fs.canWrite);
 
       // Initialize Core (need full init to access milestones)
       await core.initializeLazy(filePaths);
@@ -311,5 +319,8 @@ export function useMilestoneData(
     collapseMilestone,
     toggleMilestone,
     refreshData,
+    // Write support
+    canWrite,
+    core: coreRef.current,
   };
 }
