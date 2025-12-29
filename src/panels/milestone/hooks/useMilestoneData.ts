@@ -83,23 +83,12 @@ export function useMilestoneData(
     activeFilePathRef.current = path;
 
     try {
-      if (currentActions.openFile) {
-        const result = await currentActions.openFile(path);
-        if (typeof result === 'string') {
-          return result;
-        }
-      } else {
-        throw new Error('openFile action not available');
+      // Use adapters.readFile (the canonical way to read file content)
+      if (currentContext.adapters?.readFile) {
+        return await currentContext.adapters.readFile(path);
       }
 
-      const activeFileSlice = currentContext.getRepositorySlice('active-file');
-      const fileData = activeFileSlice?.data as { content?: string };
-
-      if (!fileData?.content) {
-        throw new Error(`Failed to fetch content for ${path}`);
-      }
-
-      return fileData.content;
+      throw new Error('No file reading capability available (adapters.readFile not configured)');
     } finally {
       activeFilePathRef.current = null;
     }
