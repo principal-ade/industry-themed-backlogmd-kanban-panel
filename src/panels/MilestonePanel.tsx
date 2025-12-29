@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Target, AlertCircle, RefreshCw, Plus } from 'lucide-react';
+import { Milestone as MilestoneIcon, AlertCircle, RefreshCw, Plus } from 'lucide-react';
 import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
@@ -90,10 +90,6 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
     await refreshData();
   }, [core, editingMilestone, refreshData]);
 
-  // Calculate totals
-  const totalMilestones = milestones.length;
-  const totalTasks = milestones.reduce((sum, m) => sum + m.milestone.tasks.length, 0);
-
   return (
     <div
       style={{
@@ -121,7 +117,7 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Target size={24} color={theme.colors.primary} />
+          <MilestoneIcon size={24} color={theme.colors.primary} />
           <h2
             style={{
               margin: 0,
@@ -135,19 +131,6 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
 
         {isBacklogProject && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Stats */}
-            <span
-              style={{
-                fontSize: theme.fontSizes[1],
-                color: theme.colors.textSecondary,
-                background: theme.colors.backgroundSecondary,
-                padding: '4px 10px',
-                borderRadius: theme.radii[1],
-              }}
-            >
-              {totalMilestones} milestone{totalMilestones !== 1 ? 's' : ''} · {totalTasks} task{totalTasks !== 1 ? 's' : ''}
-            </span>
-
             {/* Add Milestone button - only shown when write operations are available */}
             {canWrite && (
               <button
@@ -247,7 +230,7 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
             color: theme.colors.textSecondary,
           }}
         >
-          <Target size={48} color={theme.colors.border} />
+          <MilestoneIcon size={48} color={theme.colors.border} />
           <div style={{ textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: theme.fontSizes[2] }}>
               No Backlog.md project found
@@ -269,7 +252,7 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
             color: theme.colors.textSecondary,
           }}
         >
-          <Target size={48} color={theme.colors.border} />
+          <MilestoneIcon size={48} color={theme.colors.border} />
           <div style={{ textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: theme.fontSizes[2] }}>
               No milestones yet
