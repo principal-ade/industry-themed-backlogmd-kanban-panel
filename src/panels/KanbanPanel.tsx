@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { Kanban, AlertCircle, Plus } from 'lucide-react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import {
   useKanbanData,
@@ -25,9 +25,14 @@ import { TaskModal } from './kanban/components/TaskModal';
 import { Core, type Task, type TaskCreateInput, type TaskUpdateInput } from '@backlog-md/core';
 
 /**
- * KanbanPanelContent - Internal component that uses theme
+ * KanbanPanel - A kanban board panel for visualizing Backlog.md tasks.
+ *
+ * This panel shows:
+ * - Kanban board with configurable status columns
+ * - Task cards with priority indicators
+ * - Labels and assignee information
  */
-const KanbanPanelContent: React.FC<PanelComponentProps> = ({
+export const KanbanPanel: React.FC<PanelComponentProps> = ({
   context,
   actions,
   events,
@@ -552,22 +557,5 @@ const KanbanPanelContent: React.FC<PanelComponentProps> = ({
         availableStatuses={availableStatuses}
       />
     </div>
-  );
-};
-
-/**
- * KanbanPanel - A kanban board panel for visualizing Backlog.md tasks.
- *
- * This panel shows:
- * - Kanban board with configurable status columns
- * - Task cards with priority indicators
- * - Labels and assignee information
- * - Mock data for testing (to be replaced with real data)
- */
-export const KanbanPanel: React.FC<PanelComponentProps> = (props) => {
-  return (
-    <ThemeProvider>
-      <KanbanPanelContent {...props} />
-    </ThemeProvider>
   );
 };

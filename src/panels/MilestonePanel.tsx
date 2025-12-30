@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Milestone as MilestoneIcon, AlertCircle, RefreshCw, Plus } from 'lucide-react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { MilestoneCard } from './milestone/components/MilestoneCard';
@@ -8,9 +8,14 @@ import { MilestoneModal } from './milestone/components/MilestoneModal';
 import type { Task, Milestone, MilestoneCreateInput, MilestoneUpdateInput } from '@backlog-md/core';
 
 /**
- * MilestonePanelContent - Internal component that uses theme
+ * MilestonePanel - A panel for viewing and managing Backlog.md milestones.
+ *
+ * Features:
+ * - List of milestones with progress bars
+ * - Expandable milestone cards with lazy-loaded tasks
+ * - Click tasks to view details in TaskDetailPanel
  */
-const MilestonePanelContent: React.FC<PanelComponentProps> = ({
+export const MilestonePanel: React.FC<PanelComponentProps> = ({
   context,
   actions,
   events,
@@ -303,21 +308,5 @@ const MilestonePanelContent: React.FC<PanelComponentProps> = ({
         milestone={editingMilestone}
       />
     </div>
-  );
-};
-
-/**
- * MilestonePanel - A panel for viewing and managing Backlog.md milestones.
- *
- * Features:
- * - List of milestones with progress bars
- * - Expandable milestone cards with lazy-loaded tasks
- * - Click tasks to view details in TaskDetailPanel
- */
-export const MilestonePanel: React.FC<PanelComponentProps> = (props) => {
-  return (
-    <ThemeProvider>
-      <MilestonePanelContent {...props} />
-    </ThemeProvider>
   );
 };

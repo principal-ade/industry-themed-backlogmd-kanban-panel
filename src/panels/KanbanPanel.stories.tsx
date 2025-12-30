@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { ThemeProvider } from '@principal-ade/industry-theme';
 import { KanbanPanel } from './KanbanPanel';
 import {
   createMockContext,
@@ -17,11 +18,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div
-        style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
-      >
-        <Story />
-      </div>
+      <ThemeProvider>
+        <div
+          style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+        >
+          <Story />
+        </div>
+      </ThemeProvider>
     ),
   ],
   tags: ['autodocs'],

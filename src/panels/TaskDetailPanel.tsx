@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Tag, User, Calendar, Flag, GitBranch, ArrowLeft } from 'lucide-react';
-import { ThemeProvider, useTheme } from '@principal-ade/industry-theme';
+import { useTheme } from '@principal-ade/industry-theme';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
@@ -146,9 +146,16 @@ const MetadataRow: React.FC<{
 };
 
 /**
- * TaskDetailPanelContent - Internal component that uses theme
+ * TaskDetailPanel - A panel for viewing task details from Backlog.md
+ *
+ * This panel shows:
+ * - Task header with title, status, and metadata
+ * - Frontmatter fields (priority, assignee, labels, dates)
+ * - Markdown body content (description, acceptance criteria, etc.)
+ *
+ * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
  */
-const TaskDetailPanelContent: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
+export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -419,23 +426,5 @@ const TaskDetailPanelContent: React.FC<PanelComponentProps> = ({ context, action
         )}
       </div>
     </div>
-  );
-};
-
-/**
- * TaskDetailPanel - A panel for viewing task details from Backlog.md
- *
- * This panel shows:
- * - Task header with title, status, and metadata
- * - Frontmatter fields (priority, assignee, labels, dates)
- * - Markdown body content (description, acceptance criteria, etc.)
- *
- * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
- */
-export const TaskDetailPanel: React.FC<PanelComponentProps> = (props) => {
-  return (
-    <ThemeProvider>
-      <TaskDetailPanelContent {...props} />
-    </ThemeProvider>
   );
 };
