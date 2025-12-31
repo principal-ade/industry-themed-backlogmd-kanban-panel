@@ -145,7 +145,7 @@ export const MilestonePanel: React.FC<PanelComponentProps> = ({
                   alignItems: 'center',
                   gap: '6px',
                   background: theme.colors.primary,
-                  color: theme.colors.background,
+                  color: theme.colors.textOnPrimary,
                   border: 'none',
                   borderRadius: theme.radii[2],
                   padding: '6px 12px',

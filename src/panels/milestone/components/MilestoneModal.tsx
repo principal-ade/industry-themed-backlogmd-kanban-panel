@@ -284,7 +284,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
                 border: 'none',
                 borderRadius: theme.radii[2],
                 backgroundColor: theme.colors.primary,
-                color: '#fff',
+                color: theme.colors.textOnPrimary,
                 cursor: isSaving ? 'wait' : 'pointer',
                 opacity: isSaving ? 0.7 : 1,
               }}
