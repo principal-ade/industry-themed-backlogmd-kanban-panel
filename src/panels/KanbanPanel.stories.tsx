@@ -65,31 +65,26 @@ const createBacklogMocks = () => {
   const mockTasks = generateMockTasks();
   const fileTreeSlice = createBacklogFileTreeSlice();
 
-  const mockConfigContent = `project_name: My Kanban Project
-statuses:
-  - To Do
-  - In Progress
-  - Done
-default_status: To Do`;
+  const mockConfigContent = `project_name: "My Kanban Project"
+statuses: ["To Do", "In Progress", "Done"]
+default_status: "To Do"`;
 
   const createTaskFileContent = (task: (typeof mockTasks)[0]) =>
-    `
----
+    `---
 id: ${task.id}
 title: ${task.title}
 status: ${task.status}
-${task.assignee && task.assignee.length > 0 ? `assignee: [${task.assignee.map((a) => `"${a}"`).join(', ')}]` : ''}
+${task.assignee && task.assignee.length > 0 ? `assignee: [${task.assignee.map((a) => `"${a}"`).join(', ')}]` : 'assignee: []'}
 created_date: ${task.createdDate}
 ${task.updatedDate ? `updated_date: ${task.updatedDate}` : ''}
-${task.labels && task.labels.length > 0 ? `labels: [${task.labels.map((l) => `"${l}"`).join(', ')}]` : ''}
+${task.labels && task.labels.length > 0 ? `labels: [${task.labels.map((l) => `"${l}"`).join(', ')}]` : 'labels: []'}
 ${task.priority ? `priority: ${task.priority}` : ''}
-${task.dependencies && task.dependencies.length > 0 ? `dependencies: [${task.dependencies.map((d) => `"${d}"`).join(', ')}]` : ''}
+dependencies: []
 ---
 
 ${task.description || ''}
 
-${task.implementationPlan || ''}
-`.trim();
+${task.implementationPlan || ''}`.trim();
 
   // Pre-populate file contents
   const fileContents = new Map<string, string>();
@@ -100,6 +95,17 @@ ${task.implementationPlan || ''}
       fileContents.set(task.filePath, createTaskFileContent(task));
     }
   });
+
+  // Create readFile adapter that uses our file contents map
+  const readFile = async (path: string): Promise<string> => {
+    const content = fileContents.get(path);
+    if (content === undefined) {
+      console.log('[Mock] File not found:', path);
+      throw new Error(`File not found: ${path}`);
+    }
+    console.log('[Mock] Reading file:', path, 'Length:', content.length);
+    return content;
+  };
 
   // Active file slice that will be updated by openFile
   const activeFileSlice: DataSlice<any> = {
@@ -134,6 +140,9 @@ ${task.implementationPlan || ''}
     slices: mockSlices,
     getRepositorySlice: <T = unknown,>(name: string) => {
       return mockSlices.get(name) as DataSlice<T> | undefined;
+    },
+    adapters: {
+      readFile,
     },
   });
 

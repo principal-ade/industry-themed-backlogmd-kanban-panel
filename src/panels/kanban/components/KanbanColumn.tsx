@@ -49,7 +49,6 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       style={{
         flex: fullWidth ? '1 1 auto' : '1 1 0', // Grow to fill available width equally
         minWidth: fullWidth ? undefined : '280px',
-        maxWidth: fullWidth ? undefined : '500px', // Cap max width for readability
         alignSelf: 'stretch', // Fill parent height via flexbox
         minHeight: 0, // Allow shrinking
         display: 'flex',

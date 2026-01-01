@@ -11,37 +11,28 @@ export interface ColumnState {
   isLoadingMore: boolean;
 }
 
-/** Source column names (directory-based) */
-export type SourceColumn = 'tasks' | 'completed';
-
-/** Status column names (for 3-column view) */
-export type StatusColumn = 'todo' | 'in-progress' | 'completed';
+/** Status column names */
+export type StatusColumn = 'todo' | 'in-progress' | 'done';
 
 /** Display labels for status columns */
 export const STATUS_DISPLAY_LABELS: Record<StatusColumn, string> = {
   'todo': 'To Do',
   'in-progress': 'In Progress',
-  'completed': 'Completed',
+  'done': 'Done',
 };
 
 /** Map task status field values to StatusColumn keys */
-const STATUS_TO_COLUMN: Record<string, StatusColumn> = {
+const _STATUS_TO_COLUMN: Record<string, StatusColumn> = {
   'To Do': 'todo',
   'In Progress': 'in-progress',
-  'Done': 'completed',
+  'Done': 'done',
 };
 
 /** Map StatusColumn keys back to task status field values */
 const COLUMN_TO_STATUS: Record<StatusColumn, string> = {
   'todo': 'To Do',
   'in-progress': 'In Progress',
-  'completed': 'Done',
-};
-
-/** Display labels for source columns (legacy) */
-export const SOURCE_DISPLAY_LABELS: Record<SourceColumn, string> = {
-  tasks: 'Active',
-  completed: 'Completed',
+  'done': 'Done',
 };
 
 /** Status-based column state (computed from source data) */
@@ -60,26 +51,23 @@ export interface ActiveTasksState {
 
 export interface UseKanbanDataResult {
   tasks: Task[];
-  /** Source columns: "tasks" and "completed" */
-  sources: SourceColumn[];
   isLoading: boolean;
   error: string | null;
   isBacklogProject: boolean;
-  tasksBySource: Map<string, Task[]>;
-  /** Per-column pagination state */
-  columnStates: Map<string, ColumnState>;
-  /** Load more tasks for a specific source column */
-  loadMore: (source: SourceColumn) => Promise<void>;
+  /** Per-status column pagination state */
+  columnStates: Map<StatusColumn, ColumnState>;
+  /** Load more tasks for a specific status column */
+  loadMore: (status: StatusColumn) => Promise<void>;
   refreshData: () => Promise<void>;
   updateTaskStatus: (taskId: string, newStatus: string) => Promise<void>;
-  /** Status columns for 3-column view */
+  /** Status columns: To Do, In Progress, Done */
   statusColumns: StatusColumn[];
-  /** Tasks grouped by status (To Do, In Progress, Completed) */
+  /** Tasks grouped by status (To Do, In Progress, Done) */
   tasksByStatus: Map<StatusColumn, StatusColumnState>;
-  /** Active tasks (To Do + In Progress) pagination state */
-  activeTasksState: ActiveTasksState;
-  /** Load more active tasks */
-  loadMoreActive: () => Promise<void>;
+  /** Total tasks pagination state */
+  totalTasksState: ActiveTasksState;
+  /** Load more tasks */
+  loadMoreTasks: () => Promise<void>;
   /** Move task to a new status column (optimistic update - no persistence) */
   moveTaskOptimistic: (taskId: string, toColumn: StatusColumn) => void;
   /** Find a task by ID */
@@ -93,22 +81,17 @@ export interface UseKanbanDataResult {
 interface UseKanbanDataOptions {
   context?: PanelContextValue;
   actions?: PanelActions;
-  /** Number of active tasks to load (default: 20) */
+  /** Number of tasks to load per page (default: 20) */
   tasksLimit?: number;
-  /** Number of completed tasks to load (default: 5) */
-  completedLimit?: number;
 }
 
-const DEFAULT_SOURCES: SourceColumn[] = ['tasks', 'completed'];
 const DEFAULT_TASKS_LIMIT = 20;
-const DEFAULT_COMPLETED_LIMIT = 5;
 
 /**
  * Hook for managing kanban board data with lazy loading
  *
- * Uses 2-column view (Active/Completed) based on directory structure.
- * Only loads task content for displayed items (no file reads on init).
- * Completed tasks are sorted by ID descending (most recent first).
+ * Uses 3-column view based on task status: To Do, In Progress, Done.
+ * Only loads tasks from the tasks/ directory.
  */
 export function useKanbanData(
   options?: UseKanbanDataOptions
@@ -117,21 +100,20 @@ export function useKanbanData(
     context,
     actions,
     tasksLimit = DEFAULT_TASKS_LIMIT,
-    completedLimit = DEFAULT_COMPLETED_LIMIT,
   } = options || {};
 
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [sources] = useState<SourceColumn[]>(DEFAULT_SOURCES);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBacklogProject, setIsBacklogProject] = useState(false);
   const [canWrite, setCanWrite] = useState(false);
-  const [tasksBySource, setTasksBySource] = useState<Map<string, Task[]>>(
+  const [columnStates, setColumnStates] = useState<Map<StatusColumn, ColumnState>>(
     new Map()
   );
-  const [columnStates, setColumnStates] = useState<Map<string, ColumnState>>(
-    new Map()
-  );
+  const [totalLoaded, setTotalLoaded] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Keep reference to Core instance for loadMore and write operations
   const coreRef = useRef<Core | null>(null);
@@ -179,13 +161,31 @@ export function useKanbanData(
   // Track the file tree version to detect when we need to reload
   const fileTreeVersionRef = useRef<string | null>(null);
 
+  // Helper to group tasks by status and build column states
+  const buildColumnStates = useCallback((allTasks: Task[]): Map<StatusColumn, ColumnState> => {
+    const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'done'];
+    const newColumnStates = new Map<StatusColumn, ColumnState>();
+
+    for (const column of statusColumns) {
+      const status = COLUMN_TO_STATUS[column];
+      const columnTasks = allTasks.filter(t => t.status === status);
+      newColumnStates.set(column, {
+        tasks: columnTasks,
+        total: columnTasks.length,
+        hasMore: false,
+        isLoadingMore: false,
+      });
+    }
+
+    return newColumnStates;
+  }, []);
+
   // Load Backlog.md data using Core with lazy loading
   const loadBacklogData = useCallback(async () => {
     if (!context || !actions) {
       console.log('[useKanbanData] No context provided');
       setIsBacklogProject(false);
       setTasks([]);
-      setTasksBySource(new Map());
       setColumnStates(new Map());
       setIsLoading(false);
       coreRef.current = null;
@@ -202,7 +202,6 @@ export function useKanbanData(
       console.log('[useKanbanData] FileTree not available');
       setIsBacklogProject(false);
       setTasks([]);
-      setTasksBySource(new Map());
       setColumnStates(new Map());
       coreRef.current = null;
       fileTreeVersionRef.current = null;
@@ -247,7 +246,6 @@ export function useKanbanData(
         console.log('[useKanbanData] Not a Backlog.md project');
         setIsBacklogProject(false);
         setTasks([]);
-        setTasksBySource(new Map());
         setColumnStates(new Map());
         coreRef.current = null;
         return;
@@ -263,160 +261,99 @@ export function useKanbanData(
       // Store Core reference for loadMore
       coreRef.current = core;
 
-      // Use lazy paginated API - only loads task content for first page
-      // Active: sorted by title, Completed: sorted by ID desc (most recent)
-      const paginatedResult = await core.getTasksBySourcePaginated({
-        tasksLimit,
-        completedLimit,
-        offset: 0,
-        tasksSortDirection: 'asc',
-        completedSortByIdDesc: true,
+      // Load tasks from tasks/ directory only (using lazy loading API)
+      // loadMoreForSource loads tasks on-demand from the index
+      const paginatedResult = await core.loadMoreForSource('tasks', 0, {
+        limit: tasksLimit,
+        sortDirection: 'asc',
       });
 
-      // Build tasksBySource map and columnStates from paginated results
-      const newTasksBySource = new Map<string, Task[]>();
-      const newColumnStates = new Map<string, ColumnState>();
-      let allTasks: Task[] = [];
-
-      for (const source of paginatedResult.sources) {
-        const columnResult = paginatedResult.bySource.get(source);
-        if (columnResult) {
-          newTasksBySource.set(source, columnResult.items);
-          newColumnStates.set(source, {
-            tasks: columnResult.items,
-            total: columnResult.total,
-            hasMore: columnResult.hasMore,
-            isLoadingMore: false,
-          });
-          allTasks = allTasks.concat(columnResult.items);
-        } else {
-          newTasksBySource.set(source, []);
-          newColumnStates.set(source, {
-            tasks: [],
-            total: 0,
-            hasMore: false,
-            isLoadingMore: false,
-          });
-        }
-      }
-
-      const totalTasks = Array.from(paginatedResult.bySource.values()).reduce(
-        (sum, col) => sum + col.total,
-        0
-      );
+      const allTasks = paginatedResult.items;
+      const total = paginatedResult.total;
 
       console.log(
-        `[useKanbanData] Loaded ${allTasks.length}/${totalTasks} tasks (active: ${tasksLimit}, completed: ${completedLimit})`
+        `[useKanbanData] Loaded ${allTasks.length}/${total} tasks`
       );
 
       // Store the file tree version to prevent redundant reloads
       fileTreeVersionRef.current = currentVersion;
 
+      // Build column states grouped by status
+      const newColumnStates = buildColumnStates(allTasks);
+
       setTasks(allTasks);
-      setTasksBySource(newTasksBySource);
       setColumnStates(newColumnStates);
+      setTotalLoaded(allTasks.length);
+      setTotalCount(total);
+      setHasMore(paginatedResult.hasMore);
     } catch (err) {
       console.error('[useKanbanData] Failed to load Backlog.md data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load backlog data');
       setIsBacklogProject(false);
       setTasks([]);
-      setTasksBySource(new Map());
       setColumnStates(new Map());
       coreRef.current = null;
       fileTreeVersionRef.current = null;
     } finally {
       setIsLoading(false);
     }
-  }, [context, actions, fetchFileContent, tasksLimit, completedLimit]);
+  }, [context, actions, fetchFileContent, tasksLimit, buildColumnStates]);
 
   // Load data on mount or when context changes
   useEffect(() => {
     loadBacklogData();
   }, [loadBacklogData]);
 
-  // Load more tasks for a specific source column
-  const loadMore = useCallback(
-    async (source: SourceColumn) => {
-      const core = coreRef.current;
-      if (!core) {
-        console.warn('[useKanbanData] Core not available for loadMore');
-        return;
-      }
+  // Load more tasks (loads next page, then regroups by status)
+  const loadMoreTasks = useCallback(async () => {
+    const core = coreRef.current;
+    if (!core) {
+      console.warn('[useKanbanData] Core not available for loadMore');
+      return;
+    }
 
-      const currentState = columnStates.get(source);
-      if (!currentState || !currentState.hasMore || currentState.isLoadingMore) {
-        return;
-      }
+    if (!hasMore || isLoadingMore) {
+      return;
+    }
 
-      // Set loading state for this column
-      setColumnStates((prev) => {
-        const newStates = new Map(prev);
-        const state = newStates.get(source);
-        if (state) {
-          newStates.set(source, { ...state, isLoadingMore: true });
-        }
-        return newStates;
+    setIsLoadingMore(true);
+
+    try {
+      // Use lazy loading API - loadMoreForSource loads tasks on-demand
+      const result: PaginatedResult<Task> = await core.loadMoreForSource('tasks', totalLoaded, {
+        limit: tasksLimit,
+        sortDirection: 'asc',
       });
 
-      try {
-        const currentOffset = currentState.tasks.length;
-        const limit = source === 'tasks' ? tasksLimit : completedLimit;
-        const result: PaginatedResult<Task> = await core.loadMoreForSource(
-          source,
-          currentOffset,
-          {
-            limit,
-            sortDirection: 'asc',
-            completedSortByIdDesc: source === 'completed',
-          }
-        );
+      console.log(
+        `[useKanbanData] Loaded ${result.items.length} more tasks (${totalLoaded + result.items.length}/${result.total})`
+      );
 
-        console.log(
-          `[useKanbanData] Loaded ${result.items.length} more tasks for "${source}" (${currentOffset + result.items.length}/${result.total})`
-        );
+      // Update all tasks
+      const newTasks = [...tasks, ...result.items];
+      setTasks(newTasks);
+      setTotalLoaded(newTasks.length);
+      setTotalCount(result.total);
+      setHasMore(result.hasMore);
 
-        // Update column state with new tasks
-        setColumnStates((prev) => {
-          const newStates = new Map(prev);
-          const state = newStates.get(source);
-          if (state) {
-            const newTasks = [...state.tasks, ...result.items];
-            newStates.set(source, {
-              tasks: newTasks,
-              total: result.total,
-              hasMore: result.hasMore,
-              isLoadingMore: false,
-            });
-          }
-          return newStates;
-        });
+      // Rebuild column states with all tasks
+      const newColumnStates = buildColumnStates(newTasks);
+      setColumnStates(newColumnStates);
+    } catch (err) {
+      console.error('[useKanbanData] Failed to load more tasks:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load more tasks');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [tasks, hasMore, isLoadingMore, totalLoaded, tasksLimit, buildColumnStates]);
 
-        // Update tasksBySource
-        setTasksBySource((prev) => {
-          const newMap = new Map(prev);
-          const currentTasks = newMap.get(source) || [];
-          newMap.set(source, [...currentTasks, ...result.items]);
-          return newMap;
-        });
-
-        // Update all tasks
-        setTasks((prev) => [...prev, ...result.items]);
-      } catch (err) {
-        console.error(`[useKanbanData] Failed to load more for "${source}":`, err);
-        setError(err instanceof Error ? err.message : 'Failed to load more tasks');
-
-        // Reset loading state
-        setColumnStates((prev) => {
-          const newStates = new Map(prev);
-          const state = newStates.get(source);
-          if (state) {
-            newStates.set(source, { ...state, isLoadingMore: false });
-          }
-          return newStates;
-        });
-      }
+  // Load more is now just loadMoreTasks (no per-column loading needed)
+  const loadMore = useCallback(
+    async (_status: StatusColumn) => {
+      // Status columns don't have separate pagination - load more tasks overall
+      await loadMoreTasks();
     },
-    [columnStates, tasksLimit, completedLimit]
+    [loadMoreTasks]
   );
 
   // Refresh data
@@ -460,69 +397,23 @@ export function useKanbanData(
   const moveTaskOptimistic = useCallback(
     (taskId: string, toColumn: StatusColumn) => {
       const newStatus = COLUMN_TO_STATUS[toColumn];
-      const isMovingToCompleted = toColumn === 'completed';
-      const isMovingFromCompleted = !isMovingToCompleted;
 
-      // Update tasksBySource (the source of truth for UI)
-      setTasksBySource((prev) => {
-        const newMap = new Map(prev);
+      // Update tasks with new status
+      setTasks((prev) => {
+        const newTasks = prev.map(t =>
+          t.id === taskId ? { ...t, status: newStatus } : t
+        );
 
-        // Find the task in either source
-        const activeTasks = [...(newMap.get('tasks') || [])];
-        const completedTasks = [...(newMap.get('completed') || [])];
-
-        let taskToMove: Task | undefined;
-        let fromSource: SourceColumn | undefined;
-
-        // Check active tasks
-        const activeIndex = activeTasks.findIndex(t => t.id === taskId);
-        if (activeIndex !== -1) {
-          taskToMove = activeTasks[activeIndex];
-          fromSource = 'tasks';
-          activeTasks.splice(activeIndex, 1);
-        }
-
-        // Check completed tasks
-        if (!taskToMove) {
-          const completedIndex = completedTasks.findIndex(t => t.id === taskId);
-          if (completedIndex !== -1) {
-            taskToMove = completedTasks[completedIndex];
-            fromSource = 'completed';
-            completedTasks.splice(completedIndex, 1);
-          }
-        }
-
-        if (!taskToMove) {
-          console.warn(`[useKanbanData] Task ${taskId} not found for move`);
-          return prev;
-        }
-
-        // Create updated task with new status
-        const updatedTask: Task = { ...taskToMove, status: newStatus };
-
-        // Add to appropriate source
-        if (isMovingToCompleted) {
-          // Add to beginning of completed (most recent first)
-          completedTasks.unshift(updatedTask);
-        } else {
-          // Add to end of active tasks
-          activeTasks.push(updatedTask);
-        }
-
-        newMap.set('tasks', activeTasks);
-        newMap.set('completed', completedTasks);
+        // Rebuild column states with updated tasks
+        const newColumnStates = buildColumnStates(newTasks);
+        setColumnStates(newColumnStates);
 
         console.log(`[useKanbanData] Moved task ${taskId} to ${toColumn} (${newStatus})`);
 
-        return newMap;
+        return newTasks;
       });
-
-      // Also update the flat tasks array for consistency
-      setTasks((prev) =>
-        prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t)
-      );
     },
-    []
+    [buildColumnStates]
   );
 
   // Find a task by ID
@@ -534,63 +425,46 @@ export function useKanbanData(
   );
 
   // Status columns for 3-column view
-  const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'completed'];
+  const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'done'];
 
-  // Compute tasks grouped by status (splitting active tasks by their status field)
+  // Compute tasks grouped by status from columnStates
   const tasksByStatus = (() => {
     const result = new Map<StatusColumn, StatusColumnState>();
 
-    // Get active tasks and split by status
-    const activeTasks = tasksBySource.get('tasks') || [];
-    const completedTasks = tasksBySource.get('completed') || [];
-
-    // Split active tasks by status field
-    const todoTasks = activeTasks.filter(t => t.status === 'To Do');
-    const inProgressTasks = activeTasks.filter(t => t.status === 'In Progress');
-
-    result.set('todo', { tasks: todoTasks, count: todoTasks.length });
-    result.set('in-progress', { tasks: inProgressTasks, count: inProgressTasks.length });
-    result.set('completed', { tasks: completedTasks, count: completedTasks.length });
+    for (const column of statusColumns) {
+      const state = columnStates.get(column);
+      result.set(column, {
+        tasks: state?.tasks || [],
+        count: state?.total || 0,
+      });
+    }
 
     return result;
   })();
 
-  // Compute active tasks pagination state
-  const activeTasksState: ActiveTasksState = (() => {
-    const activeColumnState = columnStates.get('tasks');
-    return {
-      total: activeColumnState?.total || 0,
-      loaded: activeColumnState?.tasks.length || 0,
-      hasMore: activeColumnState?.hasMore || false,
-      isLoadingMore: activeColumnState?.isLoadingMore || false,
-    };
-  })();
-
-  // Load more active tasks (wrapper around loadMore)
-  const loadMoreActive = useCallback(async () => {
-    await loadMore('tasks');
-  }, [loadMore]);
+  // Total tasks pagination state
+  const totalTasksState: ActiveTasksState = {
+    total: totalCount,
+    loaded: totalLoaded,
+    hasMore,
+    isLoadingMore,
+  };
 
   return {
     tasks,
-    sources,
     isLoading,
     error,
     isBacklogProject,
-    tasksBySource,
     columnStates,
     loadMore,
     refreshData,
     updateTaskStatus,
-    // New 3-column view exports
     statusColumns,
     tasksByStatus,
-    activeTasksState,
-    loadMoreActive,
-    // Drag-and-drop support
+    totalTasksState,
+    loadMoreTasks,
     moveTaskOptimistic,
     getTaskById,
-    // Write support
     canWrite,
     core: coreRef.current,
   };

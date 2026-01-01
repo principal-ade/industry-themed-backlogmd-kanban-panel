@@ -87,10 +87,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   const {
     statusColumns,
     tasksByStatus,
-    columnStates,
-    loadMore,
-    activeTasksState,
-    loadMoreActive,
+    totalTasksState,
+    loadMoreTasks,
     error,
     isBacklogProject,
     refreshData,
@@ -102,7 +100,6 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     context,
     actions,
     tasksLimit: 20,
-    completedLimit: 5,
   });
 
   // Drag event handlers
@@ -132,7 +129,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     const statusToColumn: Record<string, StatusColumn> = {
       'To Do': 'todo',
       'In Progress': 'in-progress',
-      'Done': 'completed',
+      'Done': 'done',
     };
     const currentColumn = statusToColumn[task.status] || 'todo';
 
@@ -301,35 +298,6 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
         {/* Status counts and Load more active button */}
         {isBacklogProject && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            {/* Status counts - hidden in narrow view since tabs show counts */}
-            {!isNarrowView && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {statusColumns.map((status) => {
-                  const statusState = tasksByStatus.get(status);
-                  const count = statusState?.count || 0;
-                  // For completed, show loaded/total
-                  const completedState = columnStates.get('completed');
-                  const displayCount = status === 'completed' && completedState
-                    ? `${count}/${completedState.total}`
-                    : count;
-                  return (
-                    <span
-                      key={status}
-                      style={{
-                        fontSize: theme.fontSizes[1],
-                        color: theme.colors.textSecondary,
-                        background: theme.colors.backgroundSecondary,
-                        padding: '4px 10px',
-                        borderRadius: theme.radii[1],
-                        fontWeight: theme.fontWeights.medium,
-                      }}
-                    >
-                      {STATUS_DISPLAY_LABELS[status]}: {displayCount}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
 
             {/* Add Task button - only shown when write operations are available */}
             {canWrite && (
@@ -355,11 +323,11 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               </button>
             )}
 
-            {/* Load more active button */}
-            {activeTasksState.hasMore && (
+            {/* Load more tasks button */}
+            {totalTasksState.hasMore && (
               <button
-                onClick={loadMoreActive}
-                disabled={activeTasksState.isLoadingMore}
+                onClick={loadMoreTasks}
+                disabled={totalTasksState.isLoadingMore}
                 style={{
                   background: theme.colors.backgroundSecondary,
                   color: theme.colors.text,
@@ -368,14 +336,14 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
                   padding: '6px 12px',
                   fontSize: theme.fontSizes[1],
                   fontWeight: theme.fontWeights.medium,
-                  cursor: activeTasksState.isLoadingMore ? 'wait' : 'pointer',
-                  opacity: activeTasksState.isLoadingMore ? 0.7 : 1,
+                  cursor: totalTasksState.isLoadingMore ? 'wait' : 'pointer',
+                  opacity: totalTasksState.isLoadingMore ? 0.7 : 1,
                   transition: 'opacity 0.2s ease',
                 }}
               >
-                {activeTasksState.isLoadingMore
+                {totalTasksState.isLoadingMore
                   ? 'Loading...'
-                  : `Load more active (${activeTasksState.total - activeTasksState.loaded} remaining)`}
+                  : `Load more (${totalTasksState.total - totalTasksState.loaded} remaining)`}
               </button>
             )}
           </div>
@@ -491,14 +459,13 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
             }}
           >
-            {/* Inner flex container for columns - uses margin auto for centering */}
+            {/* Inner flex container for columns */}
             <div
               style={{
                 display: 'flex',
                 gap: '16px',
-                flex: '1 0 auto',
+                width: '100%',
                 paddingBottom: '8px',
-                minWidth: '100%',
                 alignItems: 'stretch',
               }}
             >
@@ -507,19 +474,12 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
                 .map((status) => {
                   const statusState = tasksByStatus.get(status);
                   const columnTasks = statusState?.tasks || [];
-                  // Only completed column has its own load more
-                  const isCompleted = status === 'completed';
-                  const completedState = columnStates.get('completed');
                   return (
                     <KanbanColumn
                       key={status}
                       columnId={status}
                       status={STATUS_DISPLAY_LABELS[status]}
                       tasks={columnTasks}
-                      total={isCompleted ? completedState?.total : undefined}
-                      hasMore={isCompleted ? completedState?.hasMore : false}
-                      isLoadingMore={isCompleted ? completedState?.isLoadingMore : false}
-                      onLoadMore={isCompleted ? () => loadMore('completed') : undefined}
                       onTaskClick={handleTaskClick}
                       fullWidth={isNarrowView}
                     />

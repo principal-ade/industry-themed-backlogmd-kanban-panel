@@ -134,9 +134,9 @@ const createMilestoneFileTreeSlice = (): DataSlice<any> => {
 const createMilestoneMocks = () => {
   const fileTreeSlice = createMilestoneFileTreeSlice();
 
-  const mockConfigContent = `project_name: My Milestone Project
-statuses: [To Do, In Progress, Done]
-default_status: To Do
+  const mockConfigContent = `project_name: "My Milestone Project"
+statuses: ["To Do", "In Progress", "Done"]
+default_status: "To Do"
 milestones: []`;
 
   // Pre-populate file contents
@@ -154,6 +154,17 @@ milestones: []`;
     const path = `backlog/tasks/${task.id} - ${task.title.replace(/[<>:"/\\|?*]/g, '').slice(0, 30)}.md`;
     fileContents.set(path, createTaskFileContent(task));
   });
+
+  // Create readFile adapter that uses our file contents map
+  const readFile = async (path: string): Promise<string> => {
+    const content = fileContents.get(path);
+    if (content === undefined) {
+      console.log('[Mock] File not found:', path);
+      throw new Error(`File not found: ${path}`);
+    }
+    console.log('[Mock] Reading file:', path, 'Length:', content.length);
+    return content;
+  };
 
   // Active file slice
   const activeFileSlice: DataSlice<any> = {
@@ -185,6 +196,9 @@ milestones: []`;
     slices: mockSlices,
     getRepositorySlice: <T = unknown,>(name: string) => {
       return mockSlices.get(name) as DataSlice<T> | undefined;
+    },
+    adapters: {
+      readFile,
     },
   });
 

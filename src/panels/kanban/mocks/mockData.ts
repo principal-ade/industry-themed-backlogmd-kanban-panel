@@ -8,7 +8,7 @@
 import type { Task } from '@backlog-md/core';
 
 // Sample task titles for generating mock data
-const activeTitles = [
+const taskTitles = [
   'Implement user authentication',
   'Design database schema',
   'Build REST API endpoints',
@@ -34,20 +34,15 @@ const activeTitles = [
   'Add two-factor authentication',
   'Create backup system',
   'Implement audit logging',
-];
-
-const completedTitles = [
   'Set up CI CD pipeline',
   'Write unit tests',
   'Configure linting rules',
   'Set up development environment',
   'Create project structure',
-  'Implement logging system',
-  'Add error tracking',
-  'Configure deployment scripts',
-  'Write integration tests',
-  'Set up monitoring',
 ];
+
+// Task statuses distributed evenly
+const statuses: Array<'To Do' | 'In Progress' | 'Done'> = ['To Do', 'In Progress', 'Done'];
 
 const assignees = [
   'alice@example.com',
@@ -77,22 +72,23 @@ const priorities: Array<'high' | 'medium' | 'low'> = ['high', 'medium', 'low'];
 
 /**
  * Generate mock tasks for testing the kanban board
- * Creates 25 active tasks and 10 completed tasks to test pagination
+ * Creates 30 tasks with evenly distributed statuses (To Do, In Progress, Done)
  */
 export function generateMockTasks(): Task[] {
   const tasks: Task[] = [];
 
-  // Generate active tasks (in tasks/ directory)
-  activeTitles.forEach((title, index) => {
+  // Generate all tasks in tasks/ directory with evenly distributed statuses
+  taskTitles.forEach((title, index) => {
     const id = String(index + 1).padStart(3, '0');
     const assigneeIndex = index % assignees.length;
     const labelIndex = index % labelSets.length;
     const priorityIndex = index % priorities.length;
+    const statusIndex = index % statuses.length;
 
     tasks.push({
       id,
       title,
-      status: index % 3 === 0 ? 'To Do' : 'In Progress',
+      status: statuses[statusIndex],
       assignee: index % 4 === 0 ? [] : [assignees[assigneeIndex]],
       createdDate: `2025-11-${String((index % 28) + 1).padStart(2, '0')}T10:00:00Z`,
       updatedDate: index % 2 === 0 ? `2025-11-${String((index % 28) + 1).padStart(2, '0')}T14:30:00Z` : undefined,
@@ -103,31 +99,6 @@ export function generateMockTasks(): Task[] {
       ordinal: index + 1,
       filePath: `backlog/tasks/${id} - ${title}.md`,
       source: 'local' as const,
-    });
-  });
-
-  // Generate completed tasks (in completed/ directory)
-  // Use higher IDs so they sort as "most recent" when sorted by ID desc
-  completedTitles.forEach((title, index) => {
-    const id = String(100 + index + 1).padStart(3, '0'); // 101, 102, 103...
-    const assigneeIndex = index % assignees.length;
-    const labelIndex = index % labelSets.length;
-    const priorityIndex = index % priorities.length;
-
-    tasks.push({
-      id,
-      title,
-      status: 'Done',
-      assignee: [assignees[assigneeIndex]],
-      createdDate: `2025-11-${String((index % 28) + 1).padStart(2, '0')}T08:30:00Z`,
-      updatedDate: `2025-11-${String((index % 28) + 5).padStart(2, '0')}T17:00:00Z`,
-      labels: labelSets[labelIndex],
-      dependencies: [],
-      description: `Description for ${title}. This task has been completed.`,
-      priority: priorities[priorityIndex],
-      ordinal: index + 1,
-      filePath: `backlog/completed/${id} - ${title}.md`,
-      source: 'completed' as const,
     });
   });
 
