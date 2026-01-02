@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Kanban, AlertCircle, Plus, Search, X } from 'lucide-react';
+import { Kanban, AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import {
@@ -22,7 +22,12 @@ import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { TaskCard } from './kanban/components/TaskCard';
 import { EmptyState } from './kanban/components/EmptyState';
 import { TaskModal } from './kanban/components/TaskModal';
-import { Core, type Task, type TaskCreateInput, type TaskUpdateInput } from '@backlog-md/core';
+import { useMilestoneData } from './milestone/hooks/useMilestoneData';
+import { MilestoneCard } from './milestone/components/MilestoneCard';
+import { MilestoneModal } from './milestone/components/MilestoneModal';
+import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput } from '@backlog-md/core';
+
+type ViewMode = 'board' | 'milestones';
 
 /**
  * KanbanPanel - A kanban board panel for visualizing Backlog.md tasks.
@@ -43,12 +48,20 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   const [isNarrowView, setIsNarrowView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // View mode state (board vs milestones)
+  const [viewMode, setViewMode] = useState<ViewMode>('board');
+
   // Drag-and-drop state
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+
+  // Milestone modal state
+  const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | undefined>(undefined);
+  const [isRefreshingMilestones, setIsRefreshingMilestones] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,6 +116,20 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     context,
     actions,
     tasksLimit: 20,
+  });
+
+  // Milestone data hook (always called to satisfy React hook rules)
+  const {
+    milestones,
+    isLoading: isMilestonesLoading,
+    error: milestonesError,
+    toggleMilestone,
+    refreshData: refreshMilestones,
+    canWrite: canWriteMilestones,
+    core: milestoneCore,
+  } = useMilestoneData({
+    context,
+    actions,
   });
 
   // Filter tasks by search query
@@ -284,8 +311,57 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     await refreshData();
   }, [core, editingTask, refreshData]);
 
+  // Milestone modal handlers
+  const handleOpenNewMilestone = useCallback(() => {
+    setEditingMilestone(undefined);
+    setIsMilestoneModalOpen(true);
+  }, []);
+
+  const handleCloseMilestoneModal = useCallback(() => {
+    setIsMilestoneModalOpen(false);
+    setEditingMilestone(undefined);
+  }, []);
+
+  const handleSaveMilestone = useCallback(async (input: MilestoneCreateInput | MilestoneUpdateInput) => {
+    if (!milestoneCore) {
+      throw new Error('Backlog not loaded');
+    }
+
+    if (editingMilestone) {
+      await milestoneCore.updateMilestone(editingMilestone.id, input as MilestoneUpdateInput);
+    } else {
+      await milestoneCore.createMilestone(input as MilestoneCreateInput);
+    }
+
+    await refreshMilestones();
+  }, [milestoneCore, editingMilestone, refreshMilestones]);
+
+  const handleRefreshMilestones = async () => {
+    setIsRefreshingMilestones(true);
+    try {
+      await refreshMilestones();
+    } finally {
+      setIsRefreshingMilestones(false);
+    }
+  };
+
+  const handleMilestoneTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    if (events) {
+      events.emit({
+        type: 'task:selected',
+        source: 'kanban-panel',
+        timestamp: Date.now(),
+        payload: { taskId: task.id, task },
+      });
+    }
+  };
+
   // Get available statuses and milestones for task modal
   const availableStatuses = ['To Do', 'In Progress', 'Done'];
+
+  // Determine which error to show based on view mode
+  const currentError = viewMode === 'board' ? error : milestonesError;
 
   return (
     <div
@@ -325,10 +401,62 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           >
             Kanban Board
           </h2>
+
+          {/* View mode toggle */}
+          {isBacklogProject && (
+            <div
+              style={{
+                display: 'flex',
+                background: theme.colors.backgroundSecondary,
+                borderRadius: theme.radii[2],
+                padding: '3px',
+                gap: '2px',
+              }}
+            >
+              <button
+                onClick={() => setViewMode('board')}
+                style={{
+                  padding: '6px 12px',
+                  border: 'none',
+                  borderRadius: theme.radii[1],
+                  background: viewMode === 'board' ? theme.colors.primary : 'transparent',
+                  color: viewMode === 'board' ? theme.colors.textOnPrimary : theme.colors.textSecondary,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                Board
+              </button>
+              <button
+                onClick={() => setViewMode('milestones')}
+                style={{
+                  padding: '6px 12px',
+                  border: 'none',
+                  borderRadius: theme.radii[1],
+                  background: viewMode === 'milestones' ? theme.colors.primary : 'transparent',
+                  color: viewMode === 'milestones' ? theme.colors.textOnPrimary : theme.colors.textSecondary,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                Milestones
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Search input */}
-        {isBacklogProject && (
+        {/* Search input - only show in board view */}
+        {isBacklogProject && viewMode === 'board' && (
           <div
             style={{
               position: 'relative',
@@ -391,63 +519,118 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           </div>
         )}
 
-        {/* Status counts and Load more active button */}
+        {/* Header actions - view-dependent */}
         {isBacklogProject && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {viewMode === 'board' ? (
+              <>
+                {/* Add Task button - only shown when write operations are available */}
+                {canWrite && (
+                  <button
+                    onClick={handleOpenNewTask}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: theme.colors.primary,
+                      color: theme.colors.textOnPrimary,
+                      border: 'none',
+                      borderRadius: theme.radii[2],
+                      padding: '6px 12px',
+                      fontSize: theme.fontSizes[1],
+                      fontWeight: theme.fontWeights.medium,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    <Plus size={14} />
+                    Add Task
+                  </button>
+                )}
 
-            {/* Add Task button - only shown when write operations are available */}
-            {canWrite && (
-              <button
-                onClick={handleOpenNewTask}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: theme.colors.primary,
-                  color: theme.colors.textOnPrimary,
-                  border: 'none',
-                  borderRadius: theme.radii[2],
-                  padding: '6px 12px',
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s ease',
-                }}
-              >
-                <Plus size={14} />
-                Add Task
-              </button>
-            )}
+                {/* Load more tasks button */}
+                {totalTasksState.hasMore && (
+                  <button
+                    onClick={loadMoreTasks}
+                    disabled={totalTasksState.isLoadingMore}
+                    style={{
+                      background: theme.colors.backgroundSecondary,
+                      color: theme.colors.text,
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: theme.radii[2],
+                      padding: '6px 12px',
+                      fontSize: theme.fontSizes[1],
+                      fontWeight: theme.fontWeights.medium,
+                      cursor: totalTasksState.isLoadingMore ? 'wait' : 'pointer',
+                      opacity: totalTasksState.isLoadingMore ? 0.7 : 1,
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    {totalTasksState.isLoadingMore
+                      ? 'Loading...'
+                      : `Load more (${totalTasksState.total - totalTasksState.loaded} remaining)`}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Add Milestone button */}
+                {canWriteMilestones && (
+                  <button
+                    onClick={handleOpenNewMilestone}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: theme.colors.primary,
+                      color: theme.colors.textOnPrimary,
+                      border: 'none',
+                      borderRadius: theme.radii[2],
+                      padding: '6px 12px',
+                      fontSize: theme.fontSizes[1],
+                      fontWeight: theme.fontWeights.medium,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    <Plus size={14} />
+                    Add Milestone
+                  </button>
+                )}
 
-            {/* Load more tasks button */}
-            {totalTasksState.hasMore && (
-              <button
-                onClick={loadMoreTasks}
-                disabled={totalTasksState.isLoadingMore}
-                style={{
-                  background: theme.colors.backgroundSecondary,
-                  color: theme.colors.text,
-                  border: `1px solid ${theme.colors.border}`,
-                  borderRadius: theme.radii[2],
-                  padding: '6px 12px',
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                  cursor: totalTasksState.isLoadingMore ? 'wait' : 'pointer',
-                  opacity: totalTasksState.isLoadingMore ? 0.7 : 1,
-                  transition: 'opacity 0.2s ease',
-                }}
-              >
-                {totalTasksState.isLoadingMore
-                  ? 'Loading...'
-                  : `Load more (${totalTasksState.total - totalTasksState.loaded} remaining)`}
-              </button>
+                {/* Refresh button */}
+                <button
+                  onClick={handleRefreshMilestones}
+                  disabled={isRefreshingMilestones || isMilestonesLoading}
+                  style={{
+                    background: theme.colors.backgroundSecondary,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radii[1],
+                    padding: '6px',
+                    cursor: isRefreshingMilestones ? 'wait' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                  }}
+                  title="Refresh milestones"
+                >
+                  <RefreshCw
+                    size={16}
+                    color={theme.colors.textSecondary}
+                    style={{
+                      animation: isRefreshingMilestones ? 'spin 1s linear infinite' : 'none',
+                    }}
+                  />
+                </button>
+              </>
             )}
           </div>
         )}
       </div>
 
       {/* Error Message */}
-      {error && (
+      {currentError && (
         <div
           style={{
             flexShrink: 0, // Don't shrink error message
@@ -463,17 +646,17 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           }}
         >
           <AlertCircle size={16} />
-          <span>{error}</span>
+          <span>{currentError}</span>
         </div>
       )}
 
-      {/* Board Container or Empty State */}
+      {/* Content Container or Empty State */}
       {!isBacklogProject ? (
         <EmptyState
           canInitialize={canInitialize}
           onInitialize={handleInitialize}
         />
-      ) : (
+      ) : viewMode === 'board' ? (
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
@@ -601,6 +784,74 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               document.body
             )}
         </DndContext>
+      ) : (
+        /* Milestones View */
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {isMilestonesLoading ? (
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.colors.textSecondary,
+              }}
+            >
+              Loading milestones...
+            </div>
+          ) : milestones.length === 0 ? (
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px',
+                color: theme.colors.textSecondary,
+              }}
+            >
+              <MilestoneIcon size={48} color={theme.colors.border} />
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: theme.fontSizes[2] }}>
+                  No milestones yet
+                </p>
+                <p style={{ margin: '8px 0 0 0', fontSize: theme.fontSizes[1] }}>
+                  Create milestones to organize your tasks into releases or sprints
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                paddingRight: '4px',
+                marginRight: '-4px',
+              }}
+            >
+              {milestones.map((milestoneState) => (
+                <MilestoneCard
+                  key={milestoneState.milestone.id}
+                  milestoneState={milestoneState}
+                  onToggle={() => toggleMilestone(milestoneState.milestone.id)}
+                  onTaskClick={handleMilestoneTaskClick}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Task Modal */}
@@ -612,6 +863,23 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
         defaultStatus="To Do"
         availableStatuses={availableStatuses}
       />
+
+      {/* Milestone Modal */}
+      <MilestoneModal
+        isOpen={isMilestoneModalOpen}
+        onClose={handleCloseMilestoneModal}
+        onSave={handleSaveMilestone}
+        milestone={editingMilestone}
+      />
+
+      {/* Spinner animation for refresh button */}
+      <style>
+        {`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </div>
   );
 };
