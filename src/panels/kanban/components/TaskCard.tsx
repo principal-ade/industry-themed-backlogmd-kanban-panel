@@ -7,12 +7,14 @@ interface TaskCardProps {
   task: Task;
   onClick?: (task: Task) => void;
   isDragOverlay?: boolean;
+  isSelected?: boolean;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
   onClick,
   isDragOverlay = false,
+  isSelected = false,
 }) => {
   const { theme } = useTheme();
 
@@ -44,10 +46,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   // Base styles for the card
   const style: React.CSSProperties = {
     flexShrink: 0,
-    background: theme.colors.surface,
+    background: isSelected ? `${theme.colors.primary}10` : theme.colors.surface,
     borderRadius: theme.radii[2],
     padding: '12px',
-    border: `1px solid ${theme.colors.border}`,
+    border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
     borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
     cursor: isDragOverlay ? 'grabbing' : 'grab',
     transition: isDragging ? 'none' : 'all 0.2s ease',
@@ -57,6 +59,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     // When dragging, the original card stays in place but becomes a placeholder
     // The DragOverlay handles the visual movement
     opacity: isDragging ? 0.4 : 1,
+    // Selected card styling
+    ...(isSelected && !isDragOverlay && {
+      boxShadow: `0 0 0 1px ${theme.colors.primary}`,
+    }),
     // Overlay card styling
     ...(isDragOverlay && {
       boxShadow: `0 8px 16px rgba(0, 0, 0, 0.15)`,

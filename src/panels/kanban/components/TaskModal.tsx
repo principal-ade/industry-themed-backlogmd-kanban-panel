@@ -4,14 +4,20 @@ import { X, Loader2 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { Task, TaskCreateInput, TaskUpdateInput } from '@backlog-md/core';
 
+interface MilestoneOption {
+  id: string;
+  title: string;
+}
+
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (input: TaskCreateInput | TaskUpdateInput) => Promise<void>;
   task?: Task; // If provided, we're editing; otherwise, creating
   defaultStatus?: string;
+  defaultMilestone?: string;
   availableStatuses?: string[];
-  availableMilestones?: string[];
+  availableMilestones?: MilestoneOption[];
 }
 
 /**
@@ -23,6 +29,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   onSave,
   task,
   defaultStatus = 'To Do',
+  defaultMilestone = '',
   availableStatuses = ['To Do', 'In Progress', 'Done'],
   availableMilestones = [],
 }) => {
@@ -60,11 +67,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         setPriority('medium');
         setLabels('');
         setAssignee('');
-        setMilestone('');
+        setMilestone(defaultMilestone);
       }
       setError(null);
     }
-  }, [isOpen, task, defaultStatus]);
+  }, [isOpen, task, defaultStatus, defaultMilestone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -435,8 +442,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 >
                   <option value="">None</option>
                   {availableMilestones.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
+                    <option key={m.id} value={m.id}>
+                      {m.title}
                     </option>
                   ))}
                 </select>

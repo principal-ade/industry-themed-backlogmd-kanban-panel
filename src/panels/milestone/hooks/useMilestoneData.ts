@@ -137,6 +137,13 @@ export function useMilestoneData(
       const files = fileTreeSlice.data.allFiles;
       const filePaths = files.map((f: { path: string }) => f.path);
 
+      // Debug: log file paths
+      const taskPaths = filePaths.filter((p: string) => p.includes('backlog/tasks/'));
+      console.log(`[useMilestoneData] File paths: ${filePaths.length} total, ${taskPaths.length} task files`);
+      if (taskPaths.length > 0) {
+        console.log(`[useMilestoneData] Sample task paths:`, taskPaths.slice(0, 3));
+      }
+
       // Create FileSystemAdapter with host file system for write operations
       const fs = new PanelFileSystemAdapter({
         fetchFile: fetchFileContent,
@@ -166,6 +173,14 @@ export function useMilestoneData(
       await core.initializeLazy(filePaths);
       coreRef.current = core;
 
+      // Debug: check what tasks are indexed
+      // @ts-expect-error - accessing private property for debugging
+      const taskIndex = core.taskIndex as Map<string, unknown>;
+      if (taskIndex) {
+        const indexedIds = Array.from(taskIndex.keys());
+        console.log(`[useMilestoneData] Core taskIndex has ${indexedIds.length} tasks:`, indexedIds.slice(0, 5));
+      }
+
       // Debug: check Core instance
       console.log('[useMilestoneData] Core instance:', core);
       console.log('[useMilestoneData] Core.listMilestones:', typeof core.listMilestones);
@@ -187,7 +202,7 @@ export function useMilestoneData(
       // Pre-load all tasks for progress calculation
       const allTaskIds = milestoneList.flatMap((m) => m.tasks);
       const uniqueTaskIds = [...new Set(allTaskIds)];
-      console.log(`[useMilestoneData] Task IDs to load:`, uniqueTaskIds.slice(0, 10), `(${uniqueTaskIds.length} total)`);
+      console.log(`[useMilestoneData] Milestone task IDs to load:`, uniqueTaskIds.slice(0, 5), `(${uniqueTaskIds.length} total)`);
       let allTasks: Task[] = [];
 
       if (uniqueTaskIds.length > 0) {

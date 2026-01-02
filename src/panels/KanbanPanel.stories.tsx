@@ -100,7 +100,7 @@ ${task.implementationPlan || ''}`.trim();
     `---
 id: ${milestone.id}
 title: "${milestone.title}"
-tasks: [${milestone.tasks.map((t) => `"${t}"`).join(', ')}]
+tasks: [${milestone.tasks.join(', ')}]
 ---
 
 ## Description
@@ -169,6 +169,21 @@ ${milestone.description || ''}`;
     },
     adapters: {
       readFile,
+      fileSystem: {
+        readFile: async (path: string) => fileContents.get(path) || '',
+        writeFile: async (path: string, content: string) => {
+          fileContents.set(path, content);
+          console.log('[Mock] Writing file:', path, 'Length:', content.length);
+        },
+        createDir: async (path: string) => {
+          console.log('[Mock] Creating directory:', path);
+        },
+        exists: async (path: string) => fileContents.has(path),
+        deleteFile: async (path: string) => {
+          fileContents.delete(path);
+          console.log('[Mock] Deleting file:', path);
+        },
+      },
     },
   });
 

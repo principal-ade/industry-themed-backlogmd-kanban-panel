@@ -22,6 +22,8 @@ interface KanbanColumnProps {
   onTaskClick?: (task: Task) => void;
   /** Whether column should take full width (for narrow/mobile views) */
   fullWidth?: boolean;
+  /** Currently selected task ID */
+  selectedTaskId?: string | null;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -34,6 +36,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onLoadMore,
   onTaskClick,
   fullWidth = false,
+  selectedTaskId,
 }) => {
   const { theme } = useTheme();
 
@@ -117,6 +120,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             key={task.id}
             task={task}
             onClick={onTaskClick}
+            isSelected={selectedTaskId === task.id}
           />
         ))}
 
