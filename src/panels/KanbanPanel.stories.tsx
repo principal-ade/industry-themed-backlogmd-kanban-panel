@@ -7,7 +7,7 @@ import {
   createMockActions,
   createMockEvents,
 } from '../mocks/panelContext';
-import { generateMockTasks } from './kanban/mocks/mockData';
+import { generateMockTasks, generateMockMilestones } from './kanban/mocks/mockData';
 import type { DataSlice } from '../types';
 
 const meta = {
@@ -36,9 +36,17 @@ type Story = StoryObj<typeof meta>;
 // Helper to create a mock file tree slice with backlog files
 const createBacklogFileTreeSlice = (): DataSlice<any> => {
   const mockTasks = generateMockTasks();
+  const mockMilestones = generateMockMilestones();
+
   const taskFiles = mockTasks.map((task) => ({
     path: task.filePath!,
     name: task.filePath!.split('/').pop(),
+    type: 'file',
+  }));
+
+  const milestoneFiles = mockMilestones.map((milestone) => ({
+    path: milestone.filePath!,
+    name: milestone.filePath!.split('/').pop(),
     type: 'file',
   }));
 
@@ -52,6 +60,7 @@ const createBacklogFileTreeSlice = (): DataSlice<any> => {
       allFiles: [
         { path: 'backlog/config.yml', name: 'config.yml', type: 'file' },
         ...taskFiles,
+        ...milestoneFiles,
       ],
     },
     loading: false,
@@ -63,6 +72,7 @@ const createBacklogFileTreeSlice = (): DataSlice<any> => {
 // Helper to create context and actions with backlog data
 const createBacklogMocks = () => {
   const mockTasks = generateMockTasks();
+  const mockMilestones = generateMockMilestones();
   const fileTreeSlice = createBacklogFileTreeSlice();
 
   const mockConfigContent = `project_name: "My Kanban Project"
@@ -86,6 +96,17 @@ ${task.description || ''}
 
 ${task.implementationPlan || ''}`.trim();
 
+  const createMilestoneFileContent = (milestone: (typeof mockMilestones)[0]) =>
+    `---
+id: ${milestone.id}
+title: "${milestone.title}"
+tasks: [${milestone.tasks.map((t) => `"${t}"`).join(', ')}]
+---
+
+## Description
+
+${milestone.description || ''}`;
+
   // Pre-populate file contents
   const fileContents = new Map<string, string>();
   console.log('[Mock] Config content being set:', mockConfigContent);
@@ -93,6 +114,11 @@ ${task.implementationPlan || ''}`.trim();
   mockTasks.forEach((task) => {
     if (task.filePath) {
       fileContents.set(task.filePath, createTaskFileContent(task));
+    }
+  });
+  mockMilestones.forEach((milestone) => {
+    if (milestone.filePath) {
+      fileContents.set(milestone.filePath, createMilestoneFileContent(milestone));
     }
   });
 
@@ -212,6 +238,22 @@ export const WithMockData: Story = {
       description: {
         story:
           'Kanban board showing tasks organized by status columns with mock data.',
+      },
+    },
+  },
+};
+
+export const MilestonesView: Story = {
+  args: {
+    context: backlogMocks.context,
+    actions: backlogMocks.actions,
+    events: createMockEvents(),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Milestones view showing project milestones with progress indicators. Toggle the view using the Board/Milestones switch in the header.',
       },
     },
   },

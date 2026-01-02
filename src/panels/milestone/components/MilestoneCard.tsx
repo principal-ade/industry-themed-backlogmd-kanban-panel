@@ -102,7 +102,7 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
             </h3>
           </div>
 
-          {/* Task count badge */}
+          {/* Task count and progress badge */}
           <span
             style={{
               fontSize: theme.fontSizes[1],
@@ -114,39 +114,14 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }}
           >
             {totalTasks} task{totalTasks !== 1 ? 's' : ''}
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div
-            style={{
-              flex: 1,
-              height: '6px',
-              background: theme.colors.backgroundSecondary,
-              borderRadius: theme.radii[1],
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: showProgress ? `${progress}%` : '0%',
-                background:
-                  progress === 100 ? theme.colors.success : theme.colors.primary,
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
-          <span
-            style={{
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.textSecondary,
-              minWidth: '45px',
-              textAlign: 'right',
-            }}
-          >
-            {showProgress ? `${progress}%` : '...'}
+            {showProgress && (
+              <>
+                {' · '}
+                <span style={{ color: progress === 100 ? theme.colors.success : theme.colors.text }}>
+                  {progress}%
+                </span>
+              </>
+            )}
           </span>
         </div>
 

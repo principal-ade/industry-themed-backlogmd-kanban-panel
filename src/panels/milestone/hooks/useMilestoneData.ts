@@ -184,13 +184,38 @@ export function useMilestoneData(
 
       console.log(`[useMilestoneData] Loaded ${milestoneList.length} milestones`);
 
-      // Build milestone states (tasks not loaded yet)
-      const milestoneStates: MilestoneState[] = milestoneList.map((m) => ({
-        milestone: m,
-        tasks: [],
-        isLoading: false,
-        isExpanded: false,
-      }));
+      // Pre-load all tasks for progress calculation
+      const allTaskIds = milestoneList.flatMap((m) => m.tasks);
+      const uniqueTaskIds = [...new Set(allTaskIds)];
+      console.log(`[useMilestoneData] Task IDs to load:`, uniqueTaskIds.slice(0, 10), `(${uniqueTaskIds.length} total)`);
+      let allTasks: Task[] = [];
+
+      if (uniqueTaskIds.length > 0) {
+        try {
+          allTasks = await core.loadTasksByIds(uniqueTaskIds);
+          console.log(`[useMilestoneData] Pre-loaded ${allTasks.length} tasks for progress`);
+          if (allTasks.length > 0) {
+            console.log(`[useMilestoneData] Sample task IDs:`, allTasks.slice(0, 5).map(t => t.id));
+          }
+        } catch (err) {
+          console.warn('[useMilestoneData] Failed to pre-load tasks:', err);
+        }
+      }
+
+      // Create a map for quick task lookup
+      const taskMap = new Map(allTasks.map((t) => [t.id, t]));
+
+      // Build milestone states with tasks pre-loaded
+      const milestoneStates: MilestoneState[] = milestoneList.map((m) => {
+        const loadedTasks = m.tasks.map((id) => taskMap.get(id)).filter((t): t is Task => !!t);
+        console.log(`[useMilestoneData] Milestone ${m.id}: ${m.tasks.length} task IDs, ${loadedTasks.length} loaded`);
+        return {
+          milestone: m,
+          tasks: loadedTasks,
+          isLoading: false,
+          isExpanded: false,
+        };
+      });
 
       fileTreeVersionRef.current = currentVersion;
       setMilestones(milestoneStates);

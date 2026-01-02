@@ -130,3 +130,54 @@ export function getMockPanelConfig() {
     enableCreate: false,
   };
 }
+
+/** Mock milestone data structure (includes filePath for test setup) */
+export interface MockMilestone {
+  id: string;
+  title: string;
+  description: string;
+  rawContent: string;
+  tasks: string[];
+  filePath: string;
+}
+
+/**
+ * Generate mock milestones for testing the milestone view
+ * Note: Milestone files must be named m-{number}.md (e.g., m-0.md, m-1.md)
+ */
+export function generateMockMilestones(): MockMilestone[] {
+  return [
+    {
+      id: 'm-0',
+      title: 'Version 1.0 - MVP Release',
+      description: 'Initial release with core functionality including authentication, basic CRUD operations, and essential UI components.',
+      rawContent: '',
+      tasks: ['001', '002', '003', '004', '005', '006', '007', '008', '009', '010'],
+      filePath: 'backlog/milestones/m-0.md',
+    },
+    {
+      id: 'm-1',
+      title: 'Version 1.1 - Enhanced Features',
+      description: 'Second release focusing on user experience improvements, notifications, and search functionality.',
+      rawContent: '',
+      tasks: ['011', '012', '013', '014', '015'],
+      filePath: 'backlog/milestones/m-1.md',
+    },
+    {
+      id: 'm-2',
+      title: 'Version 2.0 - Platform Expansion',
+      description: 'Major release with reporting, analytics, mobile support, and internationalization.',
+      rawContent: '',
+      tasks: ['016', '017', '018', '019', '020', '021', '022', '023', '024', '025'],
+      filePath: 'backlog/milestones/m-2.md',
+    },
+    {
+      id: 'm-3',
+      title: 'Infrastructure & DevOps',
+      description: 'Ongoing infrastructure improvements, CI/CD, testing, and development tooling.',
+      rawContent: '',
+      tasks: ['026', '027', '028', '029', '030'],
+      filePath: 'backlog/milestones/m-3.md',
+    },
+  ];
+}
