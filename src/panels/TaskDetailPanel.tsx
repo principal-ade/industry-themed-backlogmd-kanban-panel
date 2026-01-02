@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Tag, User, Calendar, Flag, GitBranch, ArrowLeft } from 'lucide-react';
+import { FileText, Tag, User, Calendar, Flag, GitBranch, X } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
@@ -256,15 +256,27 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
           backgroundColor: theme.colors.backgroundSecondary,
         }}
       >
-        {/* Back button and ID */}
+        {/* ID, Status, and Close button */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            justifyContent: 'space-between',
             marginBottom: '12px',
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span
+              style={{
+                fontFamily: theme.fonts.monospace,
+                fontSize: theme.fontSizes[0],
+                color: theme.colors.textMuted,
+              }}
+            >
+              {selectedTask.id}
+            </span>
+            <StatusBadge status={selectedTask.status} />
+          </div>
           <button
             onClick={handleBack}
             style={{
@@ -288,20 +300,10 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
               e.currentTarget.style.background = theme.colors.surface;
               e.currentTarget.style.color = theme.colors.textSecondary;
             }}
-            title="Back"
+            title="Close"
           >
-            <ArrowLeft size={16} />
+            <X size={16} />
           </button>
-          <span
-            style={{
-              fontFamily: theme.fonts.monospace,
-              fontSize: theme.fontSizes[0],
-              color: theme.colors.textMuted,
-            }}
-          >
-            {selectedTask.id}
-          </span>
-          <StatusBadge status={selectedTask.status} />
         </div>
 
         {/* Title */}

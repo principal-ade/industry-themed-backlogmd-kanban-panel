@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Kanban, AlertCircle, Plus } from 'lucide-react';
+import { Kanban, AlertCircle, Plus, Search, X } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import {
@@ -49,6 +49,9 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Configure sensors for drag detection
   // PointerSensor requires a small drag distance before activating
@@ -101,6 +104,35 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     actions,
     tasksLimit: 20,
   });
+
+  // Filter tasks by search query
+  const filteredTasksByStatus = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return tasksByStatus;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = new Map<StatusColumn, { tasks: Task[]; count: number }>();
+
+    for (const [status, state] of tasksByStatus) {
+      const filteredTasks = state.tasks.filter((task) => {
+        // Search in title
+        if (task.title.toLowerCase().includes(query)) return true;
+        // Search in description
+        if (task.description?.toLowerCase().includes(query)) return true;
+        // Search in labels
+        if (task.labels?.some((label) => label.toLowerCase().includes(query))) return true;
+        // Search in assignees
+        if (task.assignee?.some((a) => a.toLowerCase().includes(query))) return true;
+        // Search in milestone
+        if (task.milestone?.toLowerCase().includes(query)) return true;
+        return false;
+      });
+      filtered.set(status, { tasks: filteredTasks, count: filteredTasks.length });
+    }
+
+    return filtered;
+  }, [tasksByStatus, searchQuery]);
 
   // Drag event handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -295,6 +327,70 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           </h2>
         </div>
 
+        {/* Search input */}
+        {isBacklogProject && (
+          <div
+            style={{
+              position: 'relative',
+              flex: '1 1 200px',
+              maxWidth: '300px',
+              minWidth: '150px',
+            }}
+          >
+            <Search
+              size={16}
+              color={theme.colors.textSecondary}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 32px 8px 32px',
+                fontSize: theme.fontSizes[1],
+                fontFamily: theme.fonts.body,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[2],
+                background: theme.colors.backgroundSecondary,
+                color: theme.colors.text,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: '6px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.colors.textSecondary,
+                }}
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Status counts and Load more active button */}
         {isBacklogProject && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -408,7 +504,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
             >
               {statusColumns.map((status) => {
                 const isSelected = status === selectedTab;
-                const statusState = tasksByStatus.get(status);
+                const statusState = filteredTasksByStatus.get(status);
                 const count = statusState?.count || 0;
                 return (
                   <button
@@ -472,7 +568,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               {statusColumns
                 .filter((status) => !isNarrowView || status === selectedTab)
                 .map((status) => {
-                  const statusState = tasksByStatus.get(status);
+                  const statusState = filteredTasksByStatus.get(status);
                   const columnTasks = statusState?.tasks || [];
                   return (
                     <KanbanColumn

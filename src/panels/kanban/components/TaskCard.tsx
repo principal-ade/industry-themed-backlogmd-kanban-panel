@@ -73,6 +73,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  // Strip "Task ###" prefix from title since ID is shown at bottom
+  const displayTitle = task.title.replace(/^Task\s+\d+\s*[:\-–—]?\s*/i, '').trim() || task.title;
+
   return (
     <div
       ref={setNodeRef}
@@ -102,7 +105,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           fontWeight: theme.fontWeights.medium,
         }}
       >
-        {task.title}
+        {displayTitle}
       </h4>
 
       {/* Task Description */}
