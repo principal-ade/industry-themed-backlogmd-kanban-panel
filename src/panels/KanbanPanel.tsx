@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Kanban, AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
+import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
 import {
@@ -410,7 +410,6 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Kanban size={24} color={theme.colors.primary} />
           <h2
             style={{
               margin: 0,
@@ -418,7 +417,19 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               color: theme.colors.text,
             }}
           >
-            Kanban Board
+            <a
+              href="https://github.com/MrLesk/Backlog.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'inherit',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Backlog.md
+            </a>
           </h2>
 
           {/* View mode toggle */}
