@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { Task } from '@backlog-md/core';
 
-interface TaskCardProps {
+export interface TaskCardProps {
   task: Task;
   onClick?: (task: Task) => void;
   isDragOverlay?: boolean;
@@ -37,19 +37,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       case 'medium':
         return theme.colors.warning;
       case 'low':
-        return theme.colors.info;
+        return theme.colors.primary;
       default:
-        return theme.colors.border;
+        return theme.colors.primary;
     }
   };
 
   // Base styles for the card
   const style: React.CSSProperties = {
     flexShrink: 0,
-    background: isSelected ? `${theme.colors.primary}10` : theme.colors.surface,
+    background: theme.colors.surface,
     borderRadius: theme.radii[2],
     padding: '12px',
-    border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+    border: `1px solid ${theme.colors.border}`,
     borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
     cursor: isDragOverlay ? 'grabbing' : 'grab',
     transition: isDragging ? 'none' : 'all 0.2s ease',
@@ -59,10 +59,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     // When dragging, the original card stays in place but becomes a placeholder
     // The DragOverlay handles the visual movement
     opacity: isDragging ? 0.4 : 1,
-    // Selected card styling
-    ...(isSelected && !isDragOverlay && {
-      boxShadow: `0 0 0 1px ${theme.colors.primary}`,
-    }),
     // Overlay card styling
     ...(isDragOverlay && {
       boxShadow: `0 8px 16px rgba(0, 0, 0, 0.15)`,
@@ -91,14 +87,24 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       {...attributes}
       onMouseEnter={(e) => {
         if (!isDragging && !isDragOverlay) {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = `0 4px 8px ${theme.colors.border}`;
+          // Expand description on hover
+          const desc = e.currentTarget.querySelector('p');
+          if (desc) {
+            (desc as HTMLElement).style.maxHeight = '20em';
+          }
+          // Ensure border stays
+          e.currentTarget.style.borderLeft = `4px solid ${getPriorityColor(task.priority)}`;
         }
       }}
       onMouseLeave={(e) => {
         if (!isDragging && !isDragOverlay) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
+          // Collapse description on leave
+          const desc = e.currentTarget.querySelector('p');
+          if (desc) {
+            (desc as HTMLElement).style.maxHeight = '2.8em';
+          }
+          // Ensure border stays
+          e.currentTarget.style.borderLeft = `4px solid ${getPriorityColor(task.priority)}`;
         }
       }}
     >
@@ -107,7 +113,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         style={{
           margin: '0 0 8px 0',
           fontSize: theme.fontSizes[2],
-          color: theme.colors.text,
+          color: isSelected ? getPriorityColor(task.priority) : theme.colors.text,
           fontWeight: theme.fontWeights.medium,
         }}
       >
@@ -122,11 +128,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             fontSize: theme.fontSizes[1],
             color: theme.colors.textSecondary,
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
             lineHeight: '1.4',
+            maxHeight: '2.8em', // 2 lines (1.4 * 2)
+            transition: 'max-height 0.3s ease',
           }}
         >
           {task.description}

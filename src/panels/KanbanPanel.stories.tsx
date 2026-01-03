@@ -7,7 +7,11 @@ import {
   createMockActions,
   createMockEvents,
 } from '../mocks/panelContext';
-import { generateMockTasks, generateMockMilestones } from './kanban/mocks/mockData';
+import {
+  rawTaskMarkdownFiles,
+  getMockTaskFilePaths,
+  generateMockMilestones,
+} from './kanban/mocks/mockData';
 import type { DataSlice } from '../types';
 
 const meta = {
@@ -35,12 +39,12 @@ type Story = StoryObj<typeof meta>;
 
 // Helper to create a mock file tree slice with backlog files
 const createBacklogFileTreeSlice = (): DataSlice<any> => {
-  const mockTasks = generateMockTasks();
+  const taskFilePaths = getMockTaskFilePaths();
   const mockMilestones = generateMockMilestones();
 
-  const taskFiles = mockTasks.map((task) => ({
-    path: task.filePath!,
-    name: task.filePath!.split('/').pop(),
+  const taskFiles = taskFilePaths.map((path) => ({
+    path,
+    name: path.split('/').pop(),
     type: 'file',
   }));
 
@@ -71,30 +75,12 @@ const createBacklogFileTreeSlice = (): DataSlice<any> => {
 
 // Helper to create context and actions with backlog data
 const createBacklogMocks = () => {
-  const mockTasks = generateMockTasks();
   const mockMilestones = generateMockMilestones();
   const fileTreeSlice = createBacklogFileTreeSlice();
 
-  const mockConfigContent = `project_name: "My Kanban Project"
+  const mockConfigContent = `project_name: "Backlog.md CLI"
 statuses: ["To Do", "In Progress", "Done"]
 default_status: "To Do"`;
-
-  const createTaskFileContent = (task: (typeof mockTasks)[0]) =>
-    `---
-id: ${task.id}
-title: ${task.title}
-status: ${task.status}
-${task.assignee && task.assignee.length > 0 ? `assignee: [${task.assignee.map((a) => `"${a}"`).join(', ')}]` : 'assignee: []'}
-created_date: ${task.createdDate}
-${task.updatedDate ? `updated_date: ${task.updatedDate}` : ''}
-${task.labels && task.labels.length > 0 ? `labels: [${task.labels.map((l) => `"${l}"`).join(', ')}]` : 'labels: []'}
-${task.priority ? `priority: ${task.priority}` : ''}
-dependencies: []
----
-
-${task.description || ''}
-
-${task.implementationPlan || ''}`.trim();
 
   const createMilestoneFileContent = (milestone: (typeof mockMilestones)[0]) =>
     `---
@@ -107,15 +93,18 @@ tasks: [${milestone.tasks.join(', ')}]
 
 ${milestone.description || ''}`;
 
-  // Pre-populate file contents
+  // Pre-populate file contents with raw markdown from Backlog.md project
   const fileContents = new Map<string, string>();
   console.log('[Mock] Config content being set:', mockConfigContent);
   fileContents.set('backlog/config.yml', mockConfigContent);
-  mockTasks.forEach((task) => {
-    if (task.filePath) {
-      fileContents.set(task.filePath, createTaskFileContent(task));
-    }
-  });
+
+  // Add raw task markdown files - these will be parsed by Core
+  for (const [filePath, content] of Object.entries(rawTaskMarkdownFiles)) {
+    fileContents.set(filePath, content);
+    console.log('[Mock] Added raw task file:', filePath);
+  }
+
+  // Add milestone files
   mockMilestones.forEach((milestone) => {
     if (milestone.filePath) {
       fileContents.set(milestone.filePath, createMilestoneFileContent(milestone));
