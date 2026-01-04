@@ -68,36 +68,38 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         transition: 'background-color 0.2s ease, border 0.2s ease',
       }}
     >
-      {/* Column Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <h3
+      {/* Column Header - hidden in narrow/mobile view (tabs show this info) */}
+      {!fullWidth && (
+        <div
           style={{
-            margin: 0,
-            fontSize: theme.fontSizes[3],
-            color: theme.colors.text,
-            fontWeight: theme.fontWeights.semibold,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          {status}
-        </h3>
-        <span
-          style={{
-            fontSize: theme.fontSizes[1],
-            color: theme.colors.textSecondary,
-            background: theme.colors.background,
-            padding: '2px 8px',
-            borderRadius: theme.radii[1],
-          }}
-        >
-          {total !== undefined ? `${tasks.length}/${total}` : tasks.length}
-        </span>
-      </div>
+          <h3
+            style={{
+              margin: 0,
+              fontSize: theme.fontSizes[3],
+              color: theme.colors.text,
+              fontWeight: theme.fontWeights.semibold,
+            }}
+          >
+            {status}
+          </h3>
+          <span
+            style={{
+              fontSize: theme.fontSizes[1],
+              color: theme.colors.textSecondary,
+              background: theme.colors.background,
+              padding: '2px 8px',
+              borderRadius: theme.radii[1],
+            }}
+          >
+            {total !== undefined ? `${tasks.length}/${total}` : tasks.length}
+          </span>
+        </div>
+      )}
 
       {/* Task Cards */}
       <div

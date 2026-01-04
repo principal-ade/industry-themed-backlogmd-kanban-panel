@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Tag, User, Calendar, Flag, GitBranch, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FileText, Tag, User, Calendar, Flag, GitBranch, X, Bot, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
+
+/** Claude assignment status for a task */
+type ClaudeAssignmentStatus = 'idle' | 'loading' | 'success' | 'error';
+
+interface ClaudeAssignmentState {
+  status: ClaudeAssignmentStatus;
+  issueUrl?: string;
+  issueNumber?: number;
+  error?: string;
+}
 
 /**
  * Extract the markdown body from a Task object for rendering.
@@ -71,6 +81,20 @@ function getTaskBodyMarkdown(task: Task, options: { includeTitle?: boolean } = {
 interface TaskSelectedPayload {
   taskId: string;
   task: Task;
+}
+
+/**
+ * Configuration options for TaskDetailPanel
+ */
+export interface TaskDetailPanelConfig {
+  editable?: boolean; // When true, checkboxes are interactive. Default: false
+}
+
+/**
+ * Extended props for TaskDetailPanel that includes optional config
+ */
+export interface TaskDetailPanelProps extends PanelComponentProps {
+  config?: TaskDetailPanelConfig;
 }
 
 /**
@@ -155,9 +179,51 @@ const MetadataRow: React.FC<{
  *
  * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
  */
-export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, actions, events }) => {
+export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actions, events, config }) => {
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [claudeAssignment, setClaudeAssignment] = useState<ClaudeAssignmentState>({ status: 'idle' });
+
+  // Extract config options
+  const { editable = false } = config ?? {};
+
+  // Read repository capabilities (Claude workflow detection)
+  const repoCapabilities = context.getRepositorySlice<{
+    hasClaudeWorkflow: boolean;
+    claudeWorkflowPath?: string;
+  }>('repoCapabilities');
+  const hasClaudeWorkflow = repoCapabilities?.data?.hasClaudeWorkflow ?? false;
+
+  // Handle "Assign to Claude" button click
+  const handleAssignToClaude = useCallback(() => {
+    if (!events || !selectedTask) return;
+
+    setClaudeAssignment({ status: 'loading' });
+
+    // Emit event for host to handle
+    (events as PanelEventEmitter).emit({
+      type: 'task:assign-to-claude',
+      source: 'task-detail-panel',
+      timestamp: Date.now(),
+      payload: {
+        taskId: selectedTask.id,
+        task: {
+          id: selectedTask.id,
+          title: selectedTask.title,
+          description: selectedTask.description,
+          priority: selectedTask.priority,
+          labels: selectedTask.labels,
+          assignee: selectedTask.assignee,
+          acceptanceCriteria: selectedTask.acceptanceCriteriaItems,
+          implementationPlan: selectedTask.implementationPlan,
+          rawContent: selectedTask.rawContent,
+          filePath: selectedTask.filePath,
+          status: selectedTask.status,
+          references: selectedTask.references,
+        },
+      },
+    });
+  }, [events, selectedTask]);
 
   // Listen for task:selected events
   useEffect(() => {
@@ -165,6 +231,8 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
 
     const handleTaskSelected = (event: { payload: TaskSelectedPayload }) => {
       setSelectedTask(event.payload.task);
+      // Reset claude assignment state when a new task is selected
+      setClaudeAssignment({ status: 'idle' });
     };
 
     // Subscribe to task:selected events
@@ -176,6 +244,39 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
       }
     };
   }, [events]);
+
+  // Listen for Claude assignment success/failure events
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribers = [
+      (events as PanelEventEmitter).on('task:assigned-to-claude', (event) => {
+        const payload = event.payload as { taskId: string; issueNumber: number; issueUrl: string };
+        if (payload.taskId === selectedTask?.id) {
+          setClaudeAssignment({
+            status: 'success',
+            issueNumber: payload.issueNumber,
+            issueUrl: payload.issueUrl,
+          });
+        }
+      }),
+      (events as PanelEventEmitter).on('task:assign-to-claude:error', (event) => {
+        const payload = event.payload as { taskId: string; error: string };
+        if (payload.taskId === selectedTask?.id) {
+          setClaudeAssignment({
+            status: 'error',
+            error: payload.error,
+          });
+        }
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [events, selectedTask?.id]);
 
   // Handle back/close
   const handleBack = () => {
@@ -256,7 +357,7 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
           backgroundColor: theme.colors.backgroundSecondary,
         }}
       >
-        {/* ID, Status, and Close button */}
+        {/* ID, Status, and Actions */}
         <div
           style={{
             display: 'flex',
@@ -277,34 +378,157 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
             </span>
             <StatusBadge status={selectedTask.status} />
           </div>
-          <button
-            onClick={handleBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: theme.radii[1],
-              background: theme.colors.surface,
-              cursor: 'pointer',
-              color: theme.colors.textSecondary,
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = theme.colors.backgroundSecondary;
-              e.currentTarget.style.color = theme.colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = theme.colors.surface;
-              e.currentTarget.style.color = theme.colors.textSecondary;
-            }}
-            title="Close"
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Assign to Claude button */}
+            {hasClaudeWorkflow && claudeAssignment.status === 'idle' && (
+              <button
+                onClick={handleAssignToClaude}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  border: `1px solid ${theme.colors.primary}`,
+                  borderRadius: theme.radii[1],
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: theme.colors.primary,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.colors.primary;
+                  e.currentTarget.style.color = theme.colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = theme.colors.primary;
+                }}
+                title="Assign to Claude"
+              >
+                <Bot size={14} />
+                Assign to Claude
+              </button>
+            )}
+
+            {/* Loading state */}
+            {claudeAssignment.status === 'loading' && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  color: theme.colors.textSecondary,
+                  fontSize: theme.fontSizes[1],
+                }}
+              >
+                <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                Assigning...
+              </div>
+            )}
+
+            {/* Success state */}
+            {claudeAssignment.status === 'success' && (
+              <a
+                href={claudeAssignment.issueUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  border: `1px solid ${theme.colors.success}`,
+                  borderRadius: theme.radii[1],
+                  background: `${theme.colors.success}15`,
+                  color: theme.colors.success,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <CheckCircle size={14} />
+                Issue #{claudeAssignment.issueNumber}
+              </a>
+            )}
+
+            {/* Error state */}
+            {claudeAssignment.status === 'error' && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  border: `1px solid ${theme.colors.error}`,
+                  borderRadius: theme.radii[1],
+                  background: `${theme.colors.error}15`,
+                  color: theme.colors.error,
+                  fontSize: theme.fontSizes[1],
+                }}
+                title={claudeAssignment.error}
+              >
+                <AlertCircle size={14} />
+                Failed
+                <button
+                  onClick={() => setClaudeAssignment({ status: 'idle' })}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: theme.colors.error,
+                    cursor: 'pointer',
+                    padding: '0 0 0 4px',
+                    fontSize: theme.fontSizes[0],
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Close button */}
+            <button
+              onClick={handleBack}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[1],
+                background: theme.colors.surface,
+                cursor: 'pointer',
+                color: theme.colors.textSecondary,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+                e.currentTarget.style.color = theme.colors.text;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.surface;
+                e.currentTarget.style.color = theme.colors.textSecondary;
+              }}
+              title="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
+
+        {/* Spinner animation */}
+        <style>
+          {`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}
+        </style>
 
         {/* Title */}
         <h1
@@ -410,6 +634,7 @@ export const TaskDetailPanel: React.FC<PanelComponentProps> = ({ context, action
             theme={theme}
             maxWidth="100%"
             transparentBackground
+            editable={editable}
           />
         ) : (
           <div
