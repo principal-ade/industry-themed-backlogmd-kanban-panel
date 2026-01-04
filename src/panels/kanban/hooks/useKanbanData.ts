@@ -83,6 +83,8 @@ interface UseKanbanDataOptions {
   actions?: PanelActions;
   /** Number of tasks to load per page (default: 20) */
   tasksLimit?: number;
+  /** Event emitter for panel events */
+  events?: any;
 }
 
 const DEFAULT_TASKS_LIMIT = 20;
@@ -100,6 +102,7 @@ export function useKanbanData(
     context,
     actions,
     tasksLimit = DEFAULT_TASKS_LIMIT,
+    events,
   } = options || {};
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -303,6 +306,26 @@ export function useKanbanData(
   useEffect(() => {
     loadBacklogData();
   }, [loadBacklogData]);
+
+  // Listen for file write events and refresh when tasks are created/modified
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribe = events.on('file:write-complete', (event: any) => {
+      const payload = event.payload || {};
+      const filePath = payload.path || '';
+
+      // Check if the written file is a task file
+      if (filePath.includes('backlog/tasks/')) {
+        console.log('[useKanbanData] Task file written, refreshing data:', filePath);
+        // Reset file tree version to force reload
+        fileTreeVersionRef.current = null;
+        loadBacklogData();
+      }
+    });
+
+    return unsubscribe;
+  }, [events, loadBacklogData]);
 
   // Load more tasks (loads next page, then regroups by status)
   const loadMoreTasks = useCallback(async () => {

@@ -111,6 +111,9 @@ ${milestone.description || ''}`;
     }
   });
 
+  // Create event emitter
+  const events = createMockEvents();
+
   // Create readFile adapter that uses our file contents map
   const readFile = async (path: string): Promise<string> => {
     const content = fileContents.get(path);
@@ -163,6 +166,29 @@ ${milestone.description || ''}`;
         writeFile: async (path: string, content: string) => {
           fileContents.set(path, content);
           console.log('[Mock] Writing file:', path, 'Length:', content.length);
+
+          // Update fileTree slice to reflect the new file
+          const currentFiles = fileTreeSlice.data.allFiles || [];
+          const fileExists = currentFiles.some((f: any) => f.path === path);
+          if (!fileExists) {
+            fileTreeSlice.data = {
+              ...fileTreeSlice.data,
+              allFiles: [
+                ...currentFiles,
+                { path, name: path.split('/').pop(), type: 'file' },
+              ],
+            };
+            console.log('[Mock] Added file to fileTree:', path);
+          }
+
+          // Emit file:write-complete event
+          events.emit({
+            type: 'file:write-complete',
+            source: 'mock-file-system',
+            timestamp: Date.now(),
+            payload: { path, content },
+          });
+          console.log('[Mock] Emitted file:write-complete event for:', path);
         },
         createDir: async (path: string) => {
           console.log('[Mock] Creating directory:', path);
@@ -197,7 +223,7 @@ ${milestone.description || ''}`;
     },
   });
 
-  return { context, actions };
+  return { context, actions, events };
 };
 
 export const EmptyState: Story = {
@@ -235,13 +261,13 @@ export const WithMockData: Story = {
   args: {
     context: backlogMocks.context,
     actions: backlogMocks.actions,
-    events: createMockEvents(),
+    events: backlogMocks.events,
   },
   parameters: {
     docs: {
       description: {
         story:
-          'Kanban board showing tasks organized by status columns with mock data.',
+          'Kanban board showing tasks organized by status columns with mock data. Create a new task to see it appear immediately on the board without reloading.',
       },
     },
   },
@@ -251,7 +277,7 @@ export const MilestonesView: Story = {
   args: {
     context: backlogMocks.context,
     actions: backlogMocks.actions,
-    events: createMockEvents(),
+    events: backlogMocks.events,
   },
   parameters: {
     docs: {

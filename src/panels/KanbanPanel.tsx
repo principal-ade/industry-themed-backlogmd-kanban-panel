@@ -134,6 +134,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   } = useKanbanData({
     context,
     actions,
+    events,
     tasksLimit: 20,
   });
 
