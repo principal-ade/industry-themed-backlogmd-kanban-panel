@@ -1,7 +1,21 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useTheme } from '@principal-ade/industry-theme';
+import { ExternalLink } from 'lucide-react';
 import type { Task } from '@backlog-md/core';
+
+/** Extract GitHub issue info from a task's references */
+function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
+  if (!references) return null;
+  for (const ref of references) {
+    // Match GitHub issue URLs like https://github.com/owner/repo/issues/123
+    const match = ref.match(/github\.com\/[^/]+\/[^/]+\/issues\/(\d+)/);
+    if (match) {
+      return { number: parseInt(match[1], 10), url: ref };
+    }
+  }
+  return null;
+}
 
 export interface TaskCardProps {
   task: Task;
@@ -175,13 +189,39 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           color: theme.colors.textMuted,
         }}
       >
-        <span
-          style={{
-            fontFamily: theme.fonts.monospace,
-          }}
-        >
-          {task.id}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              fontFamily: theme.fonts.monospace,
+            }}
+          >
+            {task.id}
+          </span>
+          {(() => {
+            const issue = getGitHubIssueFromRefs(task.references);
+            if (!issue) return null;
+            return (
+              <a
+                href={issue.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  color: theme.colors.primary,
+                  textDecoration: 'none',
+                  fontSize: theme.fontSizes[0],
+                }}
+                title={`View issue #${issue.number} on GitHub`}
+              >
+                <ExternalLink size={10} />
+                #{issue.number}
+              </a>
+            );
+          })()}
+        </div>
         {task.assignee && task.assignee.length > 0 && (
           <span
             style={{

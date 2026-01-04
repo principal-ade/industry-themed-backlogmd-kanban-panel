@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, Tag, User, Calendar, Flag, GitBranch, X, Bot, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Tag, User, Calendar, Flag, GitBranch, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
+
+/** Extract GitHub issue info from a task's references */
+function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
+  if (!references) return null;
+  for (const ref of references) {
+    // Match GitHub issue URLs like https://github.com/owner/repo/issues/123
+    const match = ref.match(/github\.com\/[^/]+\/[^/]+\/issues\/(\d+)/);
+    if (match) {
+      return { number: parseInt(match[1], 10), url: ref };
+    }
+  }
+  return null;
+}
 
 /** Claude assignment status for a task */
 type ClaudeAssignmentStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -379,8 +392,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             <StatusBadge status={selectedTask.status} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Assign to Claude button */}
-            {hasClaudeWorkflow && claudeAssignment.status === 'idle' && (
+            {/* Assign to Claude button - hidden if already has a GitHub issue */}
+            {hasClaudeWorkflow && claudeAssignment.status === 'idle' && !getGitHubIssueFromRefs(selectedTask.references) && (
               <button
                 onClick={handleAssignToClaude}
                 style={{
@@ -586,6 +599,34 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
               value={selectedTask.branch}
             />
           )}
+
+          {(() => {
+            const issue = getGitHubIssueFromRefs(selectedTask.references);
+            if (!issue) return null;
+            return (
+              <MetadataRow
+                icon={<ExternalLink size={14} />}
+                label="GitHub Issue"
+                value={
+                  <a
+                    href={issue.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: theme.colors.primary,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    #{issue.number}
+                    <ExternalLink size={12} />
+                  </a>
+                }
+              />
+            );
+          })()}
         </div>
 
         {/* Labels */}
