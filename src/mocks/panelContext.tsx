@@ -89,11 +89,28 @@ const createMockSlice = <T,>(
 });
 
 /**
+ * Options for creating mock context
+ */
+interface MockContextOptions {
+  /** Override default context values */
+  overrides?: Partial<PanelContextValue>;
+  /** Additional slices to add/override */
+  slices?: Record<string, DataSlice>;
+}
+
+/**
  * Mock Panel Context for Storybook
  */
 export const createMockContext = (
-  overrides?: Partial<PanelContextValue>
+  options?: MockContextOptions | Partial<PanelContextValue>
 ): PanelContextValue => {
+  // Support both old signature (direct overrides) and new signature (options object)
+  const opts: MockContextOptions = options && 'slices' in options
+    ? options as MockContextOptions
+    : { overrides: options as Partial<PanelContextValue> };
+
+  const { overrides, slices: customSlices } = opts;
+
   // Create mock data slices
   const mockSlices = new Map<string, DataSlice>([
     ['git', createMockSlice('git', mockGitStatusData)],
@@ -152,6 +169,13 @@ export const createMockContext = (
       }),
     ],
   ]);
+
+  // Add custom slices if provided
+  if (customSlices) {
+    for (const [name, slice] of Object.entries(customSlices)) {
+      mockSlices.set(name, slice);
+    }
+  }
 
   // Create mock file system adapter
   const mockFileSystem = createMockFileSystemAdapter();

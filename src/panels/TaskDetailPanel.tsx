@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, Tag, User, Calendar, Flag, GitBranch, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { FileText, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
@@ -152,33 +152,6 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     >
       {status}
     </span>
-  );
-};
-
-/**
- * Metadata row component
- */
-const MetadataRow: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}> = ({ icon, label, value }) => {
-  const { theme } = useTheme();
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        fontSize: theme.fontSizes[1],
-      }}
-    >
-      <span style={{ color: theme.colors.textMuted, display: 'flex', alignItems: 'center' }}>
-        {icon}
-      </span>
-      <span style={{ color: theme.colors.textSecondary }}>{label}:</span>
-      <span style={{ color: theme.colors.text }}>{value}</span>
-    </div>
   );
 };
 
@@ -389,10 +362,15 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             >
               {selectedTask.id}
             </span>
+            {selectedTask.priority && (
+              <span style={getPriorityStyles(theme, selectedTask.priority)}>
+                {selectedTask.priority}
+              </span>
+            )}
             <StatusBadge status={selectedTask.status} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Assign to Claude button - hidden if already has a GitHub issue */}
+            {/* Assign to Claude button - shown if no GitHub issue yet */}
             {hasClaudeWorkflow && claudeAssignment.status === 'idle' && !getGitHubIssueFromRefs(selectedTask.references) && (
               <button
                 onClick={handleAssignToClaude}
@@ -424,6 +402,46 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
                 Assign to Claude
               </button>
             )}
+
+            {/* View Progress button - shown when task has a GitHub issue */}
+            {(() => {
+              const existingIssue = getGitHubIssueFromRefs(selectedTask.references);
+              if (!existingIssue || claudeAssignment.status !== 'idle') return null;
+              return (
+                <a
+                  href={existingIssue.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    border: `1px solid ${theme.colors.primary}`,
+                    borderRadius: theme.radii[1],
+                    background: 'transparent',
+                    color: theme.colors.primary,
+                    fontSize: theme.fontSizes[1],
+                    fontWeight: theme.fontWeights.medium,
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = theme.colors.primary;
+                    e.currentTarget.style.color = theme.colors.background;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = theme.colors.primary;
+                  }}
+                  title={`View issue #${existingIssue.number} on GitHub`}
+                >
+                  <Bot size={14} />
+                  View Progress
+                  <ExternalLink size={12} />
+                </a>
+              );
+            })()}
 
             {/* Loading state */}
             {claudeAssignment.status === 'loading' && (
@@ -556,108 +574,6 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
           {selectedTask.title}
         </h1>
 
-        {/* Metadata grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '12px',
-          }}
-        >
-          {selectedTask.priority && (
-            <MetadataRow
-              icon={<Flag size={14} />}
-              label="Priority"
-              value={
-                <span style={getPriorityStyles(theme, selectedTask.priority)}>
-                  {selectedTask.priority}
-                </span>
-              }
-            />
-          )}
-
-          {selectedTask.assignee && selectedTask.assignee.length > 0 && (
-            <MetadataRow
-              icon={<User size={14} />}
-              label="Assignee"
-              value={selectedTask.assignee.join(', ')}
-            />
-          )}
-
-          {selectedTask.createdDate && (
-            <MetadataRow
-              icon={<Calendar size={14} />}
-              label="Created"
-              value={selectedTask.createdDate}
-            />
-          )}
-
-          {selectedTask.branch && (
-            <MetadataRow
-              icon={<GitBranch size={14} />}
-              label="Branch"
-              value={selectedTask.branch}
-            />
-          )}
-
-          {(() => {
-            const issue = getGitHubIssueFromRefs(selectedTask.references);
-            if (!issue) return null;
-            return (
-              <MetadataRow
-                icon={<ExternalLink size={14} />}
-                label="GitHub Issue"
-                value={
-                  <a
-                    href={issue.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      color: theme.colors.primary,
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    #{issue.number}
-                    <ExternalLink size={12} />
-                  </a>
-                }
-              />
-            );
-          })()}
-        </div>
-
-        {/* Labels */}
-        {selectedTask.labels && selectedTask.labels.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginTop: '12px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <Tag size={14} color={theme.colors.textMuted} />
-            {selectedTask.labels.map((label) => (
-              <span
-                key={label}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: theme.radii[1],
-                  fontSize: theme.fontSizes[0],
-                  fontWeight: theme.fontWeights.medium,
-                  background: `${theme.colors.primary}15`,
-                  color: theme.colors.primary,
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Body Content */}

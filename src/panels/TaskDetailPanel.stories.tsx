@@ -7,7 +7,6 @@ import {
   createMockActions,
   createMockEvents,
 } from '../mocks/panelContext';
-import { generateMockTasks } from './kanban/mocks/mockData';
 import type { Task } from '@backlog-md/core';
 
 const meta = {
@@ -33,16 +32,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Get a sample task with rich content
+// Create a sample task with rich content
 const getSampleTask = (): Task => {
-  const mockTasks = generateMockTasks();
-  // Find a task with description, or use the first one
-  const task = mockTasks.find(t => t.description) || mockTasks[0];
-
-  // Enhance with more content for demo
   return {
-    ...task,
-    description: task.description || 'This is the task description with detailed information about what needs to be done.',
+    id: 'task-sample-001',
+    title: 'Implement user authentication',
+    status: 'In Progress',
+    createdDate: '2024-01-15',
+    assignee: ['Developer'],
+    labels: ['feature', 'security'],
+    dependencies: [],
+    priority: 'high',
+    description: 'This is the task description with detailed information about what needs to be done.',
     implementationPlan: `## Steps
 
 1. First, analyze the requirements
@@ -61,7 +62,7 @@ const getSampleTask = (): Task => {
       { index: 3, text: 'Code review completed', checked: false },
       { index: 4, text: 'Documentation updated', checked: false },
     ],
-    rawContent: `# ${task.title}
+    rawContent: `# Implement user authentication
 
 This is the task description with detailed information about what needs to be done.
 
@@ -241,6 +242,81 @@ export const TaskWithBranch: Story = {
     docs: {
       description: {
         story: 'Task associated with a feature branch, showing branch metadata.',
+      },
+    },
+  },
+};
+
+export const TaskWithGitHubIssue: Story = {
+  args: defaultMocks,
+  render: (args) => {
+    const task: Task = {
+      ...getSampleTask(),
+      id: 'task-issue-456',
+      title: 'Task Linked to GitHub Issue',
+      status: 'in-progress',
+      labels: ['claude-task', 'feature'],
+      references: ['https://github.com/principal-ade/web-ade/issues/42'],
+      description: 'This task is linked to a GitHub issue and is being worked on by Claude.',
+    };
+    return (
+      <TaskDetailWithSelectedTask
+        task={task}
+        context={args.context}
+        actions={args.actions}
+        events={args.events}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Task with a linked GitHub issue. Shows "View Progress" button instead of "Assign to Claude", and the GitHub Issue link appears in metadata.',
+      },
+    },
+  },
+};
+
+export const TaskWithClaudeWorkflow: Story = {
+  args: {
+    context: createMockContext({
+      slices: {
+        repoCapabilities: {
+          scope: 'repository' as const,
+          name: 'repoCapabilities',
+          data: { hasClaudeWorkflow: true },
+          loading: false,
+          error: null,
+          refresh: async () => {},
+        },
+      },
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+  render: (args) => {
+    const task: Task = {
+      ...getSampleTask(),
+      id: 'task-assignable-789',
+      title: 'Task Ready for Claude Assignment',
+      status: 'backlog',
+      labels: ['feature'],
+      filePath: 'backlog/tasks/task-assignable-789.md',
+      description: 'This task can be assigned to Claude because the repository has a Claude workflow configured.',
+    };
+    return (
+      <TaskDetailWithSelectedTask
+        task={task}
+        context={args.context}
+        actions={args.actions}
+        events={args.events}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Task in a repository with Claude workflow enabled. Shows the "Assign to Claude" button.',
       },
     },
   },
