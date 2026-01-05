@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { FileText, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink, Trash2 } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { PanelComponentProps, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
@@ -25,6 +27,14 @@ interface ClaudeAssignmentState {
   status: ClaudeAssignmentStatus;
   issueUrl?: string;
   issueNumber?: number;
+  error?: string;
+}
+
+/** Delete status for a task */
+type DeleteStatus = 'idle' | 'loading' | 'success' | 'error';
+
+interface DeleteState {
+  status: DeleteStatus;
   error?: string;
 }
 
@@ -169,9 +179,19 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [claudeAssignment, setClaudeAssignment] = useState<ClaudeAssignmentState>({ status: 'idle' });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteState, setDeleteState] = useState<DeleteState>({ status: 'idle' });
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Extract config options
   const { editable = false } = config ?? {};
+
+  // Listen for panel focus events
+  usePanelFocusListener(
+    'task-detail',
+    events,
+    () => panelRef.current?.focus()
+  );
 
   // Read repository capabilities (Claude workflow detection)
   const repoCapabilities = context.getRepositorySlice<{
@@ -207,6 +227,24 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
           status: selectedTask.status,
           references: selectedTask.references,
         },
+      },
+    });
+  }, [events, selectedTask]);
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = useCallback(() => {
+    if (!events || !selectedTask) return;
+
+    setDeleteState({ status: 'loading' });
+
+    // Emit event for KanbanPanel to handle
+    (events as PanelEventEmitter).emit({
+      type: 'task:delete-requested',
+      source: 'task-detail-panel',
+      timestamp: Date.now(),
+      payload: {
+        taskId: selectedTask.id,
+        task: selectedTask,
       },
     });
   }, [events, selectedTask]);
@@ -264,9 +302,56 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
     };
   }, [events, selectedTask?.id]);
 
+  // Listen for delete success/failure events
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribers = [
+      (events as PanelEventEmitter).on('task:deleted:success', (event) => {
+        const payload = event.payload as { taskId: string };
+        if (payload.taskId === selectedTask?.id) {
+          setDeleteState({ status: 'success' });
+          setIsDeleteModalOpen(false);
+
+          // Show success message for 2 seconds, then close and emit task:deleted
+          setTimeout(() => {
+            // Emit task:deleted event for host orchestration
+            (events as PanelEventEmitter).emit({
+              type: 'task:deleted',
+              source: 'task-detail-panel',
+              timestamp: Date.now(),
+              payload: { taskId: payload.taskId },
+            });
+
+            // Close the panel
+            setSelectedTask(null);
+            setDeleteState({ status: 'idle' });
+          }, 2000);
+        }
+      }),
+      (events as PanelEventEmitter).on('task:deleted:error', (event) => {
+        const payload = event.payload as { taskId: string; error: string };
+        if (payload.taskId === selectedTask?.id) {
+          setDeleteState({
+            status: 'error',
+            error: payload.error,
+          });
+        }
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [events, selectedTask?.id]);
+
   // Handle back/close
   const handleBack = () => {
     setSelectedTask(null);
+    setDeleteState({ status: 'idle' });
+    setIsDeleteModalOpen(false);
     // Optionally emit an event to notify other panels
     if (events) {
       (events as PanelEventEmitter).emit({
@@ -325,6 +410,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
 
   return (
     <div
+      ref={panelRef}
+      tabIndex={-1}
       style={{
         height: '100%',
         display: 'flex',
@@ -332,6 +419,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
         overflow: 'hidden',
+        outline: 'none',
       }}
     >
       {/* Header */}
@@ -521,6 +609,60 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
               </div>
             )}
 
+            {/* Delete button */}
+            {deleteState.status === 'idle' && (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  border: `1px solid ${theme.colors.error}`,
+                  borderRadius: theme.radii[1],
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: theme.colors.error,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.colors.error;
+                  e.currentTarget.style.color = theme.colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = theme.colors.error;
+                }}
+                title="Delete task"
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            )}
+
+            {/* Delete success indicator */}
+            {deleteState.status === 'success' && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  border: `1px solid ${theme.colors.success}`,
+                  borderRadius: theme.radii[1],
+                  background: `${theme.colors.success}15`,
+                  color: theme.colors.success,
+                  fontSize: theme.fontSizes[1],
+                  fontWeight: theme.fontWeights.medium,
+                }}
+              >
+                <CheckCircle size={14} />
+                Task deleted
+              </div>
+            )}
+
             {/* Close button */}
             <button
               onClick={handleBack}
@@ -609,6 +751,167 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+          >
+            {/* Backdrop */}
+            <div
+              onClick={() => setIsDeleteModalOpen(false)}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              }}
+            />
+
+            {/* Modal */}
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: '400px',
+                backgroundColor: theme.colors.background,
+                borderRadius: theme.radii[3],
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  borderBottom: `1px solid ${theme.colors.border}`,
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: theme.fontSizes[4],
+                    fontWeight: 600,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Delete Task?
+                </h2>
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: theme.radii[1],
+                    color: theme.colors.textMuted,
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: '20px' }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: theme.fontSizes[2],
+                    color: theme.colors.text,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Are you sure you want to delete <strong>"{selectedTask.title}"</strong>? This action cannot be undone.
+                </p>
+
+                {/* Error message */}
+                {deleteState.status === 'error' && (
+                  <div
+                    style={{
+                      marginTop: '16px',
+                      padding: '10px 12px',
+                      backgroundColor: `${theme.colors.error}15`,
+                      border: `1px solid ${theme.colors.error}`,
+                      borderRadius: theme.radii[2],
+                      color: theme.colors.error,
+                      fontSize: theme.fontSizes[1],
+                    }}
+                  >
+                    {deleteState.error || 'Failed to delete task'}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '12px',
+                  padding: '16px 20px',
+                  borderTop: `1px solid ${theme.colors.border}`,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={deleteState.status === 'loading'}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: theme.fontSizes[2],
+                    fontWeight: 500,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radii[2],
+                    backgroundColor: 'transparent',
+                    color: theme.colors.text,
+                    cursor: deleteState.status === 'loading' ? 'not-allowed' : 'pointer',
+                    opacity: deleteState.status === 'loading' ? 0.5 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  disabled={deleteState.status === 'loading'}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    fontSize: theme.fontSizes[2],
+                    fontWeight: 500,
+                    border: 'none',
+                    borderRadius: theme.radii[2],
+                    backgroundColor: theme.colors.error,
+                    color: theme.colors.background,
+                    cursor: deleteState.status === 'loading' ? 'wait' : 'pointer',
+                    opacity: deleteState.status === 'loading' ? 0.7 : 1,
+                  }}
+                >
+                  {deleteState.status === 'loading' && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

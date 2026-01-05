@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/core';
 import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import type { PanelComponentProps } from '../types';
 import {
   useKanbanData,
@@ -45,7 +46,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<StatusColumn>('todo');
   const [isNarrowView, setIsNarrowView] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const kanbanPanelRef = useRef<HTMLDivElement>(null);
 
   // View mode state (board vs milestones)
   const [viewMode, setViewMode] = useState<ViewMode>('board');
@@ -91,7 +92,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
 
   // Detect narrow viewport using ResizeObserver
   useLayoutEffect(() => {
-    const container = containerRef.current;
+    const container = kanbanPanelRef.current;
     if (!container) return;
 
     const observer = new ResizeObserver((entries) => {
@@ -104,6 +105,13 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // Listen for panel focus events
+  usePanelFocusListener(
+    'backlog-kanban',
+    events,
+    () => kanbanPanelRef.current?.focus()
+  );
 
   // Subscribe to task:selected events from other panels
   useEffect(() => {
@@ -385,7 +393,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
 
   return (
     <div
-      ref={containerRef}
+      ref={kanbanPanelRef}
+      tabIndex={-1}
       style={{
         padding: 'clamp(12px, 3vw, 20px)', // Responsive padding for mobile
         fontFamily: theme.fonts.body,
@@ -397,6 +406,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
         overflow: 'hidden', // Prevent outer scrolling
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
+        outline: 'none', // Remove default focus outline
       }}
     >
       {/* Header */}
