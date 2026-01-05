@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useTheme } from '@principal-ade/industry-theme';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, GitBranch } from 'lucide-react';
 import type { Task } from '@backlog-md/core';
 
 /** Extract GitHub issue info from a task's references */
@@ -123,16 +123,38 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       }}
     >
       {/* Task Title */}
-      <h4
-        style={{
-          margin: '0 0 8px 0',
-          fontSize: theme.fontSizes[2],
-          color: isSelected ? getPriorityColor(task.priority) : theme.colors.text,
-          fontWeight: theme.fontWeights.medium,
-        }}
-      >
-        {displayTitle}
-      </h4>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+        <h4
+          style={{
+            margin: 0,
+            fontSize: theme.fontSizes[2],
+            color: isSelected ? getPriorityColor(task.priority) : theme.colors.text,
+            fontWeight: theme.fontWeights.medium,
+            flex: 1,
+          }}
+        >
+          {displayTitle}
+        </h4>
+        {getGitHubIssueFromRefs(task.references) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '2px 6px',
+              borderRadius: theme.radii[1],
+              background: `${theme.colors.success}20`,
+              color: theme.colors.success,
+              fontSize: theme.fontSizes[0],
+              fontWeight: theme.fontWeights.medium,
+              flexShrink: 0,
+            }}
+            title="Assigned to Claude"
+          >
+            <GitBranch size={10} />
+          </div>
+        )}
+      </div>
 
       {/* Task Description */}
       {task.description && (

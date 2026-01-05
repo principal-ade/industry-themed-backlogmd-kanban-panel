@@ -431,7 +431,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
           backgroundColor: theme.colors.backgroundSecondary,
         }}
       >
-        {/* ID, Status, and Actions */}
+        {/* ID, Status, and Close button */}
         <div
           style={{
             display: 'flex',
@@ -457,14 +457,46 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             )}
             <StatusBadge status={selectedTask.status} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Assign to Claude button - shown if no GitHub issue yet */}
-            {hasClaudeWorkflow && claudeAssignment.status === 'idle' && !getGitHubIssueFromRefs(selectedTask.references) && (
+          <button
+            onClick={handleBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii[1],
+              background: theme.colors.surface,
+              cursor: 'pointer',
+              color: theme.colors.textSecondary,
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              e.currentTarget.style.color = theme.colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = theme.colors.surface;
+              e.currentTarget.style.color = theme.colors.textSecondary;
+            }}
+            title="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Action buttons row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          {/* Assign to Claude button - shown if no GitHub issue yet */}
+          {hasClaudeWorkflow && claudeAssignment.status === 'idle' && !getGitHubIssueFromRefs(selectedTask.references) && (
               <button
                 onClick={handleAssignToClaude}
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   border: `1px solid ${theme.colors.primary}`,
@@ -501,8 +533,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
+                    flex: 1,
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '6px',
                     padding: '6px 12px',
                     border: `1px solid ${theme.colors.primary}`,
@@ -535,8 +569,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             {claudeAssignment.status === 'loading' && (
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   color: theme.colors.textSecondary,
@@ -555,8 +591,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   border: `1px solid ${theme.colors.success}`,
@@ -578,8 +616,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             {claudeAssignment.status === 'error' && (
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   border: `1px solid ${theme.colors.error}`,
@@ -614,8 +654,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   border: `1px solid ${theme.colors.error}`,
@@ -646,8 +688,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
             {deleteState.status === 'success' && (
               <div
                 style={{
+                  flex: 1,
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
                   padding: '6px 12px',
                   border: `1px solid ${theme.colors.success}`,
@@ -662,36 +706,6 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actio
                 Task deleted
               </div>
             )}
-
-            {/* Close button */}
-            <button
-              onClick={handleBack}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: theme.radii[1],
-                background: theme.colors.surface,
-                cursor: 'pointer',
-                color: theme.colors.textSecondary,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = theme.colors.backgroundSecondary;
-                e.currentTarget.style.color = theme.colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.colors.surface;
-                e.currentTarget.style.color = theme.colors.textSecondary;
-              }}
-              title="Close"
-            >
-              <X size={16} />
-            </button>
-          </div>
         </div>
 
         {/* Spinner animation */}
