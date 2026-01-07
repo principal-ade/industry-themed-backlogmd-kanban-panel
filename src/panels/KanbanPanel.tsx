@@ -16,7 +16,7 @@ import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import type { PanelComponentProps } from '../types';
 import {
   useKanbanData,
-  STATUS_DISPLAY_LABELS,
+  STATUS_COLUMNS,
   type StatusColumn,
 } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
@@ -25,7 +25,7 @@ import { EmptyState } from './kanban/components/EmptyState';
 import { TaskModal } from './kanban/components/TaskModal';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { MilestoneModal } from './milestone/components/MilestoneModal';
-import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput } from '@backlog-md/core';
+import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 
 type ViewMode = 'board' | 'milestones';
 
@@ -44,7 +44,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<StatusColumn>('todo');
+  const [selectedTab, setSelectedTab] = useState<StatusColumn>(DEFAULT_TASK_STATUSES.TODO);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const kanbanPanelRef = useRef<HTMLDivElement>(null);
 
@@ -212,13 +212,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     const task = getTaskById(taskId);
     if (!task) return;
 
-    // Determine current column from task status
-    const statusToColumn: Record<string, StatusColumn> = {
-      'To Do': 'todo',
-      'In Progress': 'in-progress',
-      'Done': 'done',
-    };
-    const currentColumn = statusToColumn[task.status] || 'todo';
+    // Current column IS the task status (no mapping needed)
+    const currentColumn = task.status || DEFAULT_TASK_STATUSES.TODO;
 
     // Only move if dropping in a different column
     if (currentColumn !== targetColumn) {
@@ -386,7 +381,11 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
   };
 
   // Get available statuses and milestones for task modal
-  const availableStatuses = ['To Do', 'In Progress', 'Done'];
+  const availableStatuses = [
+    DEFAULT_TASK_STATUSES.TODO,
+    DEFAULT_TASK_STATUSES.IN_PROGRESS,
+    DEFAULT_TASK_STATUSES.DONE
+  ];
 
   // Determine which error to show based on view mode
   const currentError = viewMode === 'board' ? error : milestonesError;
@@ -778,7 +777,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
                       gap: '6px',
                     }}
                   >
-                    {STATUS_DISPLAY_LABELS[status]}
+                    {status}
                     <span
                       style={{
                         background: isSelected ? 'rgba(255,255,255,0.2)' : theme.colors.background,
@@ -825,7 +824,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
                     <KanbanColumn
                       key={status}
                       columnId={status}
-                      status={STATUS_DISPLAY_LABELS[status]}
+                      status={status}
                       tasks={columnTasks}
                       onTaskClick={handleTaskClick}
                       fullWidth={isNarrowView}

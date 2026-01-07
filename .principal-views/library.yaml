@@ -1,0 +1,27 @@
+version: "1.0.0"
+name: "Component Library"
+
+nodeComponents: {}
+
+edgeComponents:
+  interaction:
+    description: "User interaction with UI component"
+    color: "#3b82f6"
+  trigger:
+    description: "Event triggers another action or event"
+    color: "#8b5cf6"
+  emit:
+    description: "Emits an event to the event bus"
+    color: "#ec4899"
+  display:
+    description: "Updates or displays UI"
+    color: "#10b981"
+  flow:
+    description: "Data or control flow between processes"
+    color: "#f59e0b"
+  call:
+    description: "Function or API call"
+    color: "#06b6d4"
+  update:
+    description: "Updates state or data"
+    color: "#84cc16"

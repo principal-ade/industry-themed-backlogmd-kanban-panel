@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Core, type Task, type PaginatedResult } from '@backlog-md/core';
+import { Core, type Task, type PaginatedResult, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
 import type { PanelContextValue, PanelActions } from '../../../types';
 
@@ -11,29 +11,18 @@ export interface ColumnState {
   isLoadingMore: boolean;
 }
 
-/** Status column names */
-export type StatusColumn = 'todo' | 'in-progress' | 'done';
+/**
+ * Status column identifiers - now using actual status values directly
+ * This eliminates the need for status-to-column mapping
+ */
+export type StatusColumn = typeof DEFAULT_TASK_STATUSES[keyof typeof DEFAULT_TASK_STATUSES];
 
-/** Display labels for status columns */
-export const STATUS_DISPLAY_LABELS: Record<StatusColumn, string> = {
-  'todo': 'To Do',
-  'in-progress': 'In Progress',
-  'done': 'Done',
-};
-
-/** Map task status field values to StatusColumn keys */
-const _STATUS_TO_COLUMN: Record<string, StatusColumn> = {
-  'To Do': 'todo',
-  'In Progress': 'in-progress',
-  'Done': 'done',
-};
-
-/** Map StatusColumn keys back to task status field values */
-const COLUMN_TO_STATUS: Record<StatusColumn, string> = {
-  'todo': 'To Do',
-  'in-progress': 'In Progress',
-  'done': 'Done',
-};
+/** All status columns in order for rendering */
+export const STATUS_COLUMNS: StatusColumn[] = [
+  DEFAULT_TASK_STATUSES.TODO,
+  DEFAULT_TASK_STATUSES.IN_PROGRESS,
+  DEFAULT_TASK_STATUSES.DONE,
+];
 
 /** Status-based column state (computed from source data) */
 export interface StatusColumnState {
@@ -166,12 +155,11 @@ export function useKanbanData(
 
   // Helper to group tasks by status and build column states
   const buildColumnStates = useCallback((allTasks: Task[]): Map<StatusColumn, ColumnState> => {
-    const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'done'];
     const newColumnStates = new Map<StatusColumn, ColumnState>();
 
-    for (const column of statusColumns) {
-      const status = COLUMN_TO_STATUS[column];
-      const columnTasks = allTasks.filter(t => t.status === status);
+    for (const column of STATUS_COLUMNS) {
+      // Column IS the status now (no mapping needed)
+      const columnTasks = allTasks.filter(t => t.status === column);
       newColumnStates.set(column, {
         tasks: columnTasks,
         total: columnTasks.length,
@@ -419,7 +407,8 @@ export function useKanbanData(
   // Move task to a new column (optimistic update - no persistence)
   const moveTaskOptimistic = useCallback(
     (taskId: string, toColumn: StatusColumn) => {
-      const newStatus = COLUMN_TO_STATUS[toColumn];
+      // Column IS the status now (no mapping needed)
+      const newStatus = toColumn;
 
       // Update tasks with new status
       setTasks((prev) => {
@@ -447,8 +436,8 @@ export function useKanbanData(
     [tasks]
   );
 
-  // Status columns for 3-column view
-  const statusColumns: StatusColumn[] = ['todo', 'in-progress', 'done'];
+  // Status columns for 3-column view (use constant array)
+  const statusColumns = STATUS_COLUMNS;
 
   // Compute tasks grouped by status from columnStates
   const tasksByStatus = (() => {

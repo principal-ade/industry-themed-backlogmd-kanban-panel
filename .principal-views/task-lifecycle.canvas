@@ -1,0 +1,534 @@
+{
+  "pv": {
+    "name": "Task Lifecycle",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "id": "kanban-board",
+      "type": "text",
+      "text": "Kanban Board",
+      "x": 50,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "pv": {
+        "shape": "component",
+        "description": "Displays tasks in columns by status. Users can select tasks to view details."
+      }
+    },
+    {
+      "id": "task-detail-panel",
+      "type": "text",
+      "text": "Task Detail Panel",
+      "x": 500,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "pv": {
+        "shape": "component",
+        "description": "Shows detailed information about a selected task. Provides actions like Assign to Claude and Delete."
+      }
+    },
+    {
+      "id": "task-selected-event",
+      "type": "text",
+      "text": "task:selected",
+      "x": 50,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when user clicks on a task in the Kanban board"
+      }
+    },
+    {
+      "id": "panel-focus-detail",
+      "type": "text",
+      "text": "panel:focus (detail)",
+      "x": 300,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Focuses the task detail panel in the middle slot"
+      }
+    },
+    {
+      "id": "task-deselected-event",
+      "type": "text",
+      "text": "task:deselected",
+      "x": 500,
+      "y": 300,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted when user deselects the current task"
+      }
+    },
+    {
+      "id": "panel-focus-kanban",
+      "type": "text",
+      "text": "panel:focus (kanban)",
+      "x": 300,
+      "y": 450,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Refocuses the Kanban board panel in the left slot"
+      }
+    },
+    {
+      "id": "assign-to-claude-action",
+      "type": "text",
+      "text": "Assign to Claude",
+      "x": 800,
+      "y": 100,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "action",
+        "description": "User clicks Assign to Claude button in task detail panel"
+      }
+    },
+    {
+      "id": "task-assign-to-claude-event",
+      "type": "text",
+      "text": "task:assign-to-claude",
+      "x": 800,
+      "y": 250,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Triggers GitHub issue creation and task status update"
+      }
+    },
+    {
+      "id": "create-github-issue",
+      "type": "text",
+      "text": "Create GitHub Issue",
+      "x": 1050,
+      "y": 250,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Creates a GitHub issue with task details"
+      }
+    },
+    {
+      "id": "update-task-status",
+      "type": "text",
+      "text": "Update Task Status",
+      "x": 1050,
+      "y": 400,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Updates task status to 'In Progress' and adds GitHub issue reference"
+      }
+    },
+    {
+      "id": "task-assigned-to-claude-event",
+      "type": "text",
+      "text": "task:assigned-to-claude",
+      "x": 800,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted after successful assignment with issue URL"
+      }
+    },
+    {
+      "id": "delete-task-action",
+      "type": "text",
+      "text": "Delete Task",
+      "x": 800,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "action",
+        "description": "User clicks Delete button in task detail panel"
+      }
+    },
+    {
+      "id": "task-delete-requested-event",
+      "type": "text",
+      "text": "task:delete-requested",
+      "x": 550,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Triggers task deletion process"
+      }
+    },
+    {
+      "id": "delete-task-file",
+      "type": "text",
+      "text": "Delete Task File",
+      "x": 300,
+      "y": 700,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Removes task markdown file from filesystem"
+      }
+    },
+    {
+      "id": "update-file-tree",
+      "type": "text",
+      "text": "Update File Tree",
+      "x": 300,
+      "y": 850,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Updates file tree state to remove deleted file"
+      }
+    },
+    {
+      "id": "task-deleted-success-event",
+      "type": "text",
+      "text": "task:deleted:success",
+      "x": 50,
+      "y": 850,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Emitted after successful task deletion"
+      }
+    },
+    {
+      "id": "task-deleted-event",
+      "type": "text",
+      "text": "task:deleted",
+      "x": 50,
+      "y": 1000,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "event",
+        "description": "Final event signaling task deletion complete"
+      }
+    },
+    {
+      "id": "refresh-kanban",
+      "type": "text",
+      "text": "Refresh Kanban Board",
+      "x": 50,
+      "y": 600,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "process",
+        "description": "Kanban board detects file tree changes and refreshes task list"
+      }
+    },
+    {
+      "id": "core-api",
+      "type": "text",
+      "text": "@backlog-md/core",
+      "x": 1300,
+      "y": 400,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "system",
+        "description": "Core library for reading and updating Backlog.md tasks"
+      }
+    },
+    {
+      "id": "mock-fs",
+      "type": "text",
+      "text": "File System",
+      "x": 1300,
+      "y": 550,
+      "width": 180,
+      "height": 80,
+      "pv": {
+        "shape": "system",
+        "description": "Mock file system adapter for task file operations"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "fromNode": "kanban-board",
+      "toNode": "task-selected-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "User clicks task",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-2",
+      "fromNode": "task-selected-event",
+      "toNode": "panel-focus-detail",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Triggers focus",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-3",
+      "fromNode": "panel-focus-detail",
+      "toNode": "task-detail-panel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Shows task details",
+      "pv": {
+        "edgeType": "display"
+      }
+    },
+    {
+      "id": "edge-4",
+      "fromNode": "task-detail-panel",
+      "toNode": "task-deselected-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "User closes/deselects",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-5",
+      "fromNode": "task-deselected-event",
+      "toNode": "panel-focus-kanban",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Triggers refocus",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-6",
+      "fromNode": "panel-focus-kanban",
+      "toNode": "kanban-board",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "Returns focus",
+      "pv": {
+        "edgeType": "display"
+      }
+    },
+    {
+      "id": "edge-7",
+      "fromNode": "task-detail-panel",
+      "toNode": "assign-to-claude-action",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "User clicks button",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-8",
+      "fromNode": "assign-to-claude-action",
+      "toNode": "task-assign-to-claude-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Emits event",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-9",
+      "fromNode": "task-assign-to-claude-event",
+      "toNode": "create-github-issue",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Initiates",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-10",
+      "fromNode": "create-github-issue",
+      "toNode": "update-task-status",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Issue created",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-11",
+      "fromNode": "update-task-status",
+      "toNode": "core-api",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Uses Core API",
+      "pv": {
+        "edgeType": "call"
+      }
+    },
+    {
+      "id": "edge-12",
+      "fromNode": "core-api",
+      "toNode": "mock-fs",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Writes task file",
+      "pv": {
+        "edgeType": "call"
+      }
+    },
+    {
+      "id": "edge-13",
+      "fromNode": "update-task-status",
+      "toNode": "task-assigned-to-claude-event",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Success",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-14",
+      "fromNode": "task-assigned-to-claude-event",
+      "toNode": "task-detail-panel",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "Updates UI",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-15",
+      "fromNode": "task-detail-panel",
+      "toNode": "delete-task-action",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "User clicks delete",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-16",
+      "fromNode": "delete-task-action",
+      "toNode": "task-delete-requested-event",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Emits event",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-17",
+      "fromNode": "task-delete-requested-event",
+      "toNode": "delete-task-file",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Initiates",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-18",
+      "fromNode": "delete-task-file",
+      "toNode": "mock-fs",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "Deletes file",
+      "pv": {
+        "edgeType": "call"
+      }
+    },
+    {
+      "id": "edge-19",
+      "fromNode": "delete-task-file",
+      "toNode": "update-file-tree",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Triggers update",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-20",
+      "fromNode": "update-file-tree",
+      "toNode": "task-deleted-success-event",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "Success",
+      "pv": {
+        "edgeType": "emit"
+      }
+    },
+    {
+      "id": "edge-21",
+      "fromNode": "task-deleted-success-event",
+      "toNode": "task-deleted-event",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "Completes",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-22",
+      "fromNode": "task-deleted-event",
+      "toNode": "panel-focus-kanban",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "label": "Refocus kanban",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-23",
+      "fromNode": "update-file-tree",
+      "toNode": "refresh-kanban",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "File tree changed",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-24",
+      "fromNode": "refresh-kanban",
+      "toNode": "kanban-board",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "Updates task list",
+      "pv": {
+        "edgeType": "update"
+      }
+    }
+  ]
+}
