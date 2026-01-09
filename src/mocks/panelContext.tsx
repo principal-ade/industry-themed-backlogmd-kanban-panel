@@ -1,4 +1,5 @@
 import React from 'react';
+import { PathsFileTreeBuilder } from '@principal-ai/repository-abstraction';
 import type {
   PanelComponentProps,
   PanelContextValue,
@@ -111,6 +112,12 @@ export const createMockContext = (
 
   const { overrides, slices: customSlices } = opts;
 
+  // Create default fileTree using PathsFileTreeBuilder
+  const builder = new PathsFileTreeBuilder();
+  const defaultFileTree = builder.build({
+    files: ['src', 'package.json'],
+  });
+
   // Create mock data slices
   const mockSlices = new Map<string, DataSlice>([
     ['git', createMockSlice('git', mockGitStatusData)],
@@ -129,26 +136,7 @@ export const createMockContext = (
         },
       ]),
     ],
-    [
-      'fileTree',
-      createMockSlice('fileTree', {
-        name: 'my-project',
-        path: '/Users/developer/my-project',
-        type: 'directory',
-        children: [
-          {
-            name: 'src',
-            path: '/Users/developer/my-project/src',
-            type: 'directory',
-          },
-          {
-            name: 'package.json',
-            path: '/Users/developer/my-project/package.json',
-            type: 'file',
-          },
-        ],
-      }),
-    ],
+    ['fileTree', createMockSlice('fileTree', defaultFileTree)],
     [
       'packages',
       createMockSlice('packages', [

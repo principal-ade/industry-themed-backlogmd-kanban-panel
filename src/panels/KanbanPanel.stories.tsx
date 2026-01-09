@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
+import { PathsFileTreeBuilder } from '@principal-ai/repository-abstraction';
 import { KanbanPanel } from './KanbanPanel';
 import {
   createMockContext,
@@ -41,32 +42,26 @@ type Story = StoryObj<typeof meta>;
 const createBacklogFileTreeSlice = (): DataSlice<any> => {
   const taskFilePaths = getMockTaskFilePaths();
   const mockMilestones = generateMockMilestones();
+  const milestoneFilePaths = mockMilestones
+    .map((m) => m.filePath || `backlog/milestones/${m.id}.md`)
+    .filter(Boolean);
 
-  const taskFiles = taskFilePaths.map((path) => ({
-    path,
-    name: path.split('/').pop(),
-    type: 'file',
-  }));
+  const allPaths = [
+    'backlog/config.yml',
+    ...taskFilePaths,
+    ...milestoneFilePaths,
+  ];
 
-  const milestoneFiles = mockMilestones.map((milestone) => ({
-    path: milestone.filePath!,
-    name: milestone.filePath!.split('/').pop(),
-    type: 'file',
-  }));
+  // Use PathsFileTreeBuilder for proper FileTree structure
+  const builder = new PathsFileTreeBuilder();
+  const fileTree = builder.build({
+    files: allPaths,
+  });
 
   return {
     scope: 'repository',
     name: 'fileTree',
-    data: {
-      name: 'my-kanban-project',
-      path: '/Users/developer/projects/my-kanban-project',
-      type: 'directory',
-      allFiles: [
-        { path: 'backlog/config.yml', name: 'config.yml', type: 'file' },
-        ...taskFiles,
-        ...milestoneFiles,
-      ],
-    },
+    data: fileTree,
     loading: false,
     error: null,
     refresh: async () => {},
@@ -95,13 +90,11 @@ ${milestone.description || ''}`;
 
   // Pre-populate file contents with raw markdown from Backlog.md project
   const fileContents = new Map<string, string>();
-  console.log('[Mock] Config content being set:', mockConfigContent);
   fileContents.set('backlog/config.yml', mockConfigContent);
 
   // Add raw task markdown files - these will be parsed by Core
   for (const [filePath, content] of Object.entries(rawTaskMarkdownFiles)) {
     fileContents.set(filePath, content);
-    console.log('[Mock] Added raw task file:', filePath);
   }
 
   // Add milestone files
@@ -118,10 +111,8 @@ ${milestone.description || ''}`;
   const readFile = async (path: string): Promise<string> => {
     const content = fileContents.get(path);
     if (content === undefined) {
-      console.log('[Mock] File not found:', path);
       throw new Error(`File not found: ${path}`);
     }
-    console.log('[Mock] Reading file:', path, 'Length:', content.length);
     return content;
   };
 
@@ -138,67 +129,55 @@ ${milestone.description || ''}`;
     refresh: async () => {},
   };
 
-  const mockSlices = new Map<string, DataSlice<any>>([
-    ['fileTree', fileTreeSlice],
-    ['active-file', activeFileSlice],
-  ]);
-
   const context = createMockContext({
-    currentScope: {
-      type: 'repository',
-      workspace: {
-        name: 'my-workspace',
-        path: '/Users/developer/my-workspace',
+    overrides: {
+      currentScope: {
+        type: 'repository',
+        workspace: {
+          name: 'my-workspace',
+          path: '',
+        },
+        repository: {
+          path: '', // Empty path like TaskWorkflowLifecycle story
+          name: 'my-kanban-project',
+        },
       },
-      repository: {
-        path: '/Users/developer/projects/my-kanban-project',
-        name: 'my-kanban-project',
+      adapters: {
+        readFile,
+        fileSystem: {
+          readFile: async (path: string) => fileContents.get(path) || '',
+          writeFile: async (path: string, content: string) => {
+            fileContents.set(path, content);
+
+            // Rebuild fileTree with the new file using PathsFileTreeBuilder
+            const allPaths = Array.from(fileContents.keys());
+            const builder = new PathsFileTreeBuilder();
+            const updatedFileTree = builder.build({
+              files: allPaths,
+            });
+            fileTreeSlice.data = updatedFileTree;
+
+            // Emit file:write-complete event
+            events.emit({
+              type: 'file:write-complete',
+              source: 'mock-file-system',
+              timestamp: Date.now(),
+              payload: { path, content },
+            });
+          },
+          createDir: async (path: string) => {
+            // Directory creation is a no-op in this mock
+          },
+          exists: async (path: string) => fileContents.has(path),
+          deleteFile: async (path: string) => {
+            fileContents.delete(path);
+          },
+        },
       },
     },
-    slices: mockSlices,
-    getRepositorySlice: <T = unknown,>(name: string) => {
-      return mockSlices.get(name) as DataSlice<T> | undefined;
-    },
-    adapters: {
-      readFile,
-      fileSystem: {
-        readFile: async (path: string) => fileContents.get(path) || '',
-        writeFile: async (path: string, content: string) => {
-          fileContents.set(path, content);
-          console.log('[Mock] Writing file:', path, 'Length:', content.length);
-
-          // Update fileTree slice to reflect the new file
-          const currentFiles = fileTreeSlice.data.allFiles || [];
-          const fileExists = currentFiles.some((f: any) => f.path === path);
-          if (!fileExists) {
-            fileTreeSlice.data = {
-              ...fileTreeSlice.data,
-              allFiles: [
-                ...currentFiles,
-                { path, name: path.split('/').pop(), type: 'file' },
-              ],
-            };
-            console.log('[Mock] Added file to fileTree:', path);
-          }
-
-          // Emit file:write-complete event
-          events.emit({
-            type: 'file:write-complete',
-            source: 'mock-file-system',
-            timestamp: Date.now(),
-            payload: { path, content },
-          });
-          console.log('[Mock] Emitted file:write-complete event for:', path);
-        },
-        createDir: async (path: string) => {
-          console.log('[Mock] Creating directory:', path);
-        },
-        exists: async (path: string) => fileContents.has(path),
-        deleteFile: async (path: string) => {
-          fileContents.delete(path);
-          console.log('[Mock] Deleting file:', path);
-        },
-      },
+    slices: {
+      fileTree: fileTreeSlice,
+      'active-file': activeFileSlice,
     },
   });
 
@@ -211,14 +190,6 @@ ${milestone.description || ''}`;
         path: filePath,
         content,
       };
-      console.log(
-        '[Mock] Opening file:',
-        filePath,
-        'Content available:',
-        fileContents.has(filePath),
-        'Length:',
-        content.length
-      );
       return content as any; // Return content directly
     },
   });
@@ -229,15 +200,17 @@ ${milestone.description || ''}`;
 export const EmptyState: Story = {
   args: {
     context: createMockContext({
-      currentScope: {
-        type: 'repository',
-        workspace: {
-          name: 'my-workspace',
-          path: '/Users/developer/my-workspace',
-        },
-        repository: {
-          path: '/Users/developer/projects/my-project',
-          name: 'my-project',
+      overrides: {
+        currentScope: {
+          type: 'repository',
+          workspace: {
+            name: 'my-workspace',
+            path: '',
+          },
+          repository: {
+            path: '',
+            name: 'my-project',
+          },
         },
       },
     }),
@@ -249,6 +222,133 @@ export const EmptyState: Story = {
       description: {
         story:
           'Empty state shown when the repository is not a Backlog.md project.',
+      },
+    },
+  },
+};
+
+// Helper to create backlog mocks with NO tasks for empty state
+const createEmptyBacklogMocks = () => {
+  // Use PathsFileTreeBuilder for proper FileTree structure
+  const builder = new PathsFileTreeBuilder();
+  const fileTree = builder.build({
+    files: ['backlog/config.yml'],
+  });
+
+  const fileTreeSlice: DataSlice<any> = {
+    scope: 'repository',
+    name: 'fileTree',
+    data: fileTree,
+    loading: false,
+    error: null,
+    refresh: async () => {},
+  };
+
+  const mockConfigContent = `project_name: "Backlog.md CLI"
+statuses: ["To Do", "In Progress", "Done"]
+default_status: "To Do"`;
+
+  const fileContents = new Map<string, string>();
+  fileContents.set('backlog/config.yml', mockConfigContent);
+
+  const events = createMockEvents();
+
+  const readFile = async (path: string): Promise<string> => {
+    const content = fileContents.get(path);
+    if (content === undefined) {
+      throw new Error(`File not found: ${path}`);
+    }
+    return content;
+  };
+
+  const activeFileSlice: DataSlice<any> = {
+    scope: 'repository',
+    name: 'active-file',
+    data: {
+      path: '',
+      content: '',
+    },
+    loading: false,
+    error: null,
+    refresh: async () => {},
+  };
+
+  const context = createMockContext({
+    overrides: {
+      currentScope: {
+        type: 'repository',
+        workspace: {
+          name: 'my-workspace',
+          path: '',
+        },
+        repository: {
+          path: '', // Empty path like TaskWorkflowLifecycle story
+          name: 'my-kanban-project',
+        },
+      },
+      adapters: {
+        readFile,
+        fileSystem: {
+          readFile: async (path: string) => fileContents.get(path) || '',
+          writeFile: async (path: string, content: string) => {
+            fileContents.set(path, content);
+            // Rebuild fileTree with the new file using PathsFileTreeBuilder
+            const allPaths = Array.from(fileContents.keys());
+            const builder = new PathsFileTreeBuilder();
+            const updatedFileTree = builder.build({
+              files: allPaths,
+            });
+            fileTreeSlice.data = updatedFileTree;
+            events.emit({
+              type: 'file:write-complete',
+              source: 'mock-file-system',
+              timestamp: Date.now(),
+              payload: { path, content },
+            });
+          },
+          createDir: async (path: string) => {
+            // Directory creation is a no-op in this mock
+          },
+          exists: async (path: string) => fileContents.has(path),
+          deleteFile: async (path: string) => {
+            fileContents.delete(path);
+          },
+        },
+      },
+    },
+    slices: {
+      fileTree: fileTreeSlice,
+      'active-file': activeFileSlice,
+    },
+  });
+
+  const actions = createMockActions({
+    openFile: async (filePath: string) => {
+      const content = fileContents.get(filePath) || '';
+      activeFileSlice.data = {
+        path: filePath,
+        content,
+      };
+      return content as any;
+    },
+  });
+
+  return { context, actions, events };
+};
+
+const emptyBacklogMocks = createEmptyBacklogMocks();
+
+export const BoardEmptyState: Story = {
+  args: {
+    context: emptyBacklogMocks.context,
+    actions: emptyBacklogMocks.actions,
+    events: emptyBacklogMocks.events,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Happy empty state shown when the Backlog.md project is initialized but has no tasks yet. Users can click "Add Task" to create their first task.',
       },
     },
   },

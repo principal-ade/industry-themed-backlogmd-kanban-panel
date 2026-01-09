@@ -22,6 +22,7 @@ import {
 import { KanbanColumn } from './kanban/components/KanbanColumn';
 import { TaskCard } from './kanban/components/TaskCard';
 import { EmptyState } from './kanban/components/EmptyState';
+import { BoardEmptyState } from './kanban/components/BoardEmptyState';
 import { TaskModal } from './kanban/components/TaskModal';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { MilestoneModal } from './milestone/components/MilestoneModal';
@@ -133,6 +134,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
     totalTasksState,
     loadMoreTasks,
     error,
+    isLoading,
     isBacklogProject,
     refreshData,
     moveTaskOptimistic,
@@ -724,7 +726,13 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           onInitialize={handleInitialize}
         />
       ) : viewMode === 'board' ? (
-        <DndContext
+        !isLoading && totalTasksState.total === 0 ? (
+          <BoardEmptyState
+            onAddTask={handleOpenNewTask}
+            canWrite={canWrite}
+          />
+        ) : (
+          <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -852,6 +860,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
               document.body
             )}
         </DndContext>
+        )
       ) : (
         /* Milestones View - Two Column Layout */
         <div

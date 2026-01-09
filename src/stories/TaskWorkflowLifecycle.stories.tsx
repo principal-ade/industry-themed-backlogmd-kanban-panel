@@ -39,7 +39,6 @@ const createBacklogFileTreeSlice = (): DataSlice<unknown> => {
 
   // Create allFiles array with all file paths
   const allFiles = [
-    { path: 'backlog/Backlog.md' },
     { path: 'backlog/config.yml' },
     ...taskFilePaths.map(path => ({ path })),
     ...milestoneFiles,
@@ -72,7 +71,6 @@ const TaskWorkflowStory = () => {
       path: milestone.filePath || `backlog/milestones/${milestone.id}.md`,
     }));
     return [
-      { path: 'backlog/Backlog.md' },
       { path: 'backlog/config.yml' },
       ...taskFilePaths.map(path => ({ path })),
       ...milestoneFiles,
@@ -83,16 +81,6 @@ const TaskWorkflowStory = () => {
   const mockFS = useMemo(() => {
     // Create a mutable copy of the task files for the file system
     const files: Record<string, string> = { ...rawTaskMarkdownFiles };
-
-    // Add Backlog.md file for Core to detect this as a Backlog.md project
-    files['backlog/Backlog.md'] = `# Backlog
-
-## To Do
-
-## In Progress
-
-## Done
-`;
 
     // Add config.yml for Core to recognize this as a Backlog.md project
     files['backlog/config.yml'] = `statuses:
