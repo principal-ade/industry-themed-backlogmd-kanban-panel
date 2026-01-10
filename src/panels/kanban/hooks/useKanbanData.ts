@@ -266,6 +266,17 @@ export function useKanbanData(
         `[useKanbanData] Loaded ${allTasks.length}/${total} tasks`
       );
 
+      // Diagnostic: Log first task to see what fields are being parsed
+      if (allTasks.length > 0) {
+        console.log('[useKanbanData] First task sample:', {
+          id: allTasks[0].id,
+          title: allTasks[0].title,
+          status: allTasks[0].status,
+          description: allTasks[0].description,
+          filePath: allTasks[0].filePath,
+        });
+      }
+
       // Store the file tree version to prevent redundant reloads
       fileTreeVersionRef.current = currentVersion;
 

@@ -13,6 +13,12 @@ import {
   getMockTaskFilePaths,
   generateMockMilestones,
 } from './kanban/mocks/mockData';
+import {
+  REAL_REPO_NAME,
+  REAL_REPO_PATH,
+  realRepoFilePaths,
+  realRepoFileContents,
+} from './kanban/mocks/realRepoData';
 import type { DataSlice } from '../types';
 
 const meta = {
@@ -384,6 +390,132 @@ export const MilestonesView: Story = {
       description: {
         story:
           'Milestones view showing project milestones with progress indicators. Toggle the view using the Board/Milestones switch in the header.',
+      },
+    },
+  },
+};
+
+// Helper to create backlog mocks from generated real repository data
+const createRealBacklogMocks = () => {
+  const allFiles = realRepoFilePaths;
+  console.log('[Real Repo Story] Found files:', allFiles);
+
+  // Build fileTree from real paths
+  const builder = new PathsFileTreeBuilder();
+  const fileTree = builder.build({
+    files: allFiles,
+  });
+
+  const fileTreeSlice: DataSlice<any> = {
+    scope: 'repository',
+    name: 'fileTree',
+    data: fileTree,
+    loading: false,
+    error: null,
+    refresh: async () => {},
+  };
+
+  // Create file contents map from generated data
+  const fileContents = new Map<string, string>();
+
+  Object.entries(realRepoFileContents).forEach(([filePath, content]) => {
+    fileContents.set(filePath, content);
+    console.log(`[Real Repo Story] Loaded: ${filePath} (${content.length} bytes)`);
+  });
+
+  const events = createMockEvents();
+
+  const readFile = async (path: string): Promise<string> => {
+    console.log(`[Real Repo Story] readFile called for: ${path}`);
+    const content = fileContents.get(path);
+    if (content === undefined) {
+      console.error(`[Real Repo Story] File not found in cache: ${path}`);
+      throw new Error(`File not found: ${path}`);
+    }
+    console.log(`[Real Repo Story] Returning content (${content.length} bytes):`, content.substring(0, 200));
+    return content;
+  };
+
+  const activeFileSlice: DataSlice<any> = {
+    scope: 'repository',
+    name: 'active-file',
+    data: {
+      path: '',
+      content: '',
+    },
+    loading: false,
+    error: null,
+    refresh: async () => {},
+  };
+
+  const context = createMockContext({
+    overrides: {
+      currentScope: {
+        type: 'repository',
+        workspace: {
+          name: 'my-workspace',
+          path: '',
+        },
+        repository: {
+          path: REAL_REPO_PATH,
+          name: REAL_REPO_NAME,
+        },
+      },
+      adapters: {
+        readFile,
+        fileSystem: {
+          readFile: async (path: string) => fileContents.get(path) || '',
+          writeFile: async (path: string, content: string) => {
+            fileContents.set(path, content);
+            console.log('[Real Repo Story] Would write:', path);
+          },
+          createDir: async (path: string) => {
+            console.log('[Real Repo Story] Would create dir:', path);
+          },
+          exists: async (path: string) => fileContents.has(path),
+          deleteFile: async (path: string) => {
+            console.log('[Real Repo Story] Would delete:', path);
+          },
+        },
+      },
+    },
+    slices: {
+      fileTree: fileTreeSlice,
+      'active-file': activeFileSlice,
+    },
+  });
+
+  const actions = createMockActions({
+    openFile: async (filePath: string) => {
+      const content = fileContents.get(filePath) || '';
+      activeFileSlice.data = {
+        path: filePath,
+        content,
+      };
+      return content as any;
+    },
+  });
+
+  return { context, actions, events };
+};
+
+// Story that loads from a real repository
+// To load a different repository:
+// 1. Run: tsx scripts/generate-real-repo-mock.ts <path-to-repo>
+// 2. Storybook will automatically reload with the new data
+const realRepoMocks = createRealBacklogMocks();
+
+export const RealRepository: Story = {
+  args: {
+    context: realRepoMocks.context,
+    actions: realRepoMocks.actions,
+    events: realRepoMocks.events,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          `Real Repository View - loads data from ${REAL_REPO_PATH}. To load a different repository, run: \`tsx scripts/generate-real-repo-mock.ts <path-to-repo>\` and Storybook will automatically reload. Check the browser console for diagnostic information about loaded files.`,
       },
     },
   },
