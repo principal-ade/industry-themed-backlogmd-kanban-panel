@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useTheme } from '@principal-ade/industry-theme';
 import { ExternalLink, GitBranch } from 'lucide-react';
 import type { Task } from '@backlog-md/core';
+import { TaskContextMenu } from './TaskContextMenu';
 
 /** Extract GitHub issue info from a task's references */
 function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
@@ -31,6 +32,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   isSelected = false,
 }) => {
   const { theme } = useTheme();
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   // Only use draggable hook for non-overlay cards
   const {
@@ -89,17 +92,40 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    // Don't show context menu while dragging
+    if (isDragging) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCopyPath = async (task: Task) => {
+    if (task.filePath) {
+      try {
+        await navigator.clipboard.writeText(task.filePath);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy task path:', err);
+      }
+    }
+  };
+
   // Strip "Task ###" prefix from title since ID is shown at bottom
   const displayTitle = task.title.replace(/^Task\s+\d+\s*[:\-–—]?\s*/i, '').trim() || task.title;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      onClick={handleClick}
-      {...listeners}
-      {...attributes}
-      onMouseEnter={(e) => {
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        onClick={handleClick}
+        onContextMenu={handleContextMenu}
+        {...listeners}
+        {...attributes}
+        onMouseEnter={(e) => {
         if (!isDragging && !isDragOverlay) {
           // Expand description on hover
           const desc = e.currentTarget.querySelector('p');
@@ -255,6 +281,36 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </span>
         )}
       </div>
-    </div>
+      </div>
+
+      {contextMenuPosition && (
+        <TaskContextMenu
+          task={task}
+          position={contextMenuPosition}
+          onClose={() => setContextMenuPosition(null)}
+          onCopyPath={handleCopyPath}
+        />
+      )}
+
+      {copyFeedback && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            background: theme.colors.success,
+            color: 'white',
+            padding: '12px 16px',
+            borderRadius: theme.radii[2],
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            zIndex: 10001,
+            fontSize: theme.fontSizes[1],
+            fontWeight: theme.fontWeights.medium,
+          }}
+        >
+          Task path copied to clipboard!
+        </div>
+      )}
+    </>
   );
 };
