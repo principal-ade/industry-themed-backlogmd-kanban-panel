@@ -444,8 +444,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
             </a>
           </h2>
 
-          {/* View mode toggle */}
-          {isBacklogProject && (
+          {/* View mode toggle - only show when there are tasks */}
+          {isBacklogProject && totalTasksState.total > 0 && (
             <div
               style={{
                 display: 'flex',
@@ -497,8 +497,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           )}
         </div>
 
-        {/* Search input - only show in board view */}
-        {isBacklogProject && viewMode === 'board' && (
+        {/* Search input - only show in board view when there are tasks */}
+        {isBacklogProject && viewMode === 'board' && totalTasksState.total > 0 && (
           <div
             style={{
               position: 'relative',
@@ -561,8 +561,8 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
           </div>
         )}
 
-        {/* Header actions - view-dependent */}
-        {isBacklogProject && (
+        {/* Header actions - view-dependent, only show when there are tasks */}
+        {isBacklogProject && totalTasksState.total > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {viewMode === 'board' ? (
               <>
@@ -729,6 +729,7 @@ export const KanbanPanel: React.FC<PanelComponentProps> = ({
         !isLoading && totalTasksState.total === 0 ? (
           <BoardEmptyState
             onAddTask={handleOpenNewTask}
+            onAddMilestone={handleOpenNewMilestone}
             canWrite={canWrite}
           />
         ) : (

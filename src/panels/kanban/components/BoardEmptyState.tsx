@@ -1,9 +1,10 @@
 import React from 'react';
-import { Rocket, Plus } from 'lucide-react';
+import { Rocket, Plus, Milestone } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 
 interface BoardEmptyStateProps {
   onAddTask: () => void;
+  onAddMilestone: () => void;
   canWrite: boolean;
 }
 
@@ -12,6 +13,7 @@ interface BoardEmptyStateProps {
  */
 export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
   onAddTask,
+  onAddMilestone,
   canWrite,
 }) => {
   const { theme } = useTheme();
@@ -59,32 +61,66 @@ export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
       </p>
 
       {canWrite ? (
-        <button
-          onClick={onAddTask}
+        <div
           style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: theme.colors.primary,
-            color: theme.colors.textOnPrimary,
-            borderRadius: theme.radii[2],
-            border: 'none',
-            fontSize: theme.fontSizes[2],
-            fontWeight: 500,
-            cursor: 'pointer',
-            transition: 'opacity 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '1';
+            gap: '12px',
           }}
         >
-          <Plus size={16} />
-          <span>Add Task</span>
-        </button>
+          <button
+            onClick={onAddTask}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              backgroundColor: theme.colors.primary,
+              color: theme.colors.textOnPrimary,
+              borderRadius: theme.radii[2],
+              border: 'none',
+              fontSize: theme.fontSizes[2],
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.9';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
+          >
+            <Plus size={16} />
+            <span>Add Task</span>
+          </button>
+          <button
+            onClick={onAddMilestone}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              backgroundColor: theme.colors.backgroundSecondary,
+              color: theme.colors.text,
+              borderRadius: theme.radii[2],
+              border: `1px solid ${theme.colors.border}`,
+              fontSize: theme.fontSizes[2],
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.9';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
+          >
+            <Milestone size={16} />
+            <span>Add Milestone</span>
+          </button>
+        </div>
       ) : (
         <p
           style={{
