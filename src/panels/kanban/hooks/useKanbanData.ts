@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Task, type PaginatedResult, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { PanelContextValue, PanelActions } from '../../../types';
+import type { KanbanPanelContext, PanelActions } from '../../../types';
+import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 
 /** Per-column pagination state */
 export interface ColumnState {
@@ -68,7 +69,7 @@ export interface UseKanbanDataResult {
 }
 
 interface UseKanbanDataOptions {
-  context?: PanelContextValue;
+  context?: PanelContextValue<KanbanPanelContext>;
   actions?: PanelActions;
   /** Number of tasks to load per page (default: 20) */
   tasksLimit?: number;
@@ -184,10 +185,8 @@ export function useKanbanData(
       return;
     }
 
-    // Get fileTree slice - FileTree uses allFiles (not files)
-    const fileTreeSlice = context.getRepositorySlice('fileTree') as
-      | { data?: { allFiles?: Array<{ path: string }>; sha?: string; metadata?: { sourceSha?: string } } }
-      | undefined;
+    // Get fileTree slice from typed context (direct property access)
+    const fileTreeSlice = context.fileTree;
 
     if (!fileTreeSlice?.data?.allFiles) {
       console.log('[useKanbanData] FileTree not available');

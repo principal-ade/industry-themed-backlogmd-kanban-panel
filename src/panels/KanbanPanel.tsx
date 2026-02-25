@@ -13,7 +13,7 @@ import {
 import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
-import type { PanelComponentProps } from '../types';
+import type { KanbanPanelPropsTyped } from '../types';
 import {
   useKanbanData,
   STATUS_COLUMNS,
@@ -38,7 +38,7 @@ type ViewMode = 'board' | 'milestones';
  * - Task cards with priority indicators
  * - Labels and assignee information
  */
-export const KanbanPanel: React.FC<PanelComponentProps> = ({
+export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   context,
   actions,
   events,

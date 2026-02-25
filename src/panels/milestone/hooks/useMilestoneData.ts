@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Milestone, type Task } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { PanelContextValue, PanelActions } from '../../../types';
+import type { KanbanPanelContext, PanelActions } from '../../../types';
+import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 
 /** State for a single milestone with its tasks */
 export interface MilestoneState {
@@ -31,7 +32,7 @@ export interface UseMilestoneDataResult {
 }
 
 interface UseMilestoneDataOptions {
-  context?: PanelContextValue;
+  context?: PanelContextValue<KanbanPanelContext>;
   actions?: PanelActions;
 }
 
@@ -109,9 +110,7 @@ export function useMilestoneData(
       return;
     }
 
-    const fileTreeSlice = context.getRepositorySlice('fileTree') as
-      | { data?: { allFiles?: Array<{ path: string }>; sha?: string; metadata?: { sourceSha?: string } } }
-      | undefined;
+    const fileTreeSlice = context.fileTree;
 
     if (!fileTreeSlice?.data?.allFiles) {
       console.log('[useMilestoneData] FileTree not available');

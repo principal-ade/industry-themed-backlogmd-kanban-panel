@@ -1,13 +1,14 @@
 import { KanbanPanel } from './panels/KanbanPanel';
 import { TaskDetailPanel } from './panels/TaskDetailPanel';
-import type { PanelDefinition, PanelContextValue } from './types';
+import type { PanelContextValue } from './types';
+import type { PanelDefinition } from '@principal-ade/panel-framework-core';
 import { kanbanPanelTools, kanbanPanelToolsMetadata } from './tools';
 
 /**
  * Export array of panel definitions.
  * This is the required export for panel extensions.
  */
-export const panels: PanelDefinition[] = [
+export const panels: PanelDefinition<any, any>[] = [
   {
     metadata: {
       id: 'principal-ade.kanban-panel',

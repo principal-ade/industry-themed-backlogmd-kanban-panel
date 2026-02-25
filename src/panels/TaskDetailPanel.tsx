@@ -4,7 +4,7 @@ import { FileText, X, Bot, Loader2, CheckCircle, AlertCircle, ExternalLink, Tras
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
-import type { PanelComponentProps, PanelEventEmitter } from '../types';
+import type { TaskDetailPanelPropsTyped, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
 
 /** Extract GitHub issue info from a task's references */
@@ -116,7 +116,7 @@ export interface TaskDetailPanelConfig {
 /**
  * Extended props for TaskDetailPanel that includes optional config
  */
-export interface TaskDetailPanelProps extends PanelComponentProps {
+export interface TaskDetailPanelProps extends TaskDetailPanelPropsTyped {
   config?: TaskDetailPanelConfig;
 }
 
