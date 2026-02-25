@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
-import { PathsFileTreeBuilder } from '@principal-ai/repository-abstraction';
+import { PathsFileTreeBuilder, type FileTree } from '@principal-ai/repository-abstraction';
 import { KanbanPanel } from './KanbanPanel';
 import {
   createMockContext,
@@ -20,6 +20,12 @@ import {
   realRepoFileContents,
 } from './kanban/mocks/realRepoData';
 import type { DataSlice } from '../types';
+
+/** Data shape for active file slice */
+interface ActiveFileData {
+  path: string;
+  content: string;
+}
 
 const meta = {
   title: 'Panels/KanbanPanel',
@@ -45,7 +51,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Helper to create a mock file tree slice with backlog files
-const createBacklogFileTreeSlice = (): DataSlice<any> => {
+const createBacklogFileTreeSlice = (): DataSlice<FileTree> => {
   const taskFilePaths = getMockTaskFilePaths();
   const mockMilestones = generateMockMilestones();
   const milestoneFilePaths = mockMilestones
@@ -123,7 +129,7 @@ ${milestone.description || ''}`;
   };
 
   // Active file slice that will be updated by openFile
-  const activeFileSlice: DataSlice<any> = {
+  const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
     name: 'active-file',
     data: {
@@ -188,7 +194,7 @@ ${milestone.description || ''}`;
   });
 
   const actions = createMockActions({
-    openFile: async (filePath: string) => {
+    openFile: async (filePath: string): Promise<string> => {
       // Return content directly to avoid race conditions
       const content = fileContents.get(filePath) || '';
       // Also update the slice for compatibility
@@ -196,7 +202,7 @@ ${milestone.description || ''}`;
         path: filePath,
         content,
       };
-      return content as any; // Return content directly
+      return content;
     },
   });
 
@@ -241,7 +247,7 @@ const createEmptyBacklogMocks = () => {
     files: ['backlog/config.yml'],
   });
 
-  const fileTreeSlice: DataSlice<any> = {
+  const fileTreeSlice: DataSlice<FileTree> = {
     scope: 'repository',
     name: 'fileTree',
     data: fileTree,
@@ -267,7 +273,7 @@ default_status: "To Do"`;
     return content;
   };
 
-  const activeFileSlice: DataSlice<any> = {
+  const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
     name: 'active-file',
     data: {
@@ -329,13 +335,13 @@ default_status: "To Do"`;
   });
 
   const actions = createMockActions({
-    openFile: async (filePath: string) => {
+    openFile: async (filePath: string): Promise<string> => {
       const content = fileContents.get(filePath) || '';
       activeFileSlice.data = {
         path: filePath,
         content,
       };
-      return content as any;
+      return content;
     },
   });
 
@@ -406,7 +412,7 @@ const createRealBacklogMocks = () => {
     files: allFiles,
   });
 
-  const fileTreeSlice: DataSlice<any> = {
+  const fileTreeSlice: DataSlice<FileTree> = {
     scope: 'repository',
     name: 'fileTree',
     data: fileTree,
@@ -436,7 +442,7 @@ const createRealBacklogMocks = () => {
     return content;
   };
 
-  const activeFileSlice: DataSlice<any> = {
+  const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
     name: 'active-file',
     data: {
@@ -486,13 +492,13 @@ const createRealBacklogMocks = () => {
   });
 
   const actions = createMockActions({
-    openFile: async (filePath: string) => {
+    openFile: async (filePath: string): Promise<string> => {
       const content = fileContents.get(filePath) || '';
       activeFileSlice.data = {
         path: filePath,
         content,
       };
-      return content as any;
+      return content;
     },
   });
 

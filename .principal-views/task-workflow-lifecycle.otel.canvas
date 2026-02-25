@@ -1,0 +1,359 @@
+{
+  "nodes": [
+    {
+      "id": "story-mount",
+      "type": "text",
+      "text": "# Story Mount\n\nStorybook story component mounts",
+      "x": -400,
+      "y": 50,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "lifecycle",
+        "name": "Story Mount",
+        "description": "Initial story render",
+        "shape": "hexagon",
+        "fill": "#8b5cf6",
+        "events": {
+          "story.mounted": {
+            "name": "Story Mounted",
+            "description": "Story component rendered successfully",
+            "attributes": {
+              "story.name": {
+                "type": "string",
+                "description": "Name of the story",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "context-init",
+      "type": "text",
+      "text": "# Context Init\n\nInitialize panel context and adapters",
+      "x": -150,
+      "y": 50,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "initialization",
+        "name": "Context Initialization",
+        "description": "Setup context, adapters, and event bus",
+        "shape": "rectangle",
+        "fill": "#3b82f6",
+        "events": {
+          "context.initialized": {
+            "name": "Context Initialized",
+            "description": "Panel context ready",
+            "attributes": {
+              "has.file.tree": {
+                "type": "boolean",
+                "description": "Whether file tree is available",
+                "required": true
+              },
+              "has.file.system": {
+                "type": "boolean",
+                "description": "Whether file system adapter is available",
+                "required": true
+              },
+              "file.count": {
+                "type": "number",
+                "description": "Number of files in file tree",
+                "required": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "kanban-load",
+      "type": "text",
+      "text": "# Kanban Data Load\n\nLoad tasks using lazy loading",
+      "x": 100,
+      "y": 50,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "data-loader",
+        "name": "Kanban Data Load",
+        "description": "Load tasks from backlog",
+        "shape": "rectangle",
+        "fill": "#10b981",
+        "events": {
+          "kanban.loading": {
+            "name": "Kanban Loading",
+            "description": "Started loading kanban data",
+            "attributes": {
+              "is.backlog.project": {
+                "type": "boolean",
+                "description": "Whether this is a backlog.md project",
+                "required": true
+              }
+            }
+          },
+          "kanban.loaded": {
+            "name": "Kanban Loaded",
+            "description": "Kanban data loaded successfully",
+            "attributes": {
+              "tasks.loaded": {
+                "type": "number",
+                "description": "Number of tasks loaded",
+                "required": true
+              },
+              "tasks.total": {
+                "type": "number",
+                "description": "Total tasks available",
+                "required": true
+              },
+              "has.more": {
+                "type": "boolean",
+                "description": "Whether more tasks can be loaded",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "user-interaction",
+      "type": "text",
+      "text": "# User Interaction\n\nUser interacts with tasks",
+      "x": 350,
+      "y": 50,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "interaction",
+        "name": "User Interaction",
+        "description": "Task selection, drag-drop, etc.",
+        "shape": "diamond",
+        "fill": "#f59e0b",
+        "events": {
+          "task.selected": {
+            "name": "Task Selected",
+            "description": "User selected a task",
+            "attributes": {
+              "task.id": {
+                "type": "string",
+                "description": "ID of selected task",
+                "required": true
+              },
+              "task.status": {
+                "type": "string",
+                "description": "Current task status",
+                "required": false
+              }
+            }
+          },
+          "task.moved": {
+            "name": "Task Moved",
+            "description": "User moved task to different column",
+            "attributes": {
+              "task.id": {
+                "type": "string",
+                "description": "ID of moved task",
+                "required": true
+              },
+              "from.status": {
+                "type": "string",
+                "description": "Original status",
+                "required": true
+              },
+              "to.status": {
+                "type": "string",
+                "description": "New status",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "panel-focus",
+      "type": "text",
+      "text": "# Panel Focus\n\nFocus management between panels",
+      "x": 350,
+      "y": 220,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "orchestration",
+        "name": "Panel Focus",
+        "description": "Focus orchestration",
+        "shape": "hexagon",
+        "fill": "#ec4899",
+        "events": {
+          "panel.focused": {
+            "name": "Panel Focused",
+            "description": "Panel received focus",
+            "attributes": {
+              "panel.id": {
+                "type": "string",
+                "description": "ID of focused panel",
+                "required": true
+              },
+              "panel.slot": {
+                "type": "string",
+                "description": "Panel slot (left, middle, right)",
+                "required": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "task-mutation",
+      "type": "text",
+      "text": "# Task Mutation\n\nCRUD operations on tasks",
+      "x": 100,
+      "y": 220,
+      "width": 200,
+      "height": 120,
+      "pv": {
+        "nodeType": "mutation",
+        "name": "Task Mutation",
+        "description": "Create, update, delete tasks",
+        "shape": "rectangle",
+        "fill": "#ef4444",
+        "events": {
+          "task.created": {
+            "name": "Task Created",
+            "description": "New task created",
+            "attributes": {
+              "task.id": {
+                "type": "string",
+                "description": "ID of new task",
+                "required": true
+              },
+              "file.path": {
+                "type": "string",
+                "description": "File path of task",
+                "required": true
+              }
+            }
+          },
+          "task.updated": {
+            "name": "Task Updated",
+            "description": "Task updated",
+            "attributes": {
+              "task.id": {
+                "type": "string",
+                "description": "ID of updated task",
+                "required": true
+              },
+              "updated.fields": {
+                "type": "string",
+                "description": "Comma-separated list of updated fields",
+                "required": false
+              }
+            }
+          },
+          "task.deleted": {
+            "name": "Task Deleted",
+            "description": "Task deleted",
+            "attributes": {
+              "task.id": {
+                "type": "string",
+                "description": "ID of deleted task",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "mount-to-context",
+      "fromNode": "story-mount",
+      "toNode": "context-init",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "initialize",
+      "pv": {
+        "edgeType": "control-flow",
+        "style": "solid"
+      }
+    },
+    {
+      "id": "context-to-kanban",
+      "fromNode": "context-init",
+      "toNode": "kanban-load",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "load data",
+      "pv": {
+        "edgeType": "control-flow",
+        "style": "solid"
+      }
+    },
+    {
+      "id": "kanban-to-interaction",
+      "fromNode": "kanban-load",
+      "toNode": "user-interaction",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "ready",
+      "pv": {
+        "edgeType": "control-flow",
+        "style": "solid"
+      }
+    },
+    {
+      "id": "interaction-to-focus",
+      "fromNode": "user-interaction",
+      "toNode": "panel-focus",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "trigger focus",
+      "pv": {
+        "edgeType": "event-flow",
+        "style": "dashed"
+      }
+    },
+    {
+      "id": "interaction-to-mutation",
+      "fromNode": "user-interaction",
+      "toNode": "task-mutation",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "mutate task",
+      "pv": {
+        "edgeType": "event-flow",
+        "style": "dashed"
+      }
+    },
+    {
+      "id": "mutation-to-kanban",
+      "fromNode": "task-mutation",
+      "toNode": "kanban-load",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "refresh",
+      "pv": {
+        "edgeType": "feedback",
+        "style": "dotted"
+      }
+    }
+  ],
+  "pv": {
+    "version": "1.0.0",
+    "name": "Task Workflow Lifecycle",
+    "description": "Complete lifecycle of task workflow in Storybook, from mount to user interactions and data mutations",
+    "otel": {
+      "defaultScope": "component.name",
+      "audit": {
+        "framework": "Storybook + Backlog.md",
+        "version": "1.0.0",
+        "author": "Principal AI"
+      }
+    }
+  }
+}

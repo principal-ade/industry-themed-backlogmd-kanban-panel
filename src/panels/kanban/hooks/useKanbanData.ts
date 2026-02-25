@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Task, type PaginatedResult, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { KanbanPanelContext, PanelActions } from '../../../types';
+import type { KanbanPanelContext, PanelActions, PanelEventEmitter } from '../../../types';
 import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 
 /** Per-column pagination state */
@@ -74,7 +74,7 @@ interface UseKanbanDataOptions {
   /** Number of tasks to load per page (default: 20) */
   tasksLimit?: number;
   /** Event emitter for panel events */
-  events?: any;
+  events?: PanelEventEmitter;
 }
 
 const DEFAULT_TASKS_LIMIT = 20;
@@ -309,7 +309,7 @@ export function useKanbanData(
   useEffect(() => {
     if (!events) return;
 
-    const unsubscribe = events.on('file:write-complete', (event: any) => {
+    const unsubscribe = events.on('file:write-complete', (event: { payload?: { path?: string } }) => {
       const payload = event.payload || {};
       const filePath = payload.path || '';
 

@@ -8,6 +8,7 @@ import {
   createMockEvents,
 } from '../mocks/panelContext';
 import type { Task } from '@backlog-md/core';
+import type { PanelContextValue, PanelActions } from '../types';
 
 const meta = {
   title: 'Panels/TaskDetailPanel',
@@ -94,8 +95,8 @@ This is the task description with detailed information about what needs to be do
 // Wrapper component that emits task:selected event on mount
 const TaskDetailWithSelectedTask: React.FC<{
   task: Task;
-  context: any;
-  actions: any;
+  context: PanelContextValue;
+  actions: PanelActions;
   events: ReturnType<typeof createMockEvents>;
 }> = ({ task, context, actions, events }) => {
   useEffect(() => {
