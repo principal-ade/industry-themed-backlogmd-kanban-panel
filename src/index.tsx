@@ -2,7 +2,7 @@ import { KanbanPanel } from './panels/KanbanPanel';
 import { TaskDetailPanel } from './panels/TaskDetailPanel';
 import type { PanelContextValue, KanbanPanelContext, PanelActions } from './types';
 import type { PanelDefinition } from '@principal-ade/panel-framework-core';
-import { kanbanPanelTools, kanbanPanelToolsMetadata } from './tools';
+import { kanbanPanelTools } from './tools';
 
 /**
  * Export array of panel definitions.

@@ -177,7 +177,7 @@ ${milestone.description || ''}`;
               payload: { path, content },
             });
           },
-          createDir: async (path: string) => {
+          createDir: async (_path: string) => {
             // Directory creation is a no-op in this mock
           },
           exists: async (path: string) => fileContents.has(path),
@@ -318,7 +318,7 @@ default_status: "To Do"`;
               payload: { path, content },
             });
           },
-          createDir: async (path: string) => {
+          createDir: async (_path: string) => {
             // Directory creation is a no-op in this mock
           },
           exists: async (path: string) => fileContents.has(path),

@@ -16,7 +16,6 @@ import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import type { KanbanPanelPropsTyped } from '../types';
 import {
   useKanbanData,
-  STATUS_COLUMNS,
   type StatusColumn,
 } from './kanban/hooks/useKanbanData';
 import { KanbanColumn } from './kanban/components/KanbanColumn';
@@ -153,7 +152,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     milestones,
     isLoading: isMilestonesLoading,
     error: milestonesError,
-    toggleMilestone,
     refreshData: refreshMilestones,
     canWrite: canWriteMilestones,
     core: milestoneCore,
@@ -306,11 +304,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   // Task modal handlers
   const handleOpenNewTask = useCallback(() => {
     setEditingTask(undefined);
-    setIsTaskModalOpen(true);
-  }, []);
-
-  const handleEditTask = useCallback((task: Task) => {
-    setEditingTask(task);
     setIsTaskModalOpen(true);
   }, []);
 

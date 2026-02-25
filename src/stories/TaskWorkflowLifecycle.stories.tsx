@@ -15,7 +15,6 @@ import {
   getMockTaskFilePaths,
   generateMockMilestones,
 } from '../panels/kanban/mocks/mockData';
-import type { DataSlice } from '../types';
 
 const meta = {
   title: 'Stories/TaskWorkflowLifecycle',
@@ -28,38 +27,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Helper to create a mock file tree slice with backlog files
-const createBacklogFileTreeSlice = (): DataSlice<unknown> => {
-  const taskFilePaths = getMockTaskFilePaths();
-  const mockMilestones = generateMockMilestones();
-
-  const milestoneFiles = mockMilestones.map((milestone) => ({
-    path: milestone.filePath || `backlog/milestones/${milestone.id}.md`,
-  }));
-
-  // Create allFiles array with all file paths
-  const allFiles = [
-    { path: 'backlog/config.yml' },
-    ...taskFilePaths.map(path => ({ path })),
-    ...milestoneFiles,
-  ];
-
-  return {
-    scope: 'repository',
-    name: 'fileTree',
-    loading: false,
-    error: null,
-    data: {
-      allFiles,
-      sha: 'mock-sha-123',
-    },
-    refresh: async () => {},
-  };
-};
-
 const TaskWorkflowStory = () => {
   const [events] = useState(() => createMockEvents());
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const lastEventTimestampRef = useRef<number | null>(null);
 
   // Track file tree state for dynamic updates
@@ -396,7 +365,7 @@ const TaskWorkflowStory = () => {
     // Task created -> add to file tree
     const unsubscribeTaskCreated = events.on('task:created', async (event) => {
       console.log('[TaskWorkflowStory] task:created event received:', event.payload);
-      const { taskId, filePath, content } = event.payload as { taskId: string; filePath: string; content?: string };
+      const { filePath, content } = event.payload as { taskId: string; filePath: string; content?: string };
 
       // Add file to mock filesystem if content provided
       if (content) {

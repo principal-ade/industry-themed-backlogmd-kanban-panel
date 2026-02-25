@@ -175,7 +175,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
  *
  * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
  */
-export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, actions, events, config }) => {
+export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, events, config }) => {
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [claudeAssignment, setClaudeAssignment] = useState<ClaudeAssignmentState>({ status: 'idle' });

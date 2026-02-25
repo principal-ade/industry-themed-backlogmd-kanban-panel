@@ -85,7 +85,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }),
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (_e: React.MouseEvent) => {
     // Only trigger click if not dragging
     if (!isDragging && onClick) {
       onClick(task);
