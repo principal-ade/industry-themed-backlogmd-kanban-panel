@@ -3,11 +3,19 @@ name: "@industry-theme/backlogmd-kanban-panel"
 description: "Kanban board panel for visualizing Backlog.md tasks in the industry-themed panel framework"
 
 resources:
-  industry-themed-backlogmd-kanban-panel-storybook:
+  # Production/library context - matches the instrumentation scope
+  backlogmd-kanban-panel:
+    service.name: "@industry-theme/backlogmd-kanban-panel"
+    service.version: "1.0.41"
+
+  # Storybook/testing context
+  backlogmd-kanban-panel-storybook:
     service.name: "industry-themed-backlogmd-kanban-panel-storybook"
     service.version: "1.0.41"
     deployment.environment: "development"
     project: "backlogmd-kanban-panel"
+    owned-scopes:
+      - "@industry-theme/backlogmd-kanban-panel"
 
 nodeComponents: {}
 
