@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Task Create",
+  "description": "Creating a new task via the task modal",
+  "spanPattern": "task.create",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "success",
+      "priority": 1,
+      "description": "Task created successfully",
+      "template": {
+        "events": {
+          "modal.opened": "📝 Create modal opened",
+          "task.created": "➕ Created task {{task.id}} in {{task.status}}",
+          "kanban.loaded": "🔄 Board refreshed ({{tasks.count}} tasks)"
+        },
+        "summary": "✅ Task created: {{task.id}}"
+      }
+    },
+    {
+      "id": "error",
+      "priority": 2,
+      "description": "Failed to create task",
+      "template": {
+        "events": {
+          "modal.opened": "📝 Create modal opened",
+          "task.created": "➕ Attempted to create task",
+          "task.save.error": "❌ Save failed: {{error.type}} - {{error.message}}"
+        },
+        "summary": "❌ Create failed: {{error.type}}"
+      }
+    },
+    {
+      "id": "cancelled",
+      "priority": 3,
+      "description": "User cancelled task creation",
+      "template": {
+        "events": {
+          "modal.opened": "📝 Create modal opened",
+          "modal.cancelled": "❌ Creation cancelled{{#if had.changes}} (discarded changes){{/if}}"
+        },
+        "summary": "❌ Create cancelled"
+      }
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 version: "1.0.0"
-name: "Component Library"
+name: "@industry-theme/backlogmd-kanban-panel"
+description: "Kanban board panel for visualizing Backlog.md tasks in the industry-themed panel framework"
+
+resources:
+  industry-themed-backlogmd-kanban-panel-storybook:
+    service.name: "industry-themed-backlogmd-kanban-panel-storybook"
+    service.version: "1.0.41"
+    deployment.environment: "development"
+    project: "backlogmd-kanban-panel"
 
 nodeComponents: {}
 

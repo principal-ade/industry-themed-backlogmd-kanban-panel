@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Board Load",
+  "description": "Kanban board initialization and task loading",
+  "spanPattern": "kanban.load",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "success",
+      "priority": 1,
+      "description": "Board initialized and tasks loaded",
+      "template": {
+        "events": {
+          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
+          "kanban.loading": "⏳ {{#if is.backlog.project}}Loading backlog{{else}}Not a backlog project{{/if}}",
+          "kanban.loaded": "📊 {{#if (eq tasks.count 0)}}No tasks found{{else}}Loaded {{tasks.count}} tasks in {{columns.count}} columns{{/if}}"
+        },
+        "summary": "{{#if (eq tasks.count 0)}}📭 Empty board{{else}}✅ Board loaded: {{tasks.count}} tasks{{/if}}"
+      }
+    },
+    {
+      "id": "error",
+      "priority": 2,
+      "description": "Board failed to load",
+      "template": {
+        "events": {
+          "panel.initialized": "🚀 Panel initialized",
+          "kanban.loading": "⏳ Loading tasks...",
+          "kanban.load.error": "❌ Load failed: {{error.type}} - {{error.message}}"
+        },
+        "summary": "❌ Load error: {{error.type}}"
+      }
+    }
+  ]
+}

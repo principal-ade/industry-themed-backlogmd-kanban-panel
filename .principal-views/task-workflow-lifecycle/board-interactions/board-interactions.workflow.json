@@ -1,0 +1,77 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Board Interactions",
+  "description": "Board interactions - task selection, pagination, filter, search, empty state",
+  "spanPattern": "board.interaction",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "task-selected",
+      "priority": 1,
+      "description": "Task selected for viewing",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}{{#if task.status}} ({{task.status}}){{/if}}"
+        },
+        "summary": "📋 Viewing: {{task.id}}"
+      }
+    },
+    {
+      "id": "load-more",
+      "priority": 2,
+      "description": "User loaded more tasks (pagination)",
+      "template": {
+        "events": {
+          "kanban.load.more": "📄 Loading more tasks (offset: {{offset}}, limit: {{limit}})",
+          "kanban.loaded": "📊 Now showing {{tasks.count}} tasks"
+        },
+        "summary": "📄 Loaded more tasks"
+      }
+    },
+    {
+      "id": "filter-applied",
+      "priority": 3,
+      "description": "User applied a filter",
+      "template": {
+        "events": {
+          "filter.applied": "🔍 Filter applied: {{filter.type}} = {{filter.value}}"
+        },
+        "summary": "🔍 Filtered by {{filter.type}}"
+      }
+    },
+    {
+      "id": "filter-cleared",
+      "priority": 4,
+      "description": "User cleared filters",
+      "template": {
+        "events": {
+          "filter.cleared": "🔄 Cleared filters"
+        },
+        "summary": "🔄 Filters cleared"
+      }
+    },
+    {
+      "id": "search",
+      "priority": 5,
+      "description": "User searched for tasks",
+      "template": {
+        "events": {
+          "search.performed": "🔎 Searched for \"{{search.query}}\" → {{results.count}} results"
+        },
+        "summary": "🔎 Search: {{results.count}} results"
+      }
+    },
+    {
+      "id": "empty-action",
+      "priority": 6,
+      "description": "User clicked empty state action",
+      "template": {
+        "events": {
+          "empty.action.clicked": "👆 Clicked empty state action: {{action.type}}"
+        },
+        "summary": "👆 Empty action: {{action.type}}"
+      }
+    }
+  ]
+}

@@ -159,6 +159,9 @@ const TaskWorkflowStory = () => {
       },
     };
 
+    // Add fileTree as direct property (required by KanbanPanel typed props)
+    (ctx as Record<string, unknown>).fileTree = fileTreeSlice;
+
     ctx.getSlice = (sliceName: string) => {
       if (sliceName === 'fileTree') {
         return fileTreeSlice;

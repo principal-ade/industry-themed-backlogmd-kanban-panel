@@ -1,0 +1,708 @@
+{
+  "nodes": [
+    {
+      "id": "panel-initialized",
+      "type": "text",
+      "text": "# Panel Initialized\n\nKanban panel mounted and context ready",
+      "x": -200,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "initialization",
+        "status": "draft",
+        "event": {
+          "name": "panel.initialized",
+          "attributes": {
+            "panel.id": { "type": "string", "required": true },
+            "has.file.tree": { "type": "boolean", "required": true },
+            "has.file.system": { "type": "boolean", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "lifecycle" }
+      }
+    },
+    {
+      "id": "kanban-loading",
+      "type": "text",
+      "text": "# Loading Tasks\n\nFetching tasks from backlog",
+      "x": 50,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "5",
+      "pv": {
+        "nodeType": "data-loading",
+        "status": "draft",
+        "event": {
+          "name": "kanban.loading",
+          "attributes": {
+            "is.backlog.project": { "type": "boolean", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "lifecycle" }
+      }
+    },
+    {
+      "id": "kanban-loaded",
+      "type": "text",
+      "text": "# Tasks Loaded\n\nKanban board ready with tasks",
+      "x": 300,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "data-loaded",
+        "status": "draft",
+        "event": {
+          "name": "kanban.loaded",
+          "attributes": {
+            "tasks.count": { "type": "number", "required": true },
+            "columns.count": { "type": "number", "required": true },
+            "has.more": { "type": "boolean", "required": false }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "lifecycle" }
+      }
+    },
+    {
+      "id": "kanban-load-error",
+      "type": "text",
+      "text": "# Load Error\n\nFailed to load tasks from backlog",
+      "x": 50,
+      "y": 140,
+      "width": 200,
+      "height": 100,
+      "color": "1",
+      "pv": {
+        "nodeType": "error",
+        "status": "draft",
+        "event": {
+          "name": "kanban.load.error",
+          "attributes": {
+            "error.type": { "type": "string", "required": true },
+            "error.message": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "error" }
+      }
+    },
+    {
+      "id": "kanban-load-more",
+      "type": "text",
+      "text": "# Load More\n\nFetching additional tasks (pagination)",
+      "x": 300,
+      "y": 140,
+      "width": 200,
+      "height": 100,
+      "color": "5",
+      "pv": {
+        "nodeType": "data-loading",
+        "status": "draft",
+        "event": {
+          "name": "kanban.load.more",
+          "attributes": {
+            "offset": { "type": "number", "required": true },
+            "limit": { "type": "number", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "lifecycle" }
+      }
+    },
+    {
+      "id": "empty-action-clicked",
+      "type": "text",
+      "text": "# Empty Action Clicked\n\nUser clicked CTA on empty board",
+      "x": 300,
+      "y": -140,
+      "width": 200,
+      "height": 100,
+      "color": "2",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "empty.action.clicked",
+          "attributes": {
+            "action.type": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/EmptyState.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "task-selected",
+      "type": "text",
+      "text": "# Task Selected\n\nUser clicked on a task card",
+      "x": 550,
+      "y": -140,
+      "width": 200,
+      "height": 100,
+      "color": "2",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "task.selected",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "task.status": { "type": "string", "required": false }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "task-drag-started",
+      "type": "text",
+      "text": "# Drag Started\n\nUser started dragging a task",
+      "x": 550,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "2",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "task.drag.started",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "from.status": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "task-moved",
+      "type": "text",
+      "text": "# Task Moved\n\nUser dropped task in new column",
+      "x": 800,
+      "y": -70,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "task.moved",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "from.status": { "type": "string", "required": true },
+            "to.status": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/KanbanColumn.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "task-drag-cancelled",
+      "type": "text",
+      "text": "# Drag Cancelled\n\nUser cancelled drag operation",
+      "x": 800,
+      "y": 70,
+      "width": 200,
+      "height": 100,
+      "color": "3",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "task.drag.cancelled",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "from.status": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "filter-applied",
+      "type": "text",
+      "text": "# Filter Applied\n\nUser applied a filter to the board",
+      "x": 550,
+      "y": 140,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "filter.applied",
+          "attributes": {
+            "filter.type": { "type": "string", "required": true },
+            "filter.value": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "filter-cleared",
+      "type": "text",
+      "text": "# Filter Cleared\n\nUser cleared active filters",
+      "x": 550,
+      "y": 260,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "filter.cleared",
+          "attributes": {
+            "filters.count": { "type": "number", "required": false }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "search-performed",
+      "type": "text",
+      "text": "# Search Performed\n\nUser searched for tasks",
+      "x": 550,
+      "y": 380,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "search.performed",
+          "attributes": {
+            "search.query": { "type": "string", "required": true },
+            "results.count": { "type": "number", "required": false }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "modal-opened",
+      "type": "text",
+      "text": "# Modal Opened\n\nTask modal opened for create/edit",
+      "x": 1050,
+      "y": -140,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "modal.opened",
+          "attributes": {
+            "modal.mode": { "type": "string", "required": true },
+            "task.id": { "type": "string", "required": false }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "modal-cancelled",
+      "type": "text",
+      "text": "# Modal Cancelled\n\nUser closed modal without saving",
+      "x": 1050,
+      "y": 140,
+      "width": 200,
+      "height": 100,
+      "color": "3",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "draft",
+        "event": {
+          "name": "modal.cancelled",
+          "attributes": {
+            "modal.mode": { "type": "string", "required": true },
+            "had.changes": { "type": "boolean", "required": false }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
+        "otel": { "kind": "event", "category": "interaction" }
+      }
+    },
+    {
+      "id": "task-created",
+      "type": "text",
+      "text": "# Task Created\n\nNew task added to backlog",
+      "x": 1300,
+      "y": -140,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "mutation",
+        "status": "draft",
+        "event": {
+          "name": "task.created",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "task.status": { "type": "string", "required": true },
+            "file.path": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
+        "otel": { "kind": "event", "category": "mutation" }
+      }
+    },
+    {
+      "id": "task-updated",
+      "type": "text",
+      "text": "# Task Updated\n\nTask details modified",
+      "x": 1300,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "mutation",
+        "status": "draft",
+        "event": {
+          "name": "task.updated",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "updated.fields": { "type": "string", "required": false }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
+        "otel": { "kind": "event", "category": "mutation" }
+      }
+    },
+    {
+      "id": "task-deleted",
+      "type": "text",
+      "text": "# Task Deleted\n\nTask removed from backlog",
+      "x": 1300,
+      "y": 140,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "mutation",
+        "status": "draft",
+        "event": {
+          "name": "task.deleted",
+          "attributes": {
+            "task.id": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskContextMenu.tsx"],
+        "otel": { "kind": "event", "category": "mutation" }
+      }
+    },
+    {
+      "id": "task-save-error",
+      "type": "text",
+      "text": "# Save Error\n\nFailed to save task changes",
+      "x": 1300,
+      "y": 280,
+      "width": 200,
+      "height": 100,
+      "color": "1",
+      "pv": {
+        "nodeType": "error",
+        "status": "draft",
+        "event": {
+          "name": "task.save.error",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "operation": { "type": "string", "required": true },
+            "error.type": { "type": "string", "required": true },
+            "error.message": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
+        "otel": { "kind": "event", "category": "error" }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "init-to-loading",
+      "fromNode": "panel-initialized",
+      "toNode": "kanban-loading",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "fetch tasks",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "loading-to-loaded",
+      "fromNode": "kanban-loading",
+      "toNode": "kanban-loaded",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "success",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "loading-to-error",
+      "fromNode": "kanban-loading",
+      "toNode": "kanban-load-error",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "failure",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "loaded-to-load-more",
+      "fromNode": "kanban-loaded",
+      "toNode": "kanban-load-more",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "paginate",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "load-more-to-loaded",
+      "fromNode": "kanban-load-more",
+      "toNode": "kanban-loaded",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "append",
+      "pv": { "edgeType": "update" }
+    },
+    {
+      "id": "loaded-to-empty-action",
+      "fromNode": "kanban-loaded",
+      "toNode": "empty-action-clicked",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "empty state",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "loaded-to-selected",
+      "fromNode": "kanban-loaded",
+      "toNode": "task-selected",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "click task",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "loaded-to-drag-started",
+      "fromNode": "kanban-loaded",
+      "toNode": "task-drag-started",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "start drag",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "drag-to-moved",
+      "fromNode": "task-drag-started",
+      "toNode": "task-moved",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "drop",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "drag-to-cancelled",
+      "fromNode": "task-drag-started",
+      "toNode": "task-drag-cancelled",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "cancel",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "moved-to-updated",
+      "fromNode": "task-moved",
+      "toNode": "task-updated",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "persist",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "loaded-to-filter",
+      "fromNode": "kanban-loaded",
+      "toNode": "filter-applied",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "label": "filter",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "filter-to-cleared",
+      "fromNode": "filter-applied",
+      "toNode": "filter-cleared",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "clear",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "loaded-to-search",
+      "fromNode": "kanban-loaded",
+      "toNode": "search-performed",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "label": "search",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "selected-to-modal",
+      "fromNode": "task-selected",
+      "toNode": "modal-opened",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "edit",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "empty-to-modal",
+      "fromNode": "empty-action-clicked",
+      "toNode": "modal-opened",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "create",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "modal-to-created",
+      "fromNode": "modal-opened",
+      "toNode": "task-created",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "save new",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "modal-to-updated",
+      "fromNode": "modal-opened",
+      "toNode": "task-updated",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "save edit",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "modal-to-cancelled",
+      "fromNode": "modal-opened",
+      "toNode": "modal-cancelled",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "cancel",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "created-to-error",
+      "fromNode": "task-created",
+      "toNode": "task-save-error",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "failure",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "updated-to-error",
+      "fromNode": "task-updated",
+      "toNode": "task-save-error",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "failure",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "deleted-to-error",
+      "fromNode": "task-deleted",
+      "toNode": "task-save-error",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "failure",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "created-to-loaded",
+      "fromNode": "task-created",
+      "toNode": "kanban-loaded",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "refresh",
+      "pv": { "edgeType": "update" }
+    },
+    {
+      "id": "updated-to-loaded",
+      "fromNode": "task-updated",
+      "toNode": "kanban-loaded",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "refresh",
+      "pv": { "edgeType": "update" }
+    },
+    {
+      "id": "deleted-to-loaded",
+      "fromNode": "task-deleted",
+      "toNode": "kanban-loaded",
+      "fromSide": "left",
+      "toSide": "right",
+      "label": "refresh",
+      "pv": { "edgeType": "update" }
+    }
+  ],
+  "pv": {
+    "version": "1.0.0",
+    "name": "Kanban Panel",
+    "description": "Kanban board panel lifecycle - from initialization through task interactions and mutations",
+    "markdown": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.md",
+    "nodeTypes": {
+      "initialization": {
+        "description": "Panel initialization and setup",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "data-loading": {
+        "description": "Data fetching in progress",
+        "color": "#f59e0b",
+        "shape": "rectangle"
+      },
+      "data-loaded": {
+        "description": "Data ready for display",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "interaction": {
+        "description": "User interaction events",
+        "color": "#f59e0b",
+        "shape": "diamond"
+      },
+      "mutation": {
+        "description": "Data mutation events (CRUD)",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "error": {
+        "description": "Error events",
+        "color": "#ef4444",
+        "shape": "rectangle"
+      }
+    }
+  }
+}

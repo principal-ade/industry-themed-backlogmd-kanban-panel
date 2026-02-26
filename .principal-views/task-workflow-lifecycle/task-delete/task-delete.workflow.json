@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Task Delete",
+  "description": "Deleting a task via context menu",
+  "spanPattern": "task.delete",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "success",
+      "priority": 1,
+      "description": "Task deleted successfully",
+      "template": {
+        "events": {
+          "task.deleted": "🗑️ Deleted task {{task.id}}",
+          "kanban.loaded": "🔄 Board refreshed ({{tasks.count}} tasks)"
+        },
+        "summary": "🗑️ Task deleted: {{task.id}}"
+      }
+    },
+    {
+      "id": "error",
+      "priority": 2,
+      "description": "Failed to delete task",
+      "template": {
+        "events": {
+          "task.deleted": "🗑️ Attempted to delete {{task.id}}",
+          "task.save.error": "❌ Delete failed: {{error.type}} - {{error.message}}"
+        },
+        "summary": "❌ Delete failed: {{error.type}}"
+      }
+    }
+  ]
+}

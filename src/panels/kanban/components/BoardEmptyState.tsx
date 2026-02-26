@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Rocket, Plus, Milestone } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { getActiveSpan } from '../../../telemetry';
 
 interface BoardEmptyStateProps {
   onAddTask: () => void;
@@ -17,6 +18,22 @@ export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
   canWrite,
 }) => {
   const { theme } = useTheme();
+
+  const handleAddTask = useCallback(() => {
+    const activeSpan = getActiveSpan();
+    activeSpan?.addEvent('empty.action.clicked', {
+      'action.type': 'add_task',
+    });
+    onAddTask();
+  }, [onAddTask]);
+
+  const handleAddMilestone = useCallback(() => {
+    const activeSpan = getActiveSpan();
+    activeSpan?.addEvent('empty.action.clicked', {
+      'action.type': 'add_milestone',
+    });
+    onAddMilestone();
+  }, [onAddMilestone]);
 
   return (
     <div
@@ -69,7 +86,7 @@ export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
           }}
         >
           <button
-            onClick={onAddTask}
+            onClick={handleAddTask}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -95,7 +112,7 @@ export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
             <span>Add Task</span>
           </button>
           <button
-            onClick={onAddMilestone}
+            onClick={handleAddMilestone}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

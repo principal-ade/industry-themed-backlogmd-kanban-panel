@@ -8,6 +8,7 @@ const config: StorybookConfig = {
     '@storybook/addon-links',
     '@chromatic-com/storybook',
     '@storybook/addon-docs',
+    '@principal-ai/storybook-addon-otel'
   ],
 
   framework: {

@@ -168,7 +168,12 @@ export const createMockContext = (
   // Create mock file system adapter
   const mockFileSystem = createMockFileSystemAdapter();
 
-  const defaultContext: PanelContextValue = {
+  // Get fileTree slice for typed context (KanbanPanel expects context.fileTree)
+  const fileTreeSlice = customSlices?.fileTree || mockSlices.get('fileTree');
+
+  const defaultContext: PanelContextValue & { fileTree?: DataSlice } = {
+    // Add fileTree as direct property for typed panel props
+    fileTree: fileTreeSlice,
     currentScope: {
       type: 'repository',
       workspace: {

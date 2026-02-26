@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Task Edit",
+  "description": "Editing a task via the task modal or drag-and-drop",
+  "spanPattern": "task.edit",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "drag-completed",
+      "priority": 1,
+      "description": "Task dragged and dropped successfully",
+      "template": {
+        "events": {
+          "task.drag.started": "🎯 Started dragging {{task.id}} from {{from.status}}",
+          "task.moved": "📦 Dropped in {{to.status}}",
+          "task.updated": "💾 Status persisted"
+        },
+        "summary": "✅ Moved: {{from.status}} → {{to.status}}"
+      }
+    },
+    {
+      "id": "drag-cancelled",
+      "priority": 2,
+      "description": "Drag operation cancelled",
+      "template": {
+        "events": {
+          "task.drag.started": "🎯 Started dragging {{task.id}} from {{from.status}}",
+          "task.drag.cancelled": "↩️ Drag cancelled"
+        },
+        "summary": "↩️ Drag cancelled"
+      }
+    },
+    {
+      "id": "modal-success",
+      "priority": 3,
+      "description": "Task edited successfully via modal",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}",
+          "modal.opened": "📝 Edit modal opened for {{task.id}}",
+          "task.updated": "✏️ Updated task{{#if updated.fields}} ({{updated.fields}}){{/if}}",
+          "kanban.loaded": "🔄 Board refreshed"
+        },
+        "summary": "✅ Task edited: {{task.id}}"
+      }
+    },
+    {
+      "id": "modal-error",
+      "priority": 4,
+      "description": "Failed to save task edits via modal",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}",
+          "modal.opened": "📝 Edit modal opened",
+          "task.updated": "✏️ Attempted to update task",
+          "task.save.error": "❌ Save failed: {{error.type}} - {{error.message}}"
+        },
+        "summary": "❌ Edit failed: {{error.type}}"
+      }
+    },
+    {
+      "id": "modal-cancelled",
+      "priority": 5,
+      "description": "User cancelled task edit via modal",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}",
+          "modal.opened": "📝 Edit modal opened",
+          "modal.cancelled": "❌ Edit cancelled{{#if had.changes}} (discarded changes){{/if}}"
+        },
+        "summary": "❌ Edit cancelled"
+      }
+    }
+  ]
+}

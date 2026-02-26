@@ -26,6 +26,7 @@ import { TaskModal } from './kanban/components/TaskModal';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { MilestoneModal } from './milestone/components/MilestoneModal';
 import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
+import { getTracer, getActiveSpan, withSpan, SpanStatusCode } from '../telemetry';
 
 type ViewMode = 'board' | 'milestones';
 
@@ -71,6 +72,36 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Debounce timer for search telemetry
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Search handler with telemetry
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+
+    // Debounce telemetry to avoid spam on every keystroke
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      const activeSpan = getActiveSpan();
+      if (value.trim()) {
+        activeSpan?.addEvent('search.performed', {
+          'search.query': value.trim(),
+          // Note: results.count is approximate since filteredTasksByStatus updates async
+        });
+      }
+    }, 500);
+  }, []);
+
+  // Clear search handler with telemetry
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    const activeSpan = getActiveSpan();
+    activeSpan?.addEvent('filter.cleared');
+  }, []);
 
   // Configure sensors for drag detection
   // PointerSensor requires a small drag distance before activating
@@ -189,40 +220,109 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     return filtered;
   }, [tasksByStatus, searchQuery]);
 
+  // Track active drag span for context propagation
+  const dragSpanRef = useRef<ReturnType<ReturnType<typeof getTracer>['startSpan']> | null>(null);
+
   // Drag event handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const task = getTaskById(active.id as string);
     if (task) {
       setActiveTask(task);
+
+      // Start a span for the drag operation
+      const tracer = getTracer();
+      const span = tracer.startSpan('task.edit', {
+        attributes: {
+          'input.taskId': task.id,
+          'input.fromStatus': task.status || 'unknown',
+        },
+      });
+      dragSpanRef.current = span;
+
+      // Emit drag started event
+      span.addEvent('task.drag.started', {
+        'task.id': task.id,
+        'from.status': task.status || 'unknown',
+      });
     }
   }, [getTaskById]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
+    const span = dragSpanRef.current;
 
     setActiveTask(null);
 
-    if (!over) return;
+    if (!over) {
+      // Drag was cancelled (dropped outside valid target)
+      if (span) {
+        span.addEvent('task.drag.cancelled');
+        span.setAttributes({ 'output.cancelled': true });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+        dragSpanRef.current = null;
+      }
+      return;
+    }
 
     const taskId = active.id as string;
     const targetColumn = over.id as StatusColumn;
 
     // Find current column for the task
     const task = getTaskById(taskId);
-    if (!task) return;
+    if (!task) {
+      if (span) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Task not found' });
+        span.end();
+        dragSpanRef.current = null;
+      }
+      return;
+    }
 
     // Current column IS the task status (no mapping needed)
     const currentColumn = task.status || DEFAULT_TASK_STATUSES.TODO;
 
     // Only move if dropping in a different column
     if (currentColumn !== targetColumn) {
-      moveTaskOptimistic(taskId, targetColumn);
+      // moveTaskOptimistic will emit task.moved event using the active span
+      if (span) {
+        // Set the span in context for moveTaskOptimistic to use
+        withSpan(span, async () => {
+          moveTaskOptimistic(taskId, targetColumn);
+        });
+        span.setAttributes({
+          'output.toStatus': targetColumn,
+          'output.moved': true,
+        });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+        dragSpanRef.current = null;
+      } else {
+        moveTaskOptimistic(taskId, targetColumn);
+      }
+    } else {
+      // Dropped in same column - effectively cancelled
+      if (span) {
+        span.addEvent('task.drag.cancelled');
+        span.setAttributes({ 'output.cancelled': true, 'output.reason': 'same_column' });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+        dragSpanRef.current = null;
+      }
     }
   }, [getTaskById, moveTaskOptimistic]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
+
+    // Emit telemetry event
+    const activeSpan = getActiveSpan();
+    activeSpan?.addEvent('task.selected', {
+      'task.id': task.id,
+      'task.status': task.status || 'unknown',
+    });
+
     // Emit task:selected event for other panels (e.g., TaskDetailPanel)
     if (events) {
       events.emit({
@@ -301,15 +401,45 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     await refreshData();
   }, [fileSystem, context.currentScope.repository, refreshData]);
 
+  // Track if a save was completed (to distinguish cancel from save+close)
+  const taskSaveCompletedRef = useRef(false);
+  // Track the active task modal span
+  const taskModalSpanRef = useRef<ReturnType<ReturnType<typeof getTracer>['startSpan']> | null>(null);
+
   // Task modal handlers
   const handleOpenNewTask = useCallback(() => {
     setEditingTask(undefined);
     setIsTaskModalOpen(true);
+    taskSaveCompletedRef.current = false;
+
+    // Start a span for the task create operation
+    const tracer = getTracer();
+    const span = tracer.startSpan('task.create');
+    taskModalSpanRef.current = span;
+
+    // Emit modal opened event
+    span.addEvent('modal.opened', {
+      'modal.type': 'task',
+      'modal.mode': 'create',
+    });
   }, []);
 
   const handleCloseTaskModal = useCallback(() => {
+    const span = taskModalSpanRef.current;
+
+    // If save was not completed, this is a cancel
+    if (!taskSaveCompletedRef.current && span) {
+      span.addEvent('modal.cancelled', {
+        'had.changes': false, // We don't track dirty state yet
+      });
+      span.setAttributes({ 'output.cancelled': true });
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    }
+
     setIsTaskModalOpen(false);
     setEditingTask(undefined);
+    taskModalSpanRef.current = null;
   }, []);
 
   const handleSaveTask = useCallback(async (input: TaskCreateInput | TaskUpdateInput) => {
@@ -317,16 +447,57 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
       throw new Error('Backlog not loaded');
     }
 
-    if (editingTask) {
-      // Update existing task
-      await core.updateTask(editingTask.id, input as TaskUpdateInput);
-    } else {
-      // Create new task
-      await core.createTask(input as TaskCreateInput);
-    }
+    const span = taskModalSpanRef.current;
+    const isEditing = !!editingTask;
 
-    // Refresh to show the new/updated task
-    await refreshData();
+    try {
+      if (isEditing) {
+        // Update existing task
+        await core.updateTask(editingTask.id, input as TaskUpdateInput);
+
+        // Emit task updated event
+        span?.addEvent('task.updated', {
+          'task.id': editingTask.id,
+          'updated.fields': Object.keys(input).join(', '),
+        });
+      } else {
+        // Create new task
+        const newTask = await core.createTask(input as TaskCreateInput);
+
+        // Emit task created event
+        span?.addEvent('task.created', {
+          'task.id': newTask?.id || 'unknown',
+          'task.status': (input as TaskCreateInput).status || 'To Do',
+        });
+      }
+
+      taskSaveCompletedRef.current = true;
+
+      // Complete the span
+      if (span) {
+        span.setAttributes({
+          'output.success': true,
+          'output.operation': isEditing ? 'update' : 'create',
+        });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+        taskModalSpanRef.current = null;
+      }
+
+      // Refresh to show the new/updated task
+      await refreshData();
+    } catch (err) {
+      // Emit error event
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save task';
+      span?.addEvent('task.save.error', {
+        'error.type': err instanceof Error ? err.name : 'Unknown',
+        'error.message': errorMessage,
+      });
+      span?.recordException(err as Error);
+      span?.setStatus({ code: SpanStatusCode.ERROR, message: errorMessage });
+
+      throw err; // Re-throw so TaskModal can show the error
+    }
   }, [core, editingTask, refreshData]);
 
   // Milestone modal handlers
@@ -515,7 +686,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               style={{
                 width: '100%',
                 padding: '8px 32px 8px 32px',
@@ -531,7 +702,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={handleClearSearch}
                 style={{
                   position: 'absolute',
                   right: '6px',
