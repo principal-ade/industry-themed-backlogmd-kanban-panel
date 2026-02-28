@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Task, type PaginatedResult, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { KanbanPanelContext, PanelActions, PanelEventEmitter } from '../../../types';
+import type { KanbanPanelContext, KanbanPanelActions, PanelEventEmitter } from '../../../types';
 import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 import { getTracer, getActiveSpan, withSpan, SpanStatusCode } from '../../../telemetry';
 
@@ -71,7 +71,7 @@ export interface UseKanbanDataResult {
 
 interface UseKanbanDataOptions {
   context?: PanelContextValue<KanbanPanelContext>;
-  actions?: PanelActions;
+  actions?: KanbanPanelActions;
   /** Number of tasks to load per page (default: 20) */
   tasksLimit?: number;
   /** Event emitter for panel events */
@@ -126,11 +126,10 @@ export function useKanbanData(
 
   // Helper function to fetch file content (used for on-demand loading)
   const fetchFileContent = useCallback(async (path: string): Promise<string> => {
-    const currentContext = contextRef.current;
     const currentActions = actionsRef.current;
 
-    if (!currentActions || !currentContext) {
-      throw new Error('PanelContext not available');
+    if (!currentActions?.readFile) {
+      throw new Error('actions.readFile not available');
     }
 
     // Avoid duplicate fetches for the same file
@@ -141,12 +140,7 @@ export function useKanbanData(
     activeFilePathRef.current = path;
 
     try {
-      // Use adapters.readFile (the canonical way to read file content)
-      if (currentContext.adapters?.readFile) {
-        return await currentContext.adapters.readFile(path);
-      }
-
-      throw new Error('No file reading capability available (adapters.readFile not configured)');
+      return await currentActions.readFile(path);
     } finally {
       activeFilePathRef.current = null;
     }
@@ -237,11 +231,15 @@ export function useKanbanData(
       try {
 
         // Create FileSystemAdapter for the panel
-        // Pass host file system for write operations (if available)
+        // Pass actions for write operations (if available)
         const fs = new PanelFileSystemAdapter({
           fetchFile: fetchFileContent,
           filePaths,
-          hostFileSystem: context.adapters?.fileSystem,
+          hostFileSystem: {
+            writeFile: actions.writeFile,
+            createDir: actions.createDir,
+            deleteFile: actions.deleteFile,
+          },
         });
 
         // Create Core instance

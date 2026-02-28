@@ -52,16 +52,43 @@ import type { FileTree } from '@principal-ai/repository-abstraction';
 /**
  * Typed context for KanbanPanel and TaskDetailPanel
  * Both panels use fileTree slice
+ *
+ * Note: context is for READ-ONLY data access (slices, metadata).
+ * For file operations, use actions instead.
  */
 export interface KanbanPanelContext {
   fileTree: DataSlice<FileTree>;
 }
 
 /**
+ * Extended panel actions with file system operations.
+ *
+ * Design principle: `actions` is for all panel-initiated operations:
+ * - File operations (read, write, delete, createDir)
+ * - Host commands (openFile, openGitDiff, navigateToPanel)
+ *
+ * `context` is for READ-ONLY data access (slices, scope metadata).
+ * `events` is for peer-to-peer panel communication (pub/sub).
+ */
+export interface KanbanPanelActions extends CorePanelActions {
+  // File system operations
+  /** Read file contents */
+  readFile?: (path: string) => Promise<string>;
+  /** Write content to file */
+  writeFile?: (path: string, content: string) => Promise<void>;
+  /** Delete a file */
+  deleteFile?: (path: string) => Promise<void>;
+  /** Create a directory */
+  createDir?: (path: string) => Promise<void>;
+  /** Check if a file exists */
+  exists?: (path: string) => Promise<boolean>;
+}
+
+/**
  * Typed panel props for KanbanPanel
  */
 export type KanbanPanelPropsTyped = CorePanelComponentProps<
-  CorePanelActions,
+  KanbanPanelActions,
   KanbanPanelContext
 >;
 
@@ -69,6 +96,6 @@ export type KanbanPanelPropsTyped = CorePanelComponentProps<
  * Typed panel props for TaskDetailPanel
  */
 export type TaskDetailPanelPropsTyped = CorePanelComponentProps<
-  CorePanelActions,
+  KanbanPanelActions,
   KanbanPanelContext
 >;

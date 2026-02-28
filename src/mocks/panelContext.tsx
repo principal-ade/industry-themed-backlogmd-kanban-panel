@@ -3,62 +3,12 @@ import { PathsFileTreeBuilder } from '@principal-ai/repository-abstraction';
 import type {
   PanelComponentProps,
   PanelContextValue,
-  PanelActions,
+  KanbanPanelActions,
   PanelEventEmitter,
   PanelEvent,
   PanelEventType,
   DataSlice,
 } from '../types';
-
-/**
- * Create a mock file system adapter for Storybook
- * Stores files in memory and logs operations
- */
-export const createMockFileSystemAdapter = () => {
-  const files = new Map<string, string>();
-
-  return {
-    exists: async (path: string) => files.has(path),
-    readFile: async (path: string) => {
-      const content = files.get(path);
-      if (content === undefined) throw new Error(`File not found: ${path}`);
-      return content;
-    },
-    writeFile: async (path: string, content: string) => {
-      console.log('[Mock FS] Writing file:', path);
-      files.set(path, content);
-    },
-    deleteFile: async (path: string) => {
-      console.log('[Mock FS] Deleting file:', path);
-      files.delete(path);
-    },
-    createDir: async (path: string) => {
-      console.log('[Mock FS] Creating directory:', path);
-      // Directories are implicit in the Map-based storage
-    },
-    readDir: async (path: string) => {
-      const prefix = path.endsWith('/') ? path : path + '/';
-      const entries = new Set<string>();
-      for (const key of files.keys()) {
-        if (key.startsWith(prefix)) {
-          const rest = key.slice(prefix.length);
-          const firstSegment = rest.split('/')[0];
-          if (firstSegment) entries.add(firstSegment);
-        }
-      }
-      return Array.from(entries);
-    },
-    isDirectory: async (path: string) => {
-      const prefix = path.endsWith('/') ? path : path + '/';
-      for (const key of files.keys()) {
-        if (key.startsWith(prefix)) return true;
-      }
-      return false;
-    },
-    // Expose the internal files map for testing
-    _files: files,
-  };
-};
 
 /**
  * Mock Git Status data for Storybook
@@ -165,9 +115,6 @@ export const createMockContext = (
     }
   }
 
-  // Create mock file system adapter
-  const mockFileSystem = createMockFileSystemAdapter();
-
   // Get fileTree slice for typed context (KanbanPanel expects context.fileTree)
   const fileTreeSlice = customSlices?.fileTree || mockSlices.get('fileTree');
 
@@ -186,9 +133,7 @@ export const createMockContext = (
       },
     },
     slices: mockSlices,
-    adapters: {
-      fileSystem: mockFileSystem,
-    },
+    // Note: adapters removed - use actions for file operations instead
     getSlice: <T,>(name: string): DataSlice<T> | undefined => {
       return mockSlices.get(name) as DataSlice<T> | undefined;
     },
@@ -231,28 +176,64 @@ export const createMockContext = (
 
 /**
  * Mock Panel Actions for Storybook
+ *
+ * Actions are the primary interface for panel-initiated operations:
+ * - File operations (read, write, delete, createDir)
+ * - Host commands (openFile, openGitDiff, navigateToPanel)
  */
 export const createMockActions = (
-  overrides?: Partial<PanelActions>
-): PanelActions => ({
-  openFile: (filePath: string) => {
-    // eslint-disable-next-line no-console
-    console.log('[Mock] Opening file:', filePath);
-  },
-  openGitDiff: (filePath: string, status) => {
-    // eslint-disable-next-line no-console
-    console.log('[Mock] Opening git diff:', filePath, status);
-  },
-  navigateToPanel: (panelId: string) => {
-    // eslint-disable-next-line no-console
-    console.log('[Mock] Navigating to panel:', panelId);
-  },
-  notifyPanels: (event) => {
-    // eslint-disable-next-line no-console
-    console.log('[Mock] Notifying panels:', event);
-  },
-  ...overrides,
-});
+  overrides?: Partial<KanbanPanelActions>
+): KanbanPanelActions => {
+  // In-memory file storage for mock file operations
+  const files = new Map<string, string>();
+
+  return {
+    // Host commands
+    openFile: (filePath: string) => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Opening file:', filePath);
+    },
+    openGitDiff: (filePath: string, status) => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Opening git diff:', filePath, status);
+    },
+    navigateToPanel: (panelId: string) => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Navigating to panel:', panelId);
+    },
+
+    // File operations
+    readFile: async (path: string): Promise<string> => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Reading file:', path);
+      const content = files.get(path);
+      if (content === undefined) {
+        throw new Error(`File not found: ${path}`);
+      }
+      return content;
+    },
+    writeFile: async (path: string, content: string): Promise<void> => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Writing file:', path);
+      files.set(path, content);
+    },
+    deleteFile: async (path: string): Promise<void> => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Deleting file:', path);
+      files.delete(path);
+    },
+    createDir: async (path: string): Promise<void> => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Creating directory:', path);
+      // Directories are implicit in the Map-based storage
+    },
+    exists: async (path: string): Promise<boolean> => {
+      return files.has(path);
+    },
+
+    ...overrides,
+  };
+};
 
 /**
  * Mock Event Emitter for Storybook
@@ -306,7 +287,7 @@ export const createMockEvents = (): PanelEventEmitter => {
 export const MockPanelProvider: React.FC<{
   children: (props: PanelComponentProps) => React.ReactNode;
   contextOverrides?: Partial<PanelContextValue>;
-  actionsOverrides?: Partial<PanelActions>;
+  actionsOverrides?: Partial<KanbanPanelActions>;
 }> = ({ children, contextOverrides, actionsOverrides }) => {
   const context = createMockContext(contextOverrides);
   const actions = createMockActions(actionsOverrides);

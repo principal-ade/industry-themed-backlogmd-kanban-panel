@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Milestone, type Task } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { KanbanPanelContext, PanelActions } from '../../../types';
+import type { KanbanPanelContext, KanbanPanelActions } from '../../../types';
 import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 
 /** State for a single milestone with its tasks */
@@ -33,7 +33,7 @@ export interface UseMilestoneDataResult {
 
 interface UseMilestoneDataOptions {
   context?: PanelContextValue<KanbanPanelContext>;
-  actions?: PanelActions;
+  actions?: KanbanPanelActions;
 }
 
 /**
@@ -70,11 +70,10 @@ export function useMilestoneData(
 
   // Helper to fetch file content
   const fetchFileContent = useCallback(async (path: string): Promise<string> => {
-    const currentContext = contextRef.current;
     const currentActions = actionsRef.current;
 
-    if (!currentActions || !currentContext) {
-      throw new Error('PanelContext not available');
+    if (!currentActions?.readFile) {
+      throw new Error('actions.readFile not available');
     }
 
     if (activeFilePathRef.current === path) {
@@ -84,12 +83,7 @@ export function useMilestoneData(
     activeFilePathRef.current = path;
 
     try {
-      // Use adapters.readFile (the canonical way to read file content)
-      if (currentContext.adapters?.readFile) {
-        return await currentContext.adapters.readFile(path);
-      }
-
-      throw new Error('No file reading capability available (adapters.readFile not configured)');
+      return await currentActions.readFile(path);
     } finally {
       activeFilePathRef.current = null;
     }
@@ -143,11 +137,15 @@ export function useMilestoneData(
         console.log(`[useMilestoneData] Sample task paths:`, taskPaths.slice(0, 3));
       }
 
-      // Create FileSystemAdapter with host file system for write operations
+      // Create FileSystemAdapter with actions for write operations
       const fs = new PanelFileSystemAdapter({
         fetchFile: fetchFileContent,
         filePaths,
-        hostFileSystem: context.adapters?.fileSystem,
+        hostFileSystem: {
+          writeFile: actions.writeFile,
+          createDir: actions.createDir,
+          deleteFile: actions.deleteFile,
+        },
       });
 
       const core = new Core({

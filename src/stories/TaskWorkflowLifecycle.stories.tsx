@@ -190,18 +190,21 @@ const TaskWorkflowStory = () => {
       return slice?.scope === 'repository' ? slice : undefined;
     };
 
-    ctx.adapters = {
-      fileSystem: mockFS,
-      readFile: mockFS.readFile,
-    };
+    // Note: adapters removed - use actions for file operations instead
 
     console.log('[TaskWorkflowStory] Context created with fileTree:', fileTreeSlice.data);
 
     return ctx;
   }, [mockFS, fileTreeSlice]);
 
-  // Create mock actions
-  const actions = useMemo(() => createMockActions(), []);
+  // Create mock actions with file operations from mockFS
+  const actions = useMemo(() => createMockActions({
+    readFile: mockFS.readFile,
+    writeFile: mockFS.writeFile,
+    deleteFile: mockFS.deleteFile,
+    createDir: mockFS.createDir,
+    exists: mockFS.exists,
+  }), [mockFS]);
 
   // Create Core instance (shares same mockFS as KanbanPanel)
   const core = useMemo(() => new Core({
@@ -406,15 +409,15 @@ const TaskWorkflowStory = () => {
   useEffect(() => {
     console.log('[TaskWorkflowStory] Context setup:', {
       hasFileTree: !!context.getRepositorySlice?.('fileTree'),
-      hasReadFile: !!context.adapters?.readFile,
-      hasFileSystem: !!context.adapters?.fileSystem,
+      hasReadFile: !!actions.readFile,
+      hasWriteFile: !!actions.writeFile,
     });
 
     const fileTree = context.getRepositorySlice?.('fileTree');
     if (fileTree) {
       console.log('[TaskWorkflowStory] FileTree data:', fileTree.data);
     }
-  }, [context]);
+  }, [context, actions]);
 
   const panels = [
     {

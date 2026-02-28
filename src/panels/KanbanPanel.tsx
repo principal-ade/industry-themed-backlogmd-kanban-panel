@@ -335,16 +335,15 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     }
   };
 
-  // Check if we can initialize (need file system adapter with write capability)
-  const fileSystem = context.adapters?.fileSystem;
+  // Check if we can initialize (need file operations on actions)
   const canInitialize = Boolean(
-    fileSystem?.writeFile && fileSystem?.createDir && context.currentScope.repository?.path
+    actions.writeFile && actions.createDir && context.currentScope.repository?.path
   );
 
   // Initialize Backlog.md project
   const handleInitialize = useCallback(async () => {
-    if (!fileSystem?.writeFile || !fileSystem?.createDir) {
-      throw new Error('File system adapter not available');
+    if (!actions.writeFile || !actions.createDir) {
+      throw new Error('File operations not available on actions');
     }
 
     const repoPath = context.currentScope.repository?.path;
@@ -352,24 +351,28 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
       throw new Error('Repository path not available');
     }
 
-    // Create a minimal adapter for Core that wraps the panel's fileSystem
+    // Create a minimal adapter for Core that wraps actions
     // Only the methods used by initProject need real implementations
     const notImplemented = () => { throw new Error('Not implemented'); };
     const fsAdapter = {
       // Used by initProject
       exists: async (path: string) => {
+        if (actions.exists) {
+          return actions.exists(path);
+        }
+        // Fallback: try to read and catch error
         try {
-          await fileSystem.readFile(path);
+          await actions.readFile?.(path);
           return true;
         } catch {
           return false;
         }
       },
-      writeFile: async (path: string, content: string) => { await fileSystem.writeFile(path, content); },
-      createDir: async (path: string, _options?: { recursive?: boolean }) => { await fileSystem.createDir!(path); },
+      writeFile: async (path: string, content: string) => { await actions.writeFile!(path, content); },
+      createDir: async (path: string, _options?: { recursive?: boolean }) => { await actions.createDir!(path); },
       join: (...paths: string[]) => paths.join('/').replace(/\/+/g, '/'),
       // Not used by initProject - stubs
-      readFile: async (path: string) => fileSystem.readFile(path) as Promise<string>,
+      readFile: async (path: string) => actions.readFile?.(path) ?? Promise.reject(new Error('readFile not available')),
       deleteFile: async () => notImplemented(),
       readDir: async () => [] as string[],
       isDirectory: async () => false,
@@ -400,7 +403,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
     // Refresh to pick up the new project
     await refreshData();
-  }, [fileSystem, context.currentScope.repository, refreshData]);
+  }, [actions, context.currentScope.repository, refreshData]);
 
   // Track if a save was completed (to distinguish cancel from save+close)
   const taskSaveCompletedRef = useRef(false);

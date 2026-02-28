@@ -119,15 +119,6 @@ ${milestone.description || ''}`;
   // Create event emitter
   const events = createMockEvents();
 
-  // Create readFile adapter that uses our file contents map
-  const readFile = async (path: string): Promise<string> => {
-    const content = fileContents.get(path);
-    if (content === undefined) {
-      throw new Error(`File not found: ${path}`);
-    }
-    return content;
-  };
-
   // Active file slice that will be updated by openFile
   const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
@@ -154,38 +145,6 @@ ${milestone.description || ''}`;
           name: 'my-kanban-project',
         },
       },
-      adapters: {
-        readFile,
-        fileSystem: {
-          readFile: async (path: string) => fileContents.get(path) || '',
-          writeFile: async (path: string, content: string) => {
-            fileContents.set(path, content);
-
-            // Rebuild fileTree with the new file using PathsFileTreeBuilder
-            const allPaths = Array.from(fileContents.keys());
-            const builder = new PathsFileTreeBuilder();
-            const updatedFileTree = builder.build({
-              files: allPaths,
-            });
-            fileTreeSlice.data = updatedFileTree;
-
-            // Emit file:write-complete event
-            events.emit({
-              type: 'file:write-complete',
-              source: 'mock-file-system',
-              timestamp: Date.now(),
-              payload: { path, content },
-            });
-          },
-          createDir: async (_path: string) => {
-            // Directory creation is a no-op in this mock
-          },
-          exists: async (path: string) => fileContents.has(path),
-          deleteFile: async (path: string) => {
-            fileContents.delete(path);
-          },
-        },
-      },
     },
     slices: {
       fileTree: fileTreeSlice,
@@ -193,16 +152,50 @@ ${milestone.description || ''}`;
     },
   });
 
+  // File operations are now on actions, not context.adapters
   const actions = createMockActions({
-    openFile: async (filePath: string): Promise<string> => {
-      // Return content directly to avoid race conditions
+    readFile: async (path: string): Promise<string> => {
+      const content = fileContents.get(path);
+      if (content === undefined) {
+        throw new Error(`File not found: ${path}`);
+      }
+      return content;
+    },
+    writeFile: async (path: string, content: string): Promise<void> => {
+      fileContents.set(path, content);
+
+      // Rebuild fileTree with the new file using PathsFileTreeBuilder
+      const allPaths = Array.from(fileContents.keys());
+      const builder = new PathsFileTreeBuilder();
+      const updatedFileTree = builder.build({
+        files: allPaths,
+      });
+      fileTreeSlice.data = updatedFileTree;
+
+      // Emit file:write-complete event
+      events.emit({
+        type: 'file:write-complete',
+        source: 'mock-file-system',
+        timestamp: Date.now(),
+        payload: { path, content },
+      });
+    },
+    deleteFile: async (path: string): Promise<void> => {
+      fileContents.delete(path);
+    },
+    createDir: async (_path: string): Promise<void> => {
+      // Directory creation is a no-op in this mock
+    },
+    exists: async (path: string): Promise<boolean> => {
+      return fileContents.has(path);
+    },
+    openFile: (filePath: string) => {
+      // Update the slice for compatibility
       const content = fileContents.get(filePath) || '';
-      // Also update the slice for compatibility
       activeFileSlice.data = {
         path: filePath,
         content,
       };
-      return content;
     },
   });
 
@@ -265,14 +258,6 @@ default_status: "To Do"`;
 
   const events = createMockEvents();
 
-  const readFile = async (path: string): Promise<string> => {
-    const content = fileContents.get(path);
-    if (content === undefined) {
-      throw new Error(`File not found: ${path}`);
-    }
-    return content;
-  };
-
   const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
     name: 'active-file',
@@ -298,35 +283,6 @@ default_status: "To Do"`;
           name: 'my-kanban-project',
         },
       },
-      adapters: {
-        readFile,
-        fileSystem: {
-          readFile: async (path: string) => fileContents.get(path) || '',
-          writeFile: async (path: string, content: string) => {
-            fileContents.set(path, content);
-            // Rebuild fileTree with the new file using PathsFileTreeBuilder
-            const allPaths = Array.from(fileContents.keys());
-            const builder = new PathsFileTreeBuilder();
-            const updatedFileTree = builder.build({
-              files: allPaths,
-            });
-            fileTreeSlice.data = updatedFileTree;
-            events.emit({
-              type: 'file:write-complete',
-              source: 'mock-file-system',
-              timestamp: Date.now(),
-              payload: { path, content },
-            });
-          },
-          createDir: async (_path: string) => {
-            // Directory creation is a no-op in this mock
-          },
-          exists: async (path: string) => fileContents.has(path),
-          deleteFile: async (path: string) => {
-            fileContents.delete(path);
-          },
-        },
-      },
     },
     slices: {
       fileTree: fileTreeSlice,
@@ -334,14 +290,46 @@ default_status: "To Do"`;
     },
   });
 
+  // File operations are now on actions, not context.adapters
   const actions = createMockActions({
-    openFile: async (filePath: string): Promise<string> => {
+    readFile: async (path: string): Promise<string> => {
+      const content = fileContents.get(path);
+      if (content === undefined) {
+        throw new Error(`File not found: ${path}`);
+      }
+      return content;
+    },
+    writeFile: async (path: string, content: string): Promise<void> => {
+      fileContents.set(path, content);
+      // Rebuild fileTree with the new file using PathsFileTreeBuilder
+      const allPaths = Array.from(fileContents.keys());
+      const rebuildBuilder = new PathsFileTreeBuilder();
+      const updatedFileTree = rebuildBuilder.build({
+        files: allPaths,
+      });
+      fileTreeSlice.data = updatedFileTree;
+      events.emit({
+        type: 'file:write-complete',
+        source: 'mock-file-system',
+        timestamp: Date.now(),
+        payload: { path, content },
+      });
+    },
+    deleteFile: async (path: string): Promise<void> => {
+      fileContents.delete(path);
+    },
+    createDir: async (_path: string): Promise<void> => {
+      // Directory creation is a no-op in this mock
+    },
+    exists: async (path: string): Promise<boolean> => {
+      return fileContents.has(path);
+    },
+    openFile: (filePath: string) => {
       const content = fileContents.get(filePath) || '';
       activeFileSlice.data = {
         path: filePath,
         content,
       };
-      return content;
     },
   });
 
@@ -431,17 +419,6 @@ const createRealBacklogMocks = () => {
 
   const events = createMockEvents();
 
-  const readFile = async (path: string): Promise<string> => {
-    console.log(`[Real Repo Story] readFile called for: ${path}`);
-    const content = fileContents.get(path);
-    if (content === undefined) {
-      console.error(`[Real Repo Story] File not found in cache: ${path}`);
-      throw new Error(`File not found: ${path}`);
-    }
-    console.log(`[Real Repo Story] Returning content (${content.length} bytes):`, content.substring(0, 200));
-    return content;
-  };
-
   const activeFileSlice: DataSlice<ActiveFileData> = {
     scope: 'repository',
     name: 'active-file',
@@ -467,23 +444,6 @@ const createRealBacklogMocks = () => {
           name: REAL_REPO_NAME,
         },
       },
-      adapters: {
-        readFile,
-        fileSystem: {
-          readFile: async (path: string) => fileContents.get(path) || '',
-          writeFile: async (path: string, content: string) => {
-            fileContents.set(path, content);
-            console.log('[Real Repo Story] Would write:', path);
-          },
-          createDir: async (path: string) => {
-            console.log('[Real Repo Story] Would create dir:', path);
-          },
-          exists: async (path: string) => fileContents.has(path),
-          deleteFile: async (path: string) => {
-            console.log('[Real Repo Story] Would delete:', path);
-          },
-        },
-      },
     },
     slices: {
       fileTree: fileTreeSlice,
@@ -491,14 +451,38 @@ const createRealBacklogMocks = () => {
     },
   });
 
+  // File operations are now on actions, not context.adapters
   const actions = createMockActions({
-    openFile: async (filePath: string): Promise<string> => {
+    readFile: async (path: string): Promise<string> => {
+      console.log(`[Real Repo Story] readFile called for: ${path}`);
+      const content = fileContents.get(path);
+      if (content === undefined) {
+        console.error(`[Real Repo Story] File not found in cache: ${path}`);
+        throw new Error(`File not found: ${path}`);
+      }
+      console.log(`[Real Repo Story] Returning content (${content.length} bytes):`, content.substring(0, 200));
+      return content;
+    },
+    writeFile: async (path: string, content: string): Promise<void> => {
+      fileContents.set(path, content);
+      console.log('[Real Repo Story] Would write:', path);
+    },
+    deleteFile: async (path: string): Promise<void> => {
+      console.log('[Real Repo Story] Would delete:', path);
+      fileContents.delete(path);
+    },
+    createDir: async (path: string): Promise<void> => {
+      console.log('[Real Repo Story] Would create dir:', path);
+    },
+    exists: async (path: string): Promise<boolean> => {
+      return fileContents.has(path);
+    },
+    openFile: (filePath: string) => {
       const content = fileContents.get(filePath) || '';
       activeFileSlice.data = {
         path: filePath,
         content,
       };
-      return content;
     },
   });
 
