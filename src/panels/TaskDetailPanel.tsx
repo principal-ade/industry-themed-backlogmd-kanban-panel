@@ -6,6 +6,7 @@ import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { TaskDetailPanelPropsTyped, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
+import { getTracer, SpanStatusCode } from '../telemetry';
 
 /** Extract GitHub issue info from a task's references */
 function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
@@ -206,6 +207,18 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   const handleAssignToClaude = useCallback(() => {
     if (!events || !selectedTask) return;
 
+    // Emit telemetry event
+    const tracer = getTracer();
+    const span = tracer.startSpan('detail.interaction', {
+      attributes: { 'task.id': selectedTask.id },
+    });
+    span.addEvent('task.assign.requested', {
+      'task.id': selectedTask.id,
+      'task.title': selectedTask.title,
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+
     setClaudeAssignment({ status: 'loading' });
 
     // Emit event for host to handle
@@ -232,6 +245,24 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
       },
     });
   }, [events, selectedTask]);
+
+  // Handle opening delete modal
+  const handleOpenDeleteModal = useCallback(() => {
+    if (!selectedTask) return;
+
+    // Emit telemetry event
+    const tracer = getTracer();
+    const span = tracer.startSpan('detail.interaction', {
+      attributes: { 'task.id': selectedTask.id },
+    });
+    span.addEvent('delete.modal.opened', {
+      'task.id': selectedTask.id,
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+
+    setIsDeleteModalOpen(true);
+  }, [selectedTask]);
 
   // Handle delete confirmation
   const handleDeleteConfirm = useCallback(() => {
@@ -312,6 +343,17 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
       (events as PanelEventEmitter).on('task:deleted:success', (event) => {
         const payload = event.payload as { taskId: string };
         if (payload.taskId === selectedTask?.id) {
+          // Emit telemetry event for successful deletion
+          const tracer = getTracer();
+          const span = tracer.startSpan('task.mutation', {
+            attributes: { 'task.id': payload.taskId },
+          });
+          span.addEvent('task.deleted', {
+            'task.id': payload.taskId,
+          });
+          span.setStatus({ code: SpanStatusCode.OK });
+          span.end();
+
           setDeleteState({ status: 'success' });
           setIsDeleteModalOpen(false);
 
@@ -350,7 +392,20 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   }, [events, selectedTask?.id]);
 
   // Handle back/close
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
+    // Emit telemetry event before clearing state
+    if (selectedTask) {
+      const tracer = getTracer();
+      const span = tracer.startSpan('detail.interaction', {
+        attributes: { 'task.id': selectedTask.id },
+      });
+      span.addEvent('task.deselected', {
+        'task.id': selectedTask.id,
+      });
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    }
+
     setSelectedTask(null);
     setDeleteState({ status: 'idle' });
     setIsDeleteModalOpen(false);
@@ -363,7 +418,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
         payload: {},
       });
     }
-  };
+  }, [selectedTask, events]);
 
   // Empty state when no task is selected
   if (!selectedTask) {
@@ -459,7 +514,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
           {/* Delete button */}
           {deleteState.status === 'idle' && (
             <button
-              onClick={() => setIsDeleteModalOpen(true)}
+              onClick={handleOpenDeleteModal}
               style={{
                 display: 'flex',
                 alignItems: 'center',

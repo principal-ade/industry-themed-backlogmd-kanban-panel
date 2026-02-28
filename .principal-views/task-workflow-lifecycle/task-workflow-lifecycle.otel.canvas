@@ -11,7 +11,7 @@
       "color": "4",
       "pv": {
         "nodeType": "initialization",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "panel.initialized",
           "attributes": {
@@ -21,7 +21,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "lifecycle" }
+        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -35,7 +35,7 @@
       "color": "5",
       "pv": {
         "nodeType": "data-loading",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "kanban.loading",
           "attributes": {
@@ -43,7 +43,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "lifecycle" }
+        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -57,7 +57,7 @@
       "color": "4",
       "pv": {
         "nodeType": "data-loaded",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "kanban.loaded",
           "attributes": {
@@ -67,7 +67,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "lifecycle" }
+        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -81,7 +81,7 @@
       "color": "3",
       "pv": {
         "nodeType": "data-loaded",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "kanban.skipped",
           "attributes": {
@@ -89,7 +89,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "lifecycle" }
+        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -103,7 +103,7 @@
       "color": "1",
       "pv": {
         "nodeType": "error",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "kanban.load.error",
           "attributes": {
@@ -112,7 +112,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "error" }
+        "otel": { "kind": "event", "category": "error", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -126,7 +126,7 @@
       "color": "5",
       "pv": {
         "nodeType": "data-loading",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "kanban.load.more",
           "attributes": {
@@ -135,7 +135,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "lifecycle" }
+        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -149,7 +149,7 @@
       "color": "2",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "empty.action.clicked",
           "attributes": {
@@ -157,7 +157,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/EmptyState.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/components/BoardEmptyState.tsx"] }
       }
     },
     {
@@ -171,7 +171,7 @@
       "color": "2",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.selected",
           "attributes": {
@@ -180,7 +180,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskCard.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -194,7 +194,7 @@
       "color": "2",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.drag.started",
           "attributes": {
@@ -203,7 +203,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskCard.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -217,7 +217,7 @@
       "color": "4",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.moved",
           "attributes": {
@@ -227,7 +227,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/KanbanColumn.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -241,7 +241,7 @@
       "color": "3",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.drag.cancelled",
           "attributes": {
@@ -250,30 +250,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskCard.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
-      }
-    },
-    {
-      "id": "filter-applied",
-      "type": "text",
-      "text": "# Filter Applied\n\nUser applied a filter to the board",
-      "x": 550,
-      "y": 140,
-      "width": 200,
-      "height": 100,
-      "color": "6",
-      "pv": {
-        "nodeType": "interaction",
-        "status": "draft",
-        "event": {
-          "name": "filter.applied",
-          "attributes": {
-            "filter.type": { "type": "string", "required": true },
-            "filter.value": { "type": "string", "required": true }
-          }
-        },
-        "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -287,7 +264,7 @@
       "color": "6",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "filter.cleared",
           "attributes": {
@@ -295,7 +272,7 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -309,7 +286,7 @@
       "color": "6",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "search.performed",
           "attributes": {
@@ -318,7 +295,30 @@
           }
         },
         "sources": ["src/panels/KanbanPanel.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+      }
+    },
+    {
+      "id": "column-selected",
+      "type": "text",
+      "text": "# Column Selected\n\nUser switched to different status tab",
+      "x": 550,
+      "y": 500,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "implemented",
+        "event": {
+          "name": "column.selected",
+          "attributes": {
+            "column.status": { "type": "string", "required": true },
+            "column.previous": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -332,7 +332,7 @@
       "color": "6",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "modal.opened",
           "attributes": {
@@ -341,7 +341,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskModal.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -355,7 +355,7 @@
       "color": "3",
       "pv": {
         "nodeType": "interaction",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "modal.cancelled",
           "attributes": {
@@ -364,7 +364,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskModal.tsx"],
-        "otel": { "kind": "event", "category": "interaction" }
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -378,7 +378,7 @@
       "color": "4",
       "pv": {
         "nodeType": "mutation",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.created",
           "attributes": {
@@ -388,7 +388,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskModal.tsx"],
-        "otel": { "kind": "event", "category": "mutation" }
+        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
     {
@@ -402,7 +402,7 @@
       "color": "4",
       "pv": {
         "nodeType": "mutation",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.updated",
           "attributes": {
@@ -411,7 +411,7 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskModal.tsx"],
-        "otel": { "kind": "event", "category": "mutation" }
+        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
     {
@@ -425,15 +425,15 @@
       "color": "4",
       "pv": {
         "nodeType": "mutation",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.deleted",
           "attributes": {
             "task.id": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskContextMenu.tsx"],
-        "otel": { "kind": "event", "category": "mutation" }
+        "sources": ["src/panels/TaskDetailPanel.tsx"],
+        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     },
     {
@@ -447,7 +447,7 @@
       "color": "1",
       "pv": {
         "nodeType": "error",
-        "status": "draft",
+        "status": "implemented",
         "event": {
           "name": "task.save.error",
           "attributes": {
@@ -458,7 +458,74 @@
           }
         },
         "sources": ["src/panels/kanban/components/TaskModal.tsx"],
-        "otel": { "kind": "event", "category": "error" }
+        "otel": { "kind": "event", "category": "error", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
+      }
+    },
+    {
+      "id": "task-deselected",
+      "type": "text",
+      "text": "# Task Deselected\n\nUser closed the task detail panel",
+      "x": 550,
+      "y": -280,
+      "width": 200,
+      "height": 100,
+      "color": "2",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "implemented",
+        "event": {
+          "name": "task.deselected",
+          "attributes": {
+            "task.id": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/TaskDetailPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
+      }
+    },
+    {
+      "id": "delete-modal-opened",
+      "type": "text",
+      "text": "# Delete Modal Opened\n\nUser opened delete confirmation",
+      "x": 1050,
+      "y": 280,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "implemented",
+        "event": {
+          "name": "delete.modal.opened",
+          "attributes": {
+            "task.id": { "type": "string", "required": true }
+          }
+        },
+        "sources": ["src/panels/TaskDetailPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
+      }
+    },
+    {
+      "id": "task-assign-requested",
+      "type": "text",
+      "text": "# Assign to Claude\n\nUser requested Claude assignment",
+      "x": 1050,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "color": "2",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "implemented",
+        "event": {
+          "name": "task.assign.requested",
+          "attributes": {
+            "task.id": { "type": "string", "required": true },
+            "task.title": { "type": "string", "required": false }
+          }
+        },
+        "sources": ["src/panels/TaskDetailPanel.tsx"],
+        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     }
   ],
@@ -572,30 +639,30 @@
       "pv": { "edgeType": "trigger" }
     },
     {
-      "id": "loaded-to-filter",
-      "fromNode": "kanban-loaded",
-      "toNode": "filter-applied",
-      "fromSide": "bottom",
-      "toSide": "left",
-      "label": "filter",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "filter-to-cleared",
-      "fromNode": "filter-applied",
-      "toNode": "filter-cleared",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "clear",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
       "id": "loaded-to-search",
       "fromNode": "kanban-loaded",
       "toNode": "search-performed",
       "fromSide": "bottom",
       "toSide": "left",
       "label": "search",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "loaded-to-column-selected",
+      "fromNode": "kanban-loaded",
+      "toNode": "column-selected",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "switch tab",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "search-to-cleared",
+      "fromNode": "search-performed",
+      "toNode": "filter-cleared",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "clear",
       "pv": { "edgeType": "interaction" }
     },
     {
@@ -696,12 +763,57 @@
       "toSide": "right",
       "label": "refresh",
       "pv": { "edgeType": "update" }
+    },
+    {
+      "id": "selected-to-deselected",
+      "fromNode": "task-selected",
+      "toNode": "task-deselected",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "close",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "selected-to-delete-modal",
+      "fromNode": "task-selected",
+      "toNode": "delete-modal-opened",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "delete",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "delete-modal-to-deleted",
+      "fromNode": "delete-modal-opened",
+      "toNode": "task-deleted",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "confirm",
+      "pv": { "edgeType": "trigger" }
+    },
+    {
+      "id": "selected-to-assign",
+      "fromNode": "task-selected",
+      "toNode": "task-assign-requested",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "assign claude",
+      "pv": { "edgeType": "interaction" }
+    },
+    {
+      "id": "deselected-to-loaded",
+      "fromNode": "task-deselected",
+      "toNode": "kanban-loaded",
+      "fromSide": "left",
+      "toSide": "top",
+      "label": "return",
+      "pv": { "edgeType": "flow" }
     }
   ],
   "pv": {
     "version": "1.0.0",
-    "name": "Kanban Panel",
-    "description": "Kanban board panel lifecycle - from initialization through task interactions and mutations",
+    "name": "Task Workflow Lifecycle",
+    "description": "Complete task workflow lifecycle - from kanban board initialization through task interactions, detail panel views, and mutations",
     "markdown": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.md",
     "nodeTypes": {
       "initialization": {

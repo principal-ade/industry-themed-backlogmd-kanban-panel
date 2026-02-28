@@ -41,14 +41,14 @@
       }
     },
     {
-      "id": "filter-applied",
+      "id": "column-selected",
       "priority": 4,
-      "description": "User applied a filter",
+      "description": "User switched to different status tab",
       "template": {
         "events": {
-          "filter.applied": "🔍 Filter applied: {{filter.type}} = {{filter.value}}"
+          "column.selected": "📑 Switched to {{column.status}} (from {{column.previous}})"
         },
-        "summary": "🔍 Filtered by {{filter.type}}"
+        "summary": "📑 Viewing: {{column.status}}"
       }
     },
     {
@@ -82,6 +82,28 @@
           "empty.action.clicked": "👆 Clicked empty state action: {{action.type}}"
         },
         "summary": "👆 Empty action: {{action.type}}"
+      }
+    },
+    {
+      "id": "task-deselected",
+      "priority": 8,
+      "description": "User closed the task detail panel",
+      "template": {
+        "events": {
+          "task.deselected": "👋 Closed task {{task.id}}"
+        },
+        "summary": "👋 Task closed"
+      }
+    },
+    {
+      "id": "task-assign-requested",
+      "priority": 9,
+      "description": "User requested Claude assignment",
+      "template": {
+        "events": {
+          "task.assign.requested": "🤖 Requested Claude assignment for {{task.id}}"
+        },
+        "summary": "🤖 Assign to Claude: {{task.id}}"
       }
     }
   ]

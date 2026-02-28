@@ -12,7 +12,8 @@
       "description": "Task deleted successfully",
       "template": {
         "events": {
-          "task.deleted": "🗑️ Deleted task {{task.id}}",
+          "delete.modal.opened": "🗑️ Opened delete confirmation for {{task.id}}",
+          "task.deleted": "✅ Deleted task {{task.id}}",
           "kanban.loaded": "🔄 Board refreshed ({{tasks.count}} tasks)"
         },
         "summary": "🗑️ Task deleted: {{task.id}}"

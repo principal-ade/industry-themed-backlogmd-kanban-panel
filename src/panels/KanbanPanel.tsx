@@ -77,6 +77,24 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   // Debounce timer for search telemetry
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Emit panel.initialized on mount
+  useEffect(() => {
+    const tracer = getTracer();
+    const span = tracer.startSpan('panel.lifecycle', {
+      attributes: {
+        'panel.id': 'kanban-panel',
+      },
+    });
+    span.addEvent('panel.initialized', {
+      'panel.id': 'kanban-panel',
+      'has.file.tree': Boolean(context?.fileTree?.data),
+      'has.file.system': Boolean(actions?.writeFile),
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   // Search handler with telemetry
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
@@ -87,12 +105,18 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     }
 
     searchDebounceRef.current = setTimeout(() => {
-      const activeSpan = getActiveSpan();
       if (value.trim()) {
-        activeSpan?.addEvent('search.performed', {
-          'search.query': value.trim(),
-          // Note: results.count is approximate since filteredTasksByStatus updates async
+        const tracer = getTracer();
+        const span = tracer.startSpan('board.interaction', {
+          attributes: {
+            'search.query': value.trim(),
+          },
         });
+        span.addEvent('search.performed', {
+          'search.query': value.trim(),
+        });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
       }
     }, 500);
   }, []);
@@ -100,9 +124,32 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   // Clear search handler with telemetry
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
-    const activeSpan = getActiveSpan();
-    activeSpan?.addEvent('filter.cleared');
+    const tracer = getTracer();
+    const span = tracer.startSpan('board.interaction');
+    span.addEvent('filter.cleared');
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
   }, []);
+
+  // Tab/column selection handler with telemetry
+  const handleTabSelect = useCallback((status: StatusColumn) => {
+    const previousTab = selectedTab;
+    setSelectedTab(status);
+
+    const tracer = getTracer();
+    const span = tracer.startSpan('board.interaction', {
+      attributes: {
+        'column.selected': status,
+        'column.previous': previousTab,
+      },
+    });
+    span.addEvent('column.selected', {
+      'column.status': status,
+      'column.previous': previousTab,
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+  }, [selectedTab]);
 
   // Configure sensors for drag detection
   // PointerSensor requires a small drag distance before activating
@@ -191,6 +238,29 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     context,
     actions,
   });
+
+  // Track ref to emit kanban.skipped only once
+  const hasEmittedSkipped = useRef(false);
+
+  // Emit kanban.skipped when not a backlog project
+  useEffect(() => {
+    if (!isLoading && !isBacklogProject && !hasEmittedSkipped.current) {
+      hasEmittedSkipped.current = true;
+      const tracer = getTracer();
+      const span = tracer.startSpan('board.interaction', {
+        attributes: { 'is.backlog.project': false },
+      });
+      span.addEvent('kanban.skipped', {
+        'reason': 'not_backlog_project',
+      });
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    }
+    // Reset when project status changes (e.g., after initialization)
+    if (isBacklogProject) {
+      hasEmittedSkipped.current = false;
+    }
+  }, [isLoading, isBacklogProject]);
 
   // Filter tasks by search query
   const filteredTasksByStatus = useMemo(() => {
@@ -317,12 +387,20 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
 
-    // Emit telemetry event
-    const activeSpan = getActiveSpan();
-    activeSpan?.addEvent('task.selected', {
+    // Emit telemetry event with its own span
+    const tracer = getTracer();
+    const span = tracer.startSpan('board.interaction', {
+      attributes: {
+        'task.id': task.id,
+        'task.status': task.status || 'unknown',
+      },
+    });
+    span.addEvent('task.selected', {
       'task.id': task.id,
       'task.status': task.status || 'unknown',
     });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
 
     // Emit task:selected event for other panels (e.g., TaskDetailPanel)
     if (events) {
@@ -970,7 +1048,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                 return (
                   <button
                     key={status}
-                    onClick={() => setSelectedTab(status)}
+                    onClick={() => handleTabSelect(status)}
                     style={{
                       flex: 1,
                       padding: '10px 12px',

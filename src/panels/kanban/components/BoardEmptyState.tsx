@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Rocket, Plus, Milestone } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { getActiveSpan } from '../../../telemetry';
+import { getTracer, SpanStatusCode } from '../../../telemetry';
 
 interface BoardEmptyStateProps {
   onAddTask: () => void;
@@ -20,18 +20,28 @@ export const BoardEmptyState: React.FC<BoardEmptyStateProps> = ({
   const { theme } = useTheme();
 
   const handleAddTask = useCallback(() => {
-    const activeSpan = getActiveSpan();
-    activeSpan?.addEvent('empty.action.clicked', {
+    const tracer = getTracer();
+    const span = tracer.startSpan('board.interaction', {
+      attributes: { 'action.type': 'add_task' },
+    });
+    span.addEvent('empty.action.clicked', {
       'action.type': 'add_task',
     });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
     onAddTask();
   }, [onAddTask]);
 
   const handleAddMilestone = useCallback(() => {
-    const activeSpan = getActiveSpan();
-    activeSpan?.addEvent('empty.action.clicked', {
+    const tracer = getTracer();
+    const span = tracer.startSpan('board.interaction', {
+      attributes: { 'action.type': 'add_milestone' },
+    });
+    span.addEvent('empty.action.clicked', {
       'action.type': 'add_milestone',
     });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
     onAddMilestone();
   }, [onAddMilestone]);
 
