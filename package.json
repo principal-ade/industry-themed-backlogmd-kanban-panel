@@ -1,6 +1,6 @@
 {
   "name": "@industry-theme/backlogmd-kanban-panel",
-  "version": "1.0.46",
+  "version": "1.1.0",
   "description": "Kanban board panel for visualizing Backlog.md tasks in the industry-themed panel framework",
   "type": "module",
   "main": "dist/panels.bundle.js",
