@@ -67,7 +67,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     borderRadius: theme.radii[2],
     padding: '12px',
     border: `1px solid ${theme.colors.border}`,
-    borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
+    borderLeft: `4px solid transparent`,
+    borderRight: `4px solid ${getPriorityColor(task.priority)}`,
     cursor: isDragOverlay ? 'grabbing' : 'grab',
     transition: isDragging ? 'none' : 'all 0.2s ease',
     minHeight: '44px',
@@ -126,28 +127,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         {...listeners}
         {...attributes}
         onMouseEnter={(e) => {
-        if (!isDragging && !isDragOverlay) {
-          // Expand description on hover
-          const desc = e.currentTarget.querySelector('p');
-          if (desc) {
-            (desc as HTMLElement).style.maxHeight = '20em';
+          if (!isDragging && !isDragOverlay) {
+            e.currentTarget.style.borderLeft = `4px solid ${theme.colors.primary}`;
           }
-          // Ensure border stays
-          e.currentTarget.style.borderLeft = `4px solid ${getPriorityColor(task.priority)}`;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isDragging && !isDragOverlay) {
-          // Collapse description on leave
-          const desc = e.currentTarget.querySelector('p');
-          if (desc) {
-            (desc as HTMLElement).style.maxHeight = '2.8em';
+        }}
+        onMouseLeave={(e) => {
+          if (!isDragging && !isDragOverlay) {
+            e.currentTarget.style.borderLeft = `4px solid transparent`;
           }
-          // Ensure border stays
-          e.currentTarget.style.borderLeft = `4px solid ${getPriorityColor(task.priority)}`;
-        }
-      }}
-    >
+        }}
+      >
       {/* Task Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
         <h4
@@ -192,7 +181,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             overflow: 'hidden',
             lineHeight: '1.4',
             maxHeight: '2.8em', // 2 lines (1.4 * 2)
-            transition: 'max-height 0.3s ease',
           }}
         >
           {task.description}

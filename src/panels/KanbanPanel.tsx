@@ -72,6 +72,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   // Debounce timer for search telemetry
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -661,75 +662,37 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
           )}
         </div>
 
-        {/* Search input - only show in board view when there are tasks */}
-        {isBacklogProject && viewMode === 'board' && totalTasksState.total > 0 && (
-          <div
-            style={{
-              position: 'relative',
-              flex: '1 1 200px',
-              maxWidth: '300px',
-              minWidth: '150px',
-            }}
-          >
-            <Search
-              size={16}
-              color={theme.colors.textSecondary}
-              style={{
-                position: 'absolute',
-                left: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 32px 8px 32px',
-                fontSize: theme.fontSizes[1],
-                fontFamily: theme.fonts.body,
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: theme.radii[2],
-                background: theme.colors.backgroundSecondary,
-                color: theme.colors.text,
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={handleClearSearch}
-                style={{
-                  position: 'absolute',
-                  right: '6px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: theme.colors.textSecondary,
-                }}
-                aria-label="Clear search"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Header actions - view-dependent, only show when there are tasks */}
         {isBacklogProject && totalTasksState.total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {viewMode === 'board' ? (
               <>
+                {/* Search toggle button */}
+                <button
+                  onClick={() => {
+                    const newVisible = !isSearchVisible;
+                    setIsSearchVisible(newVisible);
+                    if (!newVisible) {
+                      setSearchQuery('');
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: isSearchVisible ? theme.colors.primary : theme.colors.backgroundSecondary,
+                    color: isSearchVisible ? theme.colors.textOnPrimary : theme.colors.textSecondary,
+                    border: isSearchVisible ? 'none' : `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radii[2],
+                    padding: '6px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  title={isSearchVisible ? 'Hide search' : 'Search tasks'}
+                >
+                  <Search size={16} />
+                </button>
+
                 {/* Add Task button - only shown when write operations are available */}
                 {canWrite && (
                   <button
@@ -751,30 +714,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                   >
                     <Plus size={14} />
                     Add Task
-                  </button>
-                )}
-
-                {/* Load more tasks button */}
-                {totalTasksState.hasMore && (
-                  <button
-                    onClick={loadMoreTasks}
-                    disabled={totalTasksState.isLoadingMore}
-                    style={{
-                      background: theme.colors.backgroundSecondary,
-                      color: theme.colors.text,
-                      border: `1px solid ${theme.colors.border}`,
-                      borderRadius: theme.radii[2],
-                      padding: '6px 12px',
-                      fontSize: theme.fontSizes[1],
-                      fontWeight: theme.fontWeights.medium,
-                      cursor: totalTasksState.isLoadingMore ? 'wait' : 'pointer',
-                      opacity: totalTasksState.isLoadingMore ? 0.7 : 1,
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    {totalTasksState.isLoadingMore
-                      ? 'Loading...'
-                      : `Load more (${totalTasksState.total - totalTasksState.loaded} remaining)`}
                   </button>
                 )}
               </>
@@ -861,6 +800,102 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
           </div>
         )}
       </div>
+
+      {/* Search bar row - only show in board view when there are tasks and search is visible */}
+      {isBacklogProject && viewMode === 'board' && totalTasksState.total > 0 && isSearchVisible && (
+        <div
+          style={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              flex: 1,
+            }}
+          >
+            <Search
+              size={16}
+              color={theme.colors.textSecondary}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 32px 8px 32px',
+                fontSize: theme.fontSizes[1],
+                fontFamily: theme.fonts.body,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[2],
+                background: theme.colors.backgroundSecondary,
+                color: theme.colors.text,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClearSearch}
+                style={{
+                  position: 'absolute',
+                  right: '6px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.colors.textSecondary,
+                }}
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Load more tasks button */}
+          {totalTasksState.hasMore && (
+            <button
+              onClick={loadMoreTasks}
+              disabled={totalTasksState.isLoadingMore}
+              style={{
+                flexShrink: 0,
+                background: theme.colors.backgroundSecondary,
+                color: theme.colors.text,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[2],
+                padding: '8px 12px',
+                fontSize: theme.fontSizes[1],
+                fontWeight: theme.fontWeights.medium,
+                cursor: totalTasksState.isLoadingMore ? 'wait' : 'pointer',
+                opacity: totalTasksState.isLoadingMore ? 0.7 : 1,
+                transition: 'opacity 0.2s ease',
+              }}
+            >
+              {totalTasksState.isLoadingMore
+                ? 'Loading...'
+                : `Load more (${totalTasksState.total - totalTasksState.loaded} remaining)`}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Error Message */}
       {currentError && (
