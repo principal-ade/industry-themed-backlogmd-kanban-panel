@@ -7,21 +7,47 @@
   "mode": "span-tree",
   "scenarios": [
     {
-      "id": "success",
+      "id": "backlog-success-with-tasks",
       "priority": 1,
-      "description": "Board initialized and tasks loaded",
+      "description": "Backlog board initialized and tasks loaded",
       "template": {
         "events": {
           "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
-          "kanban.loading": "⏳ {{#if is.backlog.project}}Loading backlog{{else}}Not a backlog project{{/if}}",
-          "kanban.loaded": "📊 {{#if (eq tasks.count 0)}}No tasks found{{else}}Loaded {{tasks.count}} tasks in {{columns.count}} columns{{/if}}"
+          "kanban.loading": "⏳ Loading backlog",
+          "kanban.loaded": "📊 Loaded {{tasks.count}} tasks in {{columns.count}} columns"
         },
-        "summary": "{{#if (eq tasks.count 0)}}📭 Empty board{{else}}✅ Board loaded: {{tasks.count}} tasks{{/if}}"
+        "summary": "✅ Board loaded: {{tasks.count}} tasks"
+      }
+    },
+    {
+      "id": "backlog-success-empty",
+      "priority": 2,
+      "description": "Backlog board initialized with no tasks",
+      "template": {
+        "events": {
+          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
+          "kanban.loading": "⏳ Loading backlog",
+          "kanban.loaded": "📊 No tasks found"
+        },
+        "summary": "📭 Empty board"
+      }
+    },
+    {
+      "id": "non-backlog",
+      "priority": 3,
+      "description": "Non-backlog project detected",
+      "template": {
+        "events": {
+          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
+          "kanban.loading": "⏳ Not a backlog project",
+          "kanban.skipped": "⏭️ Skipped - not a backlog project"
+        },
+        "summary": "ℹ️ Not a backlog project"
       }
     },
     {
       "id": "error",
-      "priority": 2,
+      "priority": 4,
       "description": "Board failed to load",
       "template": {
         "events": {

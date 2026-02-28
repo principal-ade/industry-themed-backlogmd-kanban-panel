@@ -32,14 +32,28 @@
       }
     },
     {
-      "id": "modal-success",
+      "id": "modal-success-with-fields",
       "priority": 3,
+      "description": "Task edited successfully via modal with field details",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}",
+          "modal.opened": "📝 Edit modal opened for {{task.id}}",
+          "task.updated": "✏️ Updated task ({{updated.fields}})",
+          "kanban.loaded": "🔄 Board refreshed"
+        },
+        "summary": "✅ Task edited: {{task.id}}"
+      }
+    },
+    {
+      "id": "modal-success",
+      "priority": 4,
       "description": "Task edited successfully via modal",
       "template": {
         "events": {
           "task.selected": "👆 Selected task {{task.id}}",
           "modal.opened": "📝 Edit modal opened for {{task.id}}",
-          "task.updated": "✏️ Updated task{{#if updated.fields}} ({{updated.fields}}){{/if}}",
+          "task.updated": "✏️ Updated task",
           "kanban.loaded": "🔄 Board refreshed"
         },
         "summary": "✅ Task edited: {{task.id}}"
@@ -47,7 +61,7 @@
     },
     {
       "id": "modal-error",
-      "priority": 4,
+      "priority": 5,
       "description": "Failed to save task edits via modal",
       "template": {
         "events": {
@@ -60,14 +74,27 @@
       }
     },
     {
+      "id": "modal-cancelled-with-changes",
+      "priority": 6,
+      "description": "User cancelled task edit via modal with unsaved changes",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}}",
+          "modal.opened": "📝 Edit modal opened",
+          "modal.cancelled": "❌ Edit cancelled (discarded changes)"
+        },
+        "summary": "❌ Edit cancelled"
+      }
+    },
+    {
       "id": "modal-cancelled",
-      "priority": 5,
+      "priority": 7,
       "description": "User cancelled task edit via modal",
       "template": {
         "events": {
           "task.selected": "👆 Selected task {{task.id}}",
           "modal.opened": "📝 Edit modal opened",
-          "modal.cancelled": "❌ Edit cancelled{{#if had.changes}} (discarded changes){{/if}}"
+          "modal.cancelled": "❌ Edit cancelled"
         },
         "summary": "❌ Edit cancelled"
       }

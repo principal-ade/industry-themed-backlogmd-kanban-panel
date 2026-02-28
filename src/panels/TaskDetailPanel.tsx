@@ -162,7 +162,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         textTransform: 'capitalize',
       }}
     >
-      {status}
+      Status: {status}
     </span>
   );
 };
@@ -424,125 +424,129 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
         outline: 'none',
       }}
     >
-      {/* Header */}
+      {/* Header - 40px fixed height */}
       <div
         style={{
           flexShrink: 0,
-          padding: '16px 20px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 12px',
           borderBottom: `1px solid ${theme.colors.border}`,
           backgroundColor: theme.colors.backgroundSecondary,
         }}
       >
-        {/* ID, Status, and Close button */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '12px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span
-              style={{
-                fontFamily: theme.fonts.monospace,
-                fontSize: theme.fontSizes[0],
-                fontWeight: theme.fontWeights.medium,
-                color: theme.colors.textMuted,
-              }}
-            >
-              {selectedTask.id}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              fontFamily: theme.fonts.monospace,
+              fontSize: theme.fontSizes[0],
+              fontWeight: theme.fontWeights.medium,
+              color: theme.colors.textMuted,
+            }}
+          >
+            {selectedTask.id}
+          </span>
+          <StatusBadge status={selectedTask.status} />
+          {selectedTask.priority && (
+            <span style={getPriorityStyles(theme, selectedTask.priority)}>
+              Priority: {selectedTask.priority}
             </span>
-            {selectedTask.priority && (
-              <span style={getPriorityStyles(theme, selectedTask.priority)}>
-                Priority: {selectedTask.priority}
-              </span>
-            )}
-            <StatusBadge status={selectedTask.status} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Delete button */}
-            {deleteState.status === 'idle' && (
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '32px',
-                  height: '32px',
-                  border: `1px solid ${theme.colors.error}`,
-                  borderRadius: theme.radii[1],
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: theme.colors.error,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = theme.colors.error;
-                  e.currentTarget.style.color = theme.colors.background;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = theme.colors.error;
-                }}
-                title="Delete task"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-
-            {/* Delete success indicator */}
-            {deleteState.status === 'success' && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '32px',
-                  height: '32px',
-                  border: `1px solid ${theme.colors.success}`,
-                  borderRadius: theme.radii[1],
-                  background: `${theme.colors.success}15`,
-                  color: theme.colors.success,
-                }}
-                title="Task deleted"
-              >
-                <CheckCircle size={16} />
-              </div>
-            )}
-
-            {/* Close button */}
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Delete button */}
+          {deleteState.status === 'idle' && (
             <button
-              onClick={handleBack}
+              onClick={() => setIsDeleteModalOpen(true)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                border: `1px solid ${theme.colors.border}`,
+                width: '28px',
+                height: '28px',
+                border: `1px solid ${theme.colors.error}`,
                 borderRadius: theme.radii[1],
-                background: theme.colors.surface,
+                background: 'transparent',
                 cursor: 'pointer',
-                color: theme.colors.textSecondary,
+                color: theme.colors.error,
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = theme.colors.backgroundSecondary;
-                e.currentTarget.style.color = theme.colors.text;
+                e.currentTarget.style.background = theme.colors.error;
+                e.currentTarget.style.color = theme.colors.background;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = theme.colors.surface;
-                e.currentTarget.style.color = theme.colors.textSecondary;
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = theme.colors.error;
               }}
-              title="Close"
+              title="Delete task"
             >
-              <X size={16} />
+              <Trash2 size={14} />
             </button>
-          </div>
-        </div>
+          )}
 
+          {/* Delete success indicator */}
+          {deleteState.status === 'success' && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '28px',
+                height: '28px',
+                border: `1px solid ${theme.colors.success}`,
+                borderRadius: theme.radii[1],
+                background: `${theme.colors.success}15`,
+                color: theme.colors.success,
+              }}
+              title="Task deleted"
+            >
+              <CheckCircle size={14} />
+            </div>
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={handleBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.radii[1],
+              background: theme.colors.surface,
+              cursor: 'pointer',
+              color: theme.colors.textSecondary,
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.colors.backgroundSecondary;
+              e.currentTarget.style.color = theme.colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = theme.colors.surface;
+              e.currentTarget.style.color = theme.colors.textSecondary;
+            }}
+            title="Close"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Task metadata section */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: '12px 16px',
+          borderBottom: `1px solid ${theme.colors.border}`,
+          backgroundColor: theme.colors.background,
+        }}
+      >
         {/* Action buttons row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           {/* Assign to Claude button - shown if no GitHub issue yet */}

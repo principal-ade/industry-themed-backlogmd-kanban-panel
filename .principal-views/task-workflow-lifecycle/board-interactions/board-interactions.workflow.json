@@ -7,19 +7,30 @@
   "mode": "span-tree",
   "scenarios": [
     {
-      "id": "task-selected",
+      "id": "task-selected-with-status",
       "priority": 1,
+      "description": "Task selected for viewing (with status)",
+      "template": {
+        "events": {
+          "task.selected": "👆 Selected task {{task.id}} ({{task.status}})"
+        },
+        "summary": "📋 Viewing: {{task.id}}"
+      }
+    },
+    {
+      "id": "task-selected",
+      "priority": 2,
       "description": "Task selected for viewing",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}{{#if task.status}} ({{task.status}}){{/if}}"
+          "task.selected": "👆 Selected task {{task.id}}"
         },
         "summary": "📋 Viewing: {{task.id}}"
       }
     },
     {
       "id": "load-more",
-      "priority": 2,
+      "priority": 3,
       "description": "User loaded more tasks (pagination)",
       "template": {
         "events": {
@@ -31,7 +42,7 @@
     },
     {
       "id": "filter-applied",
-      "priority": 3,
+      "priority": 4,
       "description": "User applied a filter",
       "template": {
         "events": {
@@ -42,7 +53,7 @@
     },
     {
       "id": "filter-cleared",
-      "priority": 4,
+      "priority": 5,
       "description": "User cleared filters",
       "template": {
         "events": {
@@ -53,7 +64,7 @@
     },
     {
       "id": "search",
-      "priority": 5,
+      "priority": 6,
       "description": "User searched for tasks",
       "template": {
         "events": {
@@ -64,7 +75,7 @@
     },
     {
       "id": "empty-action",
-      "priority": 6,
+      "priority": 7,
       "description": "User clicked empty state action",
       "template": {
         "events": {

@@ -7,6 +7,7 @@ resources:
   backlogmd-kanban-panel:
     service.name: "@industry-theme/backlogmd-kanban-panel"
     service.version: "1.0.41"
+    deployment.environment: "production"
 
   # Storybook/testing context
   backlogmd-kanban-panel-storybook:

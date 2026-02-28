@@ -33,13 +33,25 @@
       }
     },
     {
-      "id": "cancelled",
+      "id": "cancelled-with-changes",
       "priority": 3,
+      "description": "User cancelled task creation with unsaved changes",
+      "template": {
+        "events": {
+          "modal.opened": "📝 Create modal opened",
+          "modal.cancelled": "❌ Creation cancelled (discarded changes)"
+        },
+        "summary": "❌ Create cancelled"
+      }
+    },
+    {
+      "id": "cancelled",
+      "priority": 4,
       "description": "User cancelled task creation",
       "template": {
         "events": {
           "modal.opened": "📝 Create modal opened",
-          "modal.cancelled": "❌ Creation cancelled{{#if had.changes}} (discarded changes){{/if}}"
+          "modal.cancelled": "❌ Creation cancelled"
         },
         "summary": "❌ Create cancelled"
       }

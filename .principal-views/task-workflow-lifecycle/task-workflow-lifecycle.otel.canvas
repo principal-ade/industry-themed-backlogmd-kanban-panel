@@ -71,6 +71,28 @@
       }
     },
     {
+      "id": "kanban-skipped",
+      "type": "text",
+      "text": "# Kanban Skipped\n\nNot a backlog project - skipped loading",
+      "x": 50,
+      "y": -140,
+      "width": 200,
+      "height": 100,
+      "color": "3",
+      "pv": {
+        "nodeType": "data-loaded",
+        "status": "draft",
+        "event": {
+          "name": "kanban.skipped",
+          "attributes": {
+            "reason": { "type": "string", "required": false }
+          }
+        },
+        "sources": ["src/panels/KanbanPanel.tsx"],
+        "otel": { "kind": "event", "category": "lifecycle" }
+      }
+    },
+    {
       "id": "kanban-load-error",
       "type": "text",
       "text": "# Load Error\n\nFailed to load tasks from backlog",
@@ -466,6 +488,15 @@
       "fromSide": "bottom",
       "toSide": "top",
       "label": "failure",
+      "pv": { "edgeType": "flow" }
+    },
+    {
+      "id": "loading-to-skipped",
+      "fromNode": "kanban-loading",
+      "toNode": "kanban-skipped",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "label": "not backlog",
       "pv": { "edgeType": "flow" }
     },
     {
