@@ -1,8 +1,14 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider } from '@principal-ade/industry-theme';
+import { ThemeProvider, theme as defaultTheme, overrideColors } from '@principal-ade/industry-theme';
 import { TaskCard } from './TaskCard';
 import type { Task } from '@backlog-md/core';
+
+// Custom theme with cyan primary color
+const customTheme = overrideColors(defaultTheme, {
+  primary: '#07c0ca',
+  secondary: '#06a8b1', // Slightly darker for hover states
+});
 
 const meta = {
   title: 'Components/TaskCard',
@@ -12,7 +18,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <ThemeProvider>
+      <ThemeProvider theme={customTheme}>
         <div style={{ width: '300px', padding: '20px' }}>
           <Story />
         </div>

@@ -1,7 +1,13 @@
 import React, { useEffect } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider } from '@principal-ade/industry-theme';
+import { ThemeProvider, theme as defaultTheme, overrideColors } from '@principal-ade/industry-theme';
 import { TaskDetailPanel } from './TaskDetailPanel';
+
+// Custom theme with cyan primary color
+const customTheme = overrideColors(defaultTheme, {
+  primary: '#07c0ca',
+  secondary: '#06a8b1', // Slightly darker for hover states
+});
 import {
   createMockContext,
   createMockActions,
@@ -18,7 +24,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <ThemeProvider>
+      <ThemeProvider theme={customTheme}>
         <div
           style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
         >

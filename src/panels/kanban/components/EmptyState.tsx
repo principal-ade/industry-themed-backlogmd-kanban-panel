@@ -21,6 +21,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   canInitialize = false,
 }) => {
   const { theme } = useTheme();
+
+  // Helper to render text with styled "Backlog.md"
+  const renderStyledText = (text: string) => {
+    const parts = text.split(/(Backlog\.md)/g);
+    return parts.map((part, i) =>
+      part === 'Backlog.md' ? (
+        <span key={i}>Backlog<span style={{ color: theme.colors.primary }}>.md</span></span>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  };
   const [isInitializing, setIsInitializing] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [initSuccess, setInitSuccess] = useState(false);
@@ -74,7 +86,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           marginBottom: '12px',
         }}
       >
-        {message}
+        {renderStyledText(message)}
       </h3>
 
       <p
@@ -86,7 +98,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           lineHeight: 1.6,
         }}
       >
-        {description}
+        {renderStyledText(description)}
       </p>
 
       {/* Action buttons */}
@@ -164,7 +176,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <span>Learn about Backlog.md</span>
+            <span>Learn about Backlog<span style={{ color: theme.colors.primary }}>.md</span></span>
             <ExternalLink size={16} />
           </a>
         )}
@@ -188,7 +200,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <CheckCircle2 size={20} color={theme.colors.success || '#22c55e'} style={{ flexShrink: 0, marginTop: '2px' }} />
           <div style={{ textAlign: 'left' }}>
             <p style={{ margin: 0, fontWeight: 600, color: theme.colors.text, fontSize: theme.fontSizes[2] }}>
-              Backlog.md initialized!
+              Backlog<span style={{ color: theme.colors.primary }}>.md</span> initialized!
             </p>
             <p style={{ margin: '8px 0 0', color: theme.colors.textSecondary, fontSize: theme.fontSizes[1], lineHeight: 1.5 }}>
               Created <code style={{ padding: '2px 6px', backgroundColor: theme.colors.surface, borderRadius: '4px', fontFamily: theme.fonts.monospace, fontSize: '0.9em' }}>backlog/config.yml</code>.
@@ -235,7 +247,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <strong style={{ color: theme.colors.text }}>
             Want to use this panel?
           </strong>{' '}
-          Initialize Backlog.md in your repository by running{' '}
+          Initialize Backlog<span style={{ color: theme.colors.primary }}>.md</span> in your repository by running{' '}
           <code
             style={{
               padding: '2px 6px',

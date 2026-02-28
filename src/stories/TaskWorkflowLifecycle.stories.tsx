@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThemeProvider } from '@principal-ade/industry-theme';
+import { ThemeProvider, theme as defaultTheme, overrideColors } from '@principal-ade/industry-theme';
 import { ResponsiveConfigurablePanelLayout } from '@principal-ade/panel-layouts';
+
+// Custom theme with cyan primary color
+const customTheme = overrideColors(defaultTheme, {
+  primary: '#07c0ca',
+  secondary: '#06a8b1', // Slightly darker for hover states
+});
 import { Core } from '@backlog-md/core';
 import { KanbanPanel } from '../panels/KanbanPanel';
 import { TaskDetailPanel } from '../panels/TaskDetailPanel';
@@ -553,7 +559,7 @@ const TaskWorkflowStory = () => {
  */
 export const Default: Story = {
   render: () => (
-    <ThemeProvider>
+    <ThemeProvider theme={customTheme}>
       <TaskWorkflowStory />
     </ThemeProvider>
   ),

@@ -686,7 +686,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
             >
-              Backlog.md
+              Backlog<span style={{ color: theme.colors.primary }}>.md</span>
             </a>
           </h2>
 
