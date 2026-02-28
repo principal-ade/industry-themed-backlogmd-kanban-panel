@@ -8,6 +8,18 @@ export default defineConfig(({ mode: _mode }) => ({
       // Force production JSX runtime to avoid jsxDEV in output
       jsxRuntime: 'automatic',
       jsxImportSource: 'react',
+      babel: {
+        plugins: [
+          [
+            '@babel/plugin-transform-react-jsx',
+            {
+              runtime: 'automatic',
+              development: false,
+              importSource: 'react',
+            },
+          ],
+        ],
+      },
     }),
   ],
   define: {
