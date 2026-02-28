@@ -127,6 +127,7 @@ const getPriorityStyles = (theme: ReturnType<typeof useTheme>['theme'], priority
   const baseStyles = {
     padding: '2px 8px',
     borderRadius: theme.radii[1],
+    fontFamily: theme.fonts.body,
     fontSize: theme.fontSizes[0],
     fontWeight: theme.fontWeights.medium,
   };
@@ -153,7 +154,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
       style={{
         padding: '4px 12px',
         borderRadius: theme.radii[2],
-        fontSize: theme.fontSizes[1],
+        fontFamily: theme.fonts.body,
+        fontSize: theme.fontSizes[0],
         fontWeight: theme.fontWeights.medium,
         background: `${theme.colors.primary}20`,
         color: theme.colors.primary,
@@ -445,6 +447,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
               style={{
                 fontFamily: theme.fonts.monospace,
                 fontSize: theme.fontSizes[0],
+                fontWeight: theme.fontWeights.medium,
                 color: theme.colors.textMuted,
               }}
             >
@@ -452,38 +455,92 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
             </span>
             {selectedTask.priority && (
               <span style={getPriorityStyles(theme, selectedTask.priority)}>
-                {selectedTask.priority}
+                Priority: {selectedTask.priority}
               </span>
             )}
             <StatusBadge status={selectedTask.status} />
           </div>
-          <button
-            onClick={handleBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: theme.radii[1],
-              background: theme.colors.surface,
-              cursor: 'pointer',
-              color: theme.colors.textSecondary,
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = theme.colors.backgroundSecondary;
-              e.currentTarget.style.color = theme.colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = theme.colors.surface;
-              e.currentTarget.style.color = theme.colors.textSecondary;
-            }}
-            title="Close"
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Delete button */}
+            {deleteState.status === 'idle' && (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  border: `1px solid ${theme.colors.error}`,
+                  borderRadius: theme.radii[1],
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: theme.colors.error,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.colors.error;
+                  e.currentTarget.style.color = theme.colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = theme.colors.error;
+                }}
+                title="Delete task"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+
+            {/* Delete success indicator */}
+            {deleteState.status === 'success' && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  border: `1px solid ${theme.colors.success}`,
+                  borderRadius: theme.radii[1],
+                  background: `${theme.colors.success}15`,
+                  color: theme.colors.success,
+                }}
+                title="Task deleted"
+              >
+                <CheckCircle size={16} />
+              </div>
+            )}
+
+            {/* Close button */}
+            <button
+              onClick={handleBack}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.radii[1],
+                background: theme.colors.surface,
+                cursor: 'pointer',
+                color: theme.colors.textSecondary,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.backgroundSecondary;
+                e.currentTarget.style.color = theme.colors.text;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.surface;
+                e.currentTarget.style.color = theme.colors.textSecondary;
+              }}
+              title="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Action buttons row */}
@@ -649,63 +706,6 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
               </div>
             )}
 
-            {/* Delete button */}
-            {deleteState.status === 'idle' && (
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  border: `1px solid ${theme.colors.error}`,
-                  borderRadius: theme.radii[1],
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: theme.colors.error,
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = theme.colors.error;
-                  e.currentTarget.style.color = theme.colors.background;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = theme.colors.error;
-                }}
-                title="Delete task"
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            )}
-
-            {/* Delete success indicator */}
-            {deleteState.status === 'success' && (
-              <div
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  border: `1px solid ${theme.colors.success}`,
-                  borderRadius: theme.radii[1],
-                  background: `${theme.colors.success}15`,
-                  color: theme.colors.success,
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                }}
-              >
-                <CheckCircle size={14} />
-                Task deleted
-              </div>
-            )}
         </div>
 
         {/* Spinner animation */}
@@ -721,6 +721,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
         <h1
           style={{
             margin: '0 0 16px 0',
+            fontFamily: theme.fonts.body,
             fontSize: theme.fontSizes[5],
             fontWeight: theme.fontWeights.bold,
             color: theme.colors.text,
