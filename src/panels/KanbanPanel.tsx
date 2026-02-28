@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw } from 'lucide-react';
+import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw, KanbanSquare } from 'lucide-react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import type { KanbanPanelPropsTyped } from '../types';
@@ -668,7 +668,9 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h2
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <KanbanSquare size={24} color={theme.colors.primary} />
+            <h2
             style={{
               margin: 0,
               fontSize: theme.fontSizes[4],
@@ -689,6 +691,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
               Backlog<span style={{ color: theme.colors.primary }}>.md</span>
             </a>
           </h2>
+          </div>
 
           {/* View mode toggle - only show when there are tasks */}
           {isBacklogProject && totalTasksState.total > 0 && (
