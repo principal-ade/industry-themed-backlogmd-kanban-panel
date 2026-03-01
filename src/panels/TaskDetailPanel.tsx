@@ -293,22 +293,19 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
       setDeleteState({ status: 'success' });
       setIsDeleteModalOpen(false);
 
-      // Show success message briefly, then close
-      setTimeout(() => {
-        // Emit task:deleted event for host orchestration (e.g., navigation back)
-        if (events) {
-          (events as PanelEventEmitter).emit({
-            type: 'task:deleted',
-            source: 'task-detail-panel',
-            timestamp: Date.now(),
-            payload: { taskId: selectedTask.id },
-          });
-        }
+      // Emit task:deleted event for host orchestration (e.g., navigation back)
+      if (events) {
+        (events as PanelEventEmitter).emit({
+          type: 'task:deleted',
+          source: 'task-detail-panel',
+          timestamp: Date.now(),
+          payload: { taskId: selectedTask.id },
+        });
+      }
 
-        // Close the panel
-        setSelectedTask(null);
-        setDeleteState({ status: 'idle' });
-      }, 500);
+      // Close the panel
+      setSelectedTask(null);
+      setDeleteState({ status: 'idle' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
       setDeleteState({ status: 'error', error: errorMessage });
