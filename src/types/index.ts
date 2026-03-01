@@ -82,6 +82,10 @@ export interface KanbanPanelActions extends CorePanelActions {
   createDir?: (path: string) => Promise<void>;
   /** Check if a file exists */
   exists?: (path: string) => Promise<boolean>;
+
+  // Task operations
+  /** Delete a task by ID */
+  deleteTask?: (taskId: string) => Promise<void>;
 }
 
 /**

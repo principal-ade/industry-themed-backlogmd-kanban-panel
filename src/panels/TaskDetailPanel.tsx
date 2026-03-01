@@ -178,7 +178,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
  *
  * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
  */
-export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, events, config }) => {
+export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, events, actions, config }) => {
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [claudeAssignment, setClaudeAssignment] = useState<ClaudeAssignmentState>({ status: 'idle' });
@@ -265,22 +265,55 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   }, [selectedTask]);
 
   // Handle delete confirmation
-  const handleDeleteConfirm = useCallback(() => {
-    if (!events || !selectedTask) return;
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!selectedTask) return;
+
+    // Check if deleteTask action is available
+    if (!actions?.deleteTask) {
+      setDeleteState({ status: 'error', error: 'Delete action not available' });
+      return;
+    }
 
     setDeleteState({ status: 'loading' });
 
-    // Emit event for KanbanPanel to handle
-    (events as PanelEventEmitter).emit({
-      type: 'task:delete-requested',
-      source: 'task-detail-panel',
-      timestamp: Date.now(),
-      payload: {
-        taskId: selectedTask.id,
-        task: selectedTask,
-      },
-    });
-  }, [events, selectedTask]);
+    try {
+      await actions.deleteTask(selectedTask.id);
+
+      // Emit telemetry event for successful deletion
+      const tracer = getTracer();
+      const span = tracer.startSpan('task.mutation', {
+        attributes: { 'task.id': selectedTask.id },
+      });
+      span.addEvent('task.deleted', {
+        'task.id': selectedTask.id,
+      });
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+
+      setDeleteState({ status: 'success' });
+      setIsDeleteModalOpen(false);
+
+      // Show success message for 2 seconds, then close
+      setTimeout(() => {
+        // Emit task:deleted event for host orchestration (e.g., navigation back)
+        if (events) {
+          (events as PanelEventEmitter).emit({
+            type: 'task:deleted',
+            source: 'task-detail-panel',
+            timestamp: Date.now(),
+            payload: { taskId: selectedTask.id },
+          });
+        }
+
+        // Close the panel
+        setSelectedTask(null);
+        setDeleteState({ status: 'idle' });
+      }, 2000);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
+      setDeleteState({ status: 'error', error: errorMessage });
+    }
+  }, [actions, selectedTask, events]);
 
   // Listen for task:selected events
   useEffect(() => {
@@ -335,61 +368,6 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     };
   }, [events, selectedTask?.id]);
 
-  // Listen for delete success/failure events
-  useEffect(() => {
-    if (!events) return;
-
-    const unsubscribers = [
-      (events as PanelEventEmitter).on('task:deleted:success', (event) => {
-        const payload = event.payload as { taskId: string };
-        if (payload.taskId === selectedTask?.id) {
-          // Emit telemetry event for successful deletion
-          const tracer = getTracer();
-          const span = tracer.startSpan('task.mutation', {
-            attributes: { 'task.id': payload.taskId },
-          });
-          span.addEvent('task.deleted', {
-            'task.id': payload.taskId,
-          });
-          span.setStatus({ code: SpanStatusCode.OK });
-          span.end();
-
-          setDeleteState({ status: 'success' });
-          setIsDeleteModalOpen(false);
-
-          // Show success message for 2 seconds, then close and emit task:deleted
-          setTimeout(() => {
-            // Emit task:deleted event for host orchestration
-            (events as PanelEventEmitter).emit({
-              type: 'task:deleted',
-              source: 'task-detail-panel',
-              timestamp: Date.now(),
-              payload: { taskId: payload.taskId },
-            });
-
-            // Close the panel
-            setSelectedTask(null);
-            setDeleteState({ status: 'idle' });
-          }, 2000);
-        }
-      }),
-      (events as PanelEventEmitter).on('task:deleted:error', (event) => {
-        const payload = event.payload as { taskId: string; error: string };
-        if (payload.taskId === selectedTask?.id) {
-          setDeleteState({
-            status: 'error',
-            error: payload.error,
-          });
-        }
-      }),
-    ];
-
-    return () => {
-      unsubscribers.forEach((unsub) => {
-        if (typeof unsub === 'function') unsub();
-      });
-    };
-  }, [events, selectedTask?.id]);
 
   // Handle back/close
   const handleBack = useCallback(() => {
