@@ -667,10 +667,9 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
           flexWrap: 'wrap',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <KanbanSquare size={24} color={theme.colors.primary} />
-            <h2
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+          <KanbanSquare size={24} color={theme.colors.primary} />
+          <h2
             style={{
               margin: 0,
               fontSize: theme.fontSizes[4],
@@ -691,66 +690,101 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
               Backlog<span style={{ color: theme.colors.primary }}>.md</span>
             </a>
           </h2>
-          </div>
+        </div>
 
-          {/* View mode toggle - only show when there are tasks */}
-          {isBacklogProject && totalTasksState.total > 0 && (
-            <div
+        {/* View mode toggle - centered, only show when there are tasks */}
+        {isBacklogProject && totalTasksState.total > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              background: theme.colors.backgroundSecondary,
+              borderRadius: theme.radii[2],
+              padding: '3px',
+              gap: '2px',
+            }}
+          >
+            <button
+              onClick={() => {
+                setViewMode('milestones');
+                setIsSearchVisible(false);
+                setSearchQuery('');
+              }}
               style={{
+                padding: '6px 12px',
+                border: 'none',
+                borderRadius: theme.radii[1],
+                background: 'transparent',
+                color: viewMode === 'milestones' ? theme.colors.primary : theme.colors.textSecondary,
+                fontSize: theme.fontSizes[2],
+                fontWeight: theme.fontWeights.medium,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
                 display: 'flex',
-                background: theme.colors.backgroundSecondary,
-                borderRadius: theme.radii[2],
-                padding: '3px',
-                gap: '2px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                minWidth: '91px',
               }}
             >
-              <button
-                onClick={() => setViewMode('board')}
-                style={{
-                  padding: '6px 12px',
-                  border: 'none',
-                  borderRadius: theme.radii[1],
-                  background: viewMode === 'board' ? theme.colors.primary : 'transparent',
-                  color: viewMode === 'board' ? theme.colors.textOnPrimary : theme.colors.textSecondary,
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                Board
-              </button>
-              <button
-                onClick={() => setViewMode('milestones')}
-                style={{
-                  padding: '6px 12px',
-                  border: 'none',
-                  borderRadius: theme.radii[1],
-                  background: viewMode === 'milestones' ? theme.colors.primary : 'transparent',
-                  color: viewMode === 'milestones' ? theme.colors.textOnPrimary : theme.colors.textSecondary,
-                  fontSize: theme.fontSizes[1],
-                  fontWeight: theme.fontWeights.medium,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                Milestones
-              </button>
-            </div>
-          )}
-        </div>
+              Milestones
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('board');
+                setIsSearchVisible(false);
+                setSearchQuery('');
+              }}
+              style={{
+                padding: '6px 12px',
+                border: 'none',
+                borderRadius: theme.radii[1],
+                background: 'transparent',
+                color: viewMode === 'board' ? theme.colors.primary : theme.colors.textSecondary,
+                fontSize: theme.fontSizes[2],
+                fontWeight: theme.fontWeights.medium,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                minWidth: '91px',
+              }}
+            >
+              Status
+            </button>
+          </div>
+        )}
 
         {/* Header actions - view-dependent, only show when there are tasks */}
         {isBacklogProject && totalTasksState.total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
             {viewMode === 'board' ? (
               <>
+                {/* Add Task button - only shown when write operations are available */}
+                {canWrite && (
+                  <button
+                    onClick={handleOpenNewTask}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: theme.colors.primary,
+                      color: theme.colors.textOnPrimary,
+                      border: '1px solid transparent',
+                      borderRadius: theme.radii[2],
+                      padding: '6px 12px',
+                      fontSize: theme.fontSizes[1],
+                      fontWeight: theme.fontWeights.medium,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    <Plus size={14} />
+                    Add Task
+                  </button>
+                )}
+
                 {/* Search toggle button */}
                 <button
                   onClick={() => {
@@ -764,30 +798,31 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: isSearchVisible ? theme.colors.primary : theme.colors.backgroundSecondary,
-                    color: isSearchVisible ? theme.colors.textOnPrimary : theme.colors.textSecondary,
-                    border: isSearchVisible ? 'none' : `1px solid ${theme.colors.border}`,
+                    background: theme.colors.backgroundSecondary,
+                    color: theme.colors.textSecondary,
+                    border: `1px solid ${theme.colors.border}`,
                     borderRadius: theme.radii[2],
                     padding: '6px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
                   }}
                   title={isSearchVisible ? 'Hide search' : 'Search tasks'}
                 >
                   <Search size={16} />
                 </button>
-
-                {/* Add Task button - only shown when write operations are available */}
-                {canWrite && (
+              </>
+            ) : (
+              <>
+                {/* Add Milestone button */}
+                {canWriteMilestones && (
                   <button
-                    onClick={handleOpenNewTask}
+                    onClick={handleOpenNewMilestone}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
                       background: theme.colors.primary,
                       color: theme.colors.textOnPrimary,
-                      border: 'none',
+                      border: '1px solid transparent',
                       borderRadius: theme.radii[2],
                       padding: '6px 12px',
                       fontSize: theme.fontSizes[1],
@@ -797,12 +832,10 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                     }}
                   >
                     <Plus size={14} />
-                    Add Task
+                    Add Milestone
                   </button>
                 )}
-              </>
-            ) : (
-              <>
+
                 {/* Add Task button - enabled when milestone selected */}
                 {canWrite && (
                   <button
@@ -815,7 +848,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                       gap: '6px',
                       background: selectedMilestoneId ? theme.colors.primary : theme.colors.backgroundSecondary,
                       color: selectedMilestoneId ? theme.colors.textOnPrimary : theme.colors.textMuted,
-                      border: selectedMilestoneId ? 'none' : `1px solid ${theme.colors.border}`,
+                      border: `1px solid ${selectedMilestoneId ? 'transparent' : theme.colors.border}`,
                       borderRadius: theme.radii[2],
                       padding: '6px 12px',
                       fontSize: theme.fontSizes[1],
@@ -827,30 +860,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                   >
                     <Plus size={14} />
                     Add Task
-                  </button>
-                )}
-
-                {/* Add Milestone button */}
-                {canWriteMilestones && (
-                  <button
-                    onClick={handleOpenNewMilestone}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      background: theme.colors.primary,
-                      color: theme.colors.textOnPrimary,
-                      border: 'none',
-                      borderRadius: theme.radii[2],
-                      padding: '6px 12px',
-                      fontSize: theme.fontSizes[1],
-                      fontWeight: theme.fontWeights.medium,
-                      cursor: 'pointer',
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    <Plus size={14} />
-                    Add Milestone
                   </button>
                 )}
 
