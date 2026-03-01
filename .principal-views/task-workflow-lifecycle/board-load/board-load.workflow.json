@@ -12,7 +12,7 @@
       "description": "Backlog board initialized and tasks loaded",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
+          "panel.initialized": "🚀 Panel initialized",
           "kanban.loading": "⏳ Loading backlog",
           "kanban.loaded": "📊 Loaded {{tasks.count}} tasks in {{columns.count}} columns"
         },
@@ -25,7 +25,7 @@
       "description": "Backlog board initialized with no tasks",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
+          "panel.initialized": "🚀 Panel initialized",
           "kanban.loading": "⏳ Loading backlog",
           "kanban.loaded": "📊 No tasks found"
         },
@@ -38,8 +38,8 @@
       "description": "Non-backlog project detected",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized ({{panel.id}})",
-          "kanban.loading": "⏳ Not a backlog project",
+          "panel.initialized": "🚀 Panel initialized",
+          "kanban.loading": "⏳ Checking project type",
           "kanban.skipped": "⏭️ Skipped - not a backlog project"
         },
         "summary": "ℹ️ Not a backlog project"

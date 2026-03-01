@@ -260,7 +260,7 @@ export function useKanbanData(
             'output.isBacklogProject': false,
             'duration.ms': Date.now() - startTime,
           });
-          span.addEvent('kanban.loaded', { 'tasks.count': 0, 'is.backlog.project': false });
+          span.addEvent('kanban.loaded', { 'tasks.count': 0, 'columns.count': 0, 'is.backlog.project': false });
           span.setStatus({ code: SpanStatusCode.OK });
           return;
         }
@@ -315,6 +315,7 @@ export function useKanbanData(
         // Emit loaded event with task counts
         span.addEvent('kanban.loaded', {
           'tasks.count': allTasks.length,
+          'columns.count': newColumnStates.size,
           'tasks.total': total,
           'tasks.hasMore': paginatedResult.hasMore,
         });
@@ -429,6 +430,7 @@ export function useKanbanData(
 
         span.addEvent('kanban.loaded', {
           'tasks.count': newTasks.length,
+          'columns.count': newColumnStates.size,
           'tasks.newlyLoaded': result.items.length,
         });
         span.setAttributes({
