@@ -17,9 +17,10 @@ import {
   type Tracer,
   type Span,
 } from '@opentelemetry/api';
+import packageJson from '../package.json';
 
 // Read version from package.json at build time
-const PACKAGE_VERSION = '1.0.41';
+const PACKAGE_VERSION = packageJson.version;
 
 export const TRACER_NAME = '@industry-theme/backlogmd-kanban-panel';
 export const TRACER_VERSION = PACKAGE_VERSION;
