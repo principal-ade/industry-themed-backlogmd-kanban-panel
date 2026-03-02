@@ -1,8 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Milestone, type Task } from '@backlog-md/core';
-import { PanelFileSystemAdapter } from '../../../adapters/PanelFileSystemAdapter';
-import type { KanbanPanelContext, KanbanPanelActions } from '../../../types';
-import type { PanelContextValue } from '@principal-ade/panel-framework-core';
 
 /** State for a single milestone with its tasks */
 export interface MilestoneState {
@@ -16,7 +13,6 @@ export interface UseMilestoneDataResult {
   milestones: MilestoneState[];
   isLoading: boolean;
   error: string | null;
-  isBacklogProject: boolean;
   /** Expand a milestone and load its tasks */
   expandMilestone: (milestoneId: string) => Promise<void>;
   /** Collapse a milestone */
@@ -25,15 +21,11 @@ export interface UseMilestoneDataResult {
   toggleMilestone: (milestoneId: string) => Promise<void>;
   /** Refresh all data */
   refreshData: () => Promise<void>;
-  /** Whether write operations are available */
-  canWrite: boolean;
-  /** Core instance for advanced operations */
-  core: Core | null;
 }
 
 interface UseMilestoneDataOptions {
-  context?: PanelContextValue<KanbanPanelContext>;
-  actions?: KanbanPanelActions;
+  /** Shared Core instance from useBacklogCore (required) */
+  core: Core | null;
 }
 
 /**
@@ -41,84 +33,33 @@ interface UseMilestoneDataOptions {
  *
  * Milestones are loaded on init with their task IDs.
  * Task content is only loaded when a milestone is expanded.
+ *
+ * Requires a shared Core instance from useBacklogCore.
  */
 export function useMilestoneData(
-  options?: UseMilestoneDataOptions
+  options: UseMilestoneDataOptions
 ): UseMilestoneDataResult {
-  const { context, actions } = options || {};
+  const { core } = options;
 
   const [milestones, setMilestones] = useState<MilestoneState[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBacklogProject, setIsBacklogProject] = useState(false);
-  const [canWrite, setCanWrite] = useState(false);
 
-  // Keep reference to Core instance for lazy loading and write operations
-  const coreRef = useRef<Core | null>(null);
+  // Track whether we've loaded data for this Core instance
+  const loadedCoreRef = useRef<Core | null>(null);
 
-  // Track active file fetches
-  const activeFilePathRef = useRef<string | null>(null);
-
-  // Store stable references
-  const contextRef = useRef(context);
-  const actionsRef = useRef(actions);
-
-  useEffect(() => {
-    contextRef.current = context;
-    actionsRef.current = actions;
-  }, [context, actions]);
-
-  // Helper to fetch file content
-  const fetchFileContent = useCallback(async (path: string): Promise<string> => {
-    const currentActions = actionsRef.current;
-
-    if (!currentActions?.readFile) {
-      throw new Error('actions.readFile not available');
-    }
-
-    if (activeFilePathRef.current === path) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    activeFilePathRef.current = path;
-
-    try {
-      return await currentActions.readFile(path);
-    } finally {
-      activeFilePathRef.current = null;
-    }
-  }, []);
-
-  // File tree version tracking
-  const fileTreeVersionRef = useRef<string | null>(null);
-
-  // Load milestone data
+  // Load milestone data using the provided Core
   const loadMilestoneData = useCallback(async () => {
-    if (!context || !actions) {
-      console.log('[useMilestoneData] No context provided');
-      setIsBacklogProject(false);
+    if (!core) {
+      console.log('[useMilestoneData] No Core provided');
       setMilestones([]);
       setIsLoading(false);
-      coreRef.current = null;
-      fileTreeVersionRef.current = null;
       return;
     }
 
-    const fileTreeSlice = context.fileTree;
-
-    if (!fileTreeSlice?.data?.allFiles) {
-      console.log('[useMilestoneData] FileTree not available');
-      setIsBacklogProject(false);
-      setMilestones([]);
-      coreRef.current = null;
-      fileTreeVersionRef.current = null;
-      return;
-    }
-
-    const currentVersion = fileTreeSlice.data.sha || fileTreeSlice.data.metadata?.sourceSha || 'unknown';
-
-    if (coreRef.current && fileTreeVersionRef.current === currentVersion) {
-      console.log('[useMilestoneData] Data already loaded for this version');
+    // Skip if already loaded for this Core instance
+    if (loadedCoreRef.current === core) {
+      console.log('[useMilestoneData] Already loaded for this Core');
       setIsLoading(false);
       return;
     }
@@ -127,88 +68,21 @@ export function useMilestoneData(
     setError(null);
 
     try {
-      const files = fileTreeSlice.data.allFiles;
-      const filePaths = files.map((f: { path: string }) => f.path);
-
-      // Debug: log file paths
-      const taskPaths = filePaths.filter((p: string) => p.includes('backlog/tasks/'));
-      console.log(`[useMilestoneData] File paths: ${filePaths.length} total, ${taskPaths.length} task files`);
-      if (taskPaths.length > 0) {
-        console.log(`[useMilestoneData] Sample task paths:`, taskPaths.slice(0, 3));
-      }
-
-      // Create FileSystemAdapter with actions for write operations
-      const fs = new PanelFileSystemAdapter({
-        fetchFile: fetchFileContent,
-        filePaths,
-        hostFileSystem: {
-          writeFile: actions.writeFile,
-          createDir: actions.createDir,
-          deleteFile: actions.deleteFile,
-        },
-      });
-
-      const core = new Core({
-        projectRoot: '',
-        adapters: { fs },
-      });
-
-      const isProject = await core.isBacklogProject();
-      if (!isProject) {
-        console.log('[useMilestoneData] Not a Backlog.md project');
-        setIsBacklogProject(false);
-        setMilestones([]);
-        coreRef.current = null;
-        return;
-      }
-
       console.log('[useMilestoneData] Loading milestone data...');
-      setIsBacklogProject(true);
-      setCanWrite(fs.canWrite);
 
-      // Initialize Core (need full init to access milestones)
-      await core.initializeLazy(filePaths);
-      coreRef.current = core;
-
-      // Debug: check what tasks are indexed
-      // @ts-expect-error - accessing private property for debugging
-      const taskIndex = core.taskIndex as Map<string, unknown>;
-      if (taskIndex) {
-        const indexedIds = Array.from(taskIndex.keys());
-        console.log(`[useMilestoneData] Core taskIndex has ${indexedIds.length} tasks:`, indexedIds.slice(0, 5));
-      }
-
-      // Debug: check Core instance
-      console.log('[useMilestoneData] Core instance:', core);
-      console.log('[useMilestoneData] Core.listMilestones:', typeof core.listMilestones);
-      console.log('[useMilestoneData] Core prototype:', Object.getPrototypeOf(core));
-
-      // Defensive check
-      if (typeof core.listMilestones !== 'function') {
-        console.error('[useMilestoneData] core.listMilestones is not a function!');
-        console.error('[useMilestoneData] Core methods:', Object.keys(core));
-        console.error('[useMilestoneData] Core prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(core)));
-        throw new Error('core.listMilestones is not available - check @backlog-md/core version');
-      }
-
-      // Load milestones (this reads milestone files only, not tasks)
+      // Load milestones
       const milestoneList = await core.listMilestones();
-
       console.log(`[useMilestoneData] Loaded ${milestoneList.length} milestones`);
 
       // Pre-load all tasks for progress calculation
       const allTaskIds = milestoneList.flatMap((m) => m.tasks);
       const uniqueTaskIds = [...new Set(allTaskIds)];
-      console.log(`[useMilestoneData] Milestone task IDs to load:`, uniqueTaskIds.slice(0, 5), `(${uniqueTaskIds.length} total)`);
       let allTasks: Task[] = [];
 
       if (uniqueTaskIds.length > 0) {
         try {
           allTasks = await core.loadTasksByIds(uniqueTaskIds);
           console.log(`[useMilestoneData] Pre-loaded ${allTasks.length} tasks for progress`);
-          if (allTasks.length > 0) {
-            console.log(`[useMilestoneData] Sample task IDs:`, allTasks.slice(0, 5).map(t => t.id));
-          }
         } catch (err) {
           console.warn('[useMilestoneData] Failed to pre-load tasks:', err);
         }
@@ -220,7 +94,6 @@ export function useMilestoneData(
       // Build milestone states with tasks pre-loaded
       const milestoneStates: MilestoneState[] = milestoneList.map((m) => {
         const loadedTasks = m.tasks.map((id) => taskMap.get(id)).filter((t): t is Task => !!t);
-        console.log(`[useMilestoneData] Milestone ${m.id}: ${m.tasks.length} task IDs, ${loadedTasks.length} loaded`);
         return {
           milestone: m,
           tasks: loadedTasks,
@@ -229,28 +102,25 @@ export function useMilestoneData(
         };
       });
 
-      fileTreeVersionRef.current = currentVersion;
+      loadedCoreRef.current = core;
       setMilestones(milestoneStates);
     } catch (err) {
       console.error('[useMilestoneData] Failed to load:', err);
       setError(err instanceof Error ? err.message : 'Failed to load milestone data');
-      setIsBacklogProject(false);
       setMilestones([]);
-      coreRef.current = null;
-      fileTreeVersionRef.current = null;
+      loadedCoreRef.current = null;
     } finally {
       setIsLoading(false);
     }
-  }, [context, actions, fetchFileContent]);
+  }, [core]);
 
-  // Load on mount
+  // Load when Core becomes available
   useEffect(() => {
     loadMilestoneData();
   }, [loadMilestoneData]);
 
   // Expand milestone and load its tasks
   const expandMilestone = useCallback(async (milestoneId: string) => {
-    const core = coreRef.current;
     if (!core) {
       console.warn('[useMilestoneData] Core not available');
       return;
@@ -307,7 +177,7 @@ export function useMilestoneData(
         )
       );
     }
-  }, [milestones]);
+  }, [core, milestones]);
 
   // Collapse milestone
   const collapseMilestone = useCallback((milestoneId: string) => {
@@ -332,7 +202,7 @@ export function useMilestoneData(
 
   // Refresh
   const refreshData = useCallback(async () => {
-    fileTreeVersionRef.current = null;
+    loadedCoreRef.current = null; // Force reload
     await loadMilestoneData();
   }, [loadMilestoneData]);
 
@@ -340,13 +210,9 @@ export function useMilestoneData(
     milestones,
     isLoading,
     error,
-    isBacklogProject,
     expandMilestone,
     collapseMilestone,
     toggleMilestone,
     refreshData,
-    // Write support
-    canWrite,
-    core: coreRef.current,
   };
 }

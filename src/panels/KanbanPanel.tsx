@@ -24,6 +24,7 @@ import { EmptyState } from './kanban/components/EmptyState';
 import { BoardEmptyState } from './kanban/components/BoardEmptyState';
 import { TaskModal } from './kanban/components/TaskModal';
 import { useMilestoneData } from './milestone/hooks/useMilestoneData';
+import { useBacklogCore } from '../hooks/useBacklogCore';
 import { MilestoneModal } from './milestone/components/MilestoneModal';
 import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import { getTracer, getActiveSpan, withSpan, SpanStatusCode } from '../telemetry';
@@ -206,25 +207,33 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     return unsubscribe;
   }, [events]);
 
+  // Shared Core instance for both kanban and milestone data
+  const {
+    core,
+    isInitializing: isCoreInitializing,
+    isBacklogProject,
+    canWrite,
+  } = useBacklogCore({ context, actions });
+
   const {
     statusColumns,
     tasksByStatus,
     totalTasksState,
     loadMoreTasks,
     error,
-    isLoading,
-    isBacklogProject,
+    isLoading: isKanbanLoading,
     refreshData,
     moveTaskOptimistic,
     getTaskById,
-    canWrite,
-    core,
   } = useKanbanData({
-    context,
+    core,
     actions,
     events,
     tasksLimit: 20,
   });
+
+  // Combined loading state
+  const isLoading = isCoreInitializing || isKanbanLoading;
 
   // Milestone data hook (always called to satisfy React hook rules)
   const {
@@ -232,11 +241,8 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     isLoading: isMilestonesLoading,
     error: milestonesError,
     refreshData: refreshMilestones,
-    canWrite: canWriteMilestones,
-    core: milestoneCore,
   } = useMilestoneData({
-    context,
-    actions,
+    core,
   });
 
   // Track ref to emit kanban.skipped only once
@@ -594,18 +600,18 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   }, []);
 
   const handleSaveMilestone = useCallback(async (input: MilestoneCreateInput | MilestoneUpdateInput) => {
-    if (!milestoneCore) {
+    if (!core) {
       throw new Error('Backlog not loaded');
     }
 
     if (editingMilestone) {
-      await milestoneCore.updateMilestone(editingMilestone.id, input as MilestoneUpdateInput);
+      await core.updateMilestone(editingMilestone.id, input as MilestoneUpdateInput);
     } else {
-      await milestoneCore.createMilestone(input as MilestoneCreateInput);
+      await core.createMilestone(input as MilestoneCreateInput);
     }
 
     await refreshMilestones();
-  }, [milestoneCore, editingMilestone, refreshMilestones]);
+  }, [core, editingMilestone, refreshMilestones]);
 
   const handleRefreshMilestones = async () => {
     setIsRefreshingMilestones(true);
@@ -813,7 +819,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
             ) : (
               <>
                 {/* Add Milestone button */}
-                {canWriteMilestones && (
+                {canWrite && (
                   <button
                     onClick={handleOpenNewMilestone}
                     style={{

@@ -40,12 +40,18 @@ export default defineConfig(({ mode: _mode }) => ({
     },
     rollupOptions: {
       // Externalize peer dependencies - these come from the host application
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@opentelemetry/api',
+      ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          '@opentelemetry/api': 'opentelemetry',
         },
       },
     },
