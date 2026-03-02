@@ -12,11 +12,11 @@
       "description": "Task dragged and dropped successfully",
       "template": {
         "events": {
-          "task.drag.started": "🎯 Started dragging {{task.id}} from {{from.status}}",
-          "task.moved": "📦 Dropped in {{to.status}}",
-          "task.updated": "💾 Status persisted"
+          "task.drag.started": "Started dragging {{task.id}} from {{from.status}}",
+          "task.moved": "Dropped in {{to.status}}",
+          "task.updated": "Status persisted"
         },
-        "summary": "✅ Moved: {{from.status}} → {{to.status}}"
+        "summary": "Moved: {{from.status}} to {{to.status}}"
       }
     },
     {
@@ -25,10 +25,10 @@
       "description": "Drag operation cancelled",
       "template": {
         "events": {
-          "task.drag.started": "🎯 Started dragging {{task.id}} from {{from.status}}",
-          "task.drag.cancelled": "↩️ Drag cancelled"
+          "task.drag.started": "Started dragging {{task.id}} from {{from.status}}",
+          "task.drag.cancelled": "Drag cancelled"
         },
-        "summary": "↩️ Drag cancelled"
+        "summary": "Drag cancelled"
       }
     },
     {
@@ -37,12 +37,12 @@
       "description": "Task edited successfully via modal with field details",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}",
-          "modal.opened": "📝 Edit modal opened for {{task.id}}",
-          "task.updated": "✏️ Updated task ({{updated.fields}})",
-          "kanban.loaded": "🔄 Board refreshed"
+          "task.selected": "Selected task {{task.id}}",
+          "modal.opened": "Edit modal opened for {{task.id}}",
+          "task.updated": "Updated task ({{updated.fields}})",
+          "kanban.loaded": "Board refreshed"
         },
-        "summary": "✅ Task edited: {{task.id}}"
+        "summary": "Task edited: {{task.id}}"
       }
     },
     {
@@ -51,12 +51,12 @@
       "description": "Task edited successfully via modal",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}",
-          "modal.opened": "📝 Edit modal opened for {{task.id}}",
-          "task.updated": "✏️ Updated task",
-          "kanban.loaded": "🔄 Board refreshed"
+          "task.selected": "Selected task {{task.id}}",
+          "modal.opened": "Edit modal opened for {{task.id}}",
+          "task.updated": "Updated task",
+          "kanban.loaded": "Board refreshed"
         },
-        "summary": "✅ Task edited: {{task.id}}"
+        "summary": "Task edited: {{task.id}}"
       }
     },
     {
@@ -65,12 +65,12 @@
       "description": "Failed to save task edits via modal",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}",
-          "modal.opened": "📝 Edit modal opened",
-          "task.updated": "✏️ Attempted to update task",
-          "task.save.error": "❌ Save failed: {{error.type}} - {{error.message}}"
+          "task.selected": "Selected task {{task.id}}",
+          "modal.opened": "Edit modal opened",
+          "task.updated": "Attempted to update task",
+          "task.save.error": "Save failed: {{error.type}} - {{error.message}}"
         },
-        "summary": "❌ Edit failed: {{error.type}}"
+        "summary": "Edit failed: {{error.type}}"
       }
     },
     {
@@ -79,11 +79,11 @@
       "description": "User cancelled task edit via modal with unsaved changes",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}",
-          "modal.opened": "📝 Edit modal opened",
-          "modal.cancelled": "❌ Edit cancelled (discarded changes)"
+          "task.selected": "Selected task {{task.id}}",
+          "modal.opened": "Edit modal opened",
+          "modal.cancelled": "Edit cancelled (discarded changes)"
         },
-        "summary": "❌ Edit cancelled"
+        "summary": "Edit cancelled"
       }
     },
     {
@@ -92,11 +92,11 @@
       "description": "User cancelled task edit via modal",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}",
-          "modal.opened": "📝 Edit modal opened",
-          "modal.cancelled": "❌ Edit cancelled"
+          "task.selected": "Selected task {{task.id}}",
+          "modal.opened": "Edit modal opened",
+          "modal.cancelled": "Edit cancelled"
         },
-        "summary": "❌ Edit cancelled"
+        "summary": "Edit cancelled"
       }
     }
   ]

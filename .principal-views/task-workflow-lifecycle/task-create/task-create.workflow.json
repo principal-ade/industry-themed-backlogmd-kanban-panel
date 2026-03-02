@@ -12,11 +12,11 @@
       "description": "Task created successfully",
       "template": {
         "events": {
-          "modal.opened": "📝 Create modal opened",
-          "task.created": "➕ Created task {{task.id}} in {{task.status}}",
-          "kanban.loaded": "🔄 Board refreshed ({{tasks.count}} tasks)"
+          "modal.opened": "Create modal opened",
+          "task.created": "Created task {{task.id}} in {{task.status}}",
+          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks)"
         },
-        "summary": "✅ Task created: {{task.id}}"
+        "summary": "Task created: {{task.id}}"
       }
     },
     {
@@ -25,11 +25,11 @@
       "description": "Failed to create task",
       "template": {
         "events": {
-          "modal.opened": "📝 Create modal opened",
-          "task.created": "➕ Attempted to create task",
-          "task.save.error": "❌ Save failed: {{error.type}} - {{error.message}}"
+          "modal.opened": "Create modal opened",
+          "task.created": "Attempted to create task",
+          "task.save.error": "Save failed: {{error.type}} - {{error.message}}"
         },
-        "summary": "❌ Create failed: {{error.type}}"
+        "summary": "Create failed: {{error.type}}"
       }
     },
     {
@@ -38,10 +38,10 @@
       "description": "User cancelled task creation with unsaved changes",
       "template": {
         "events": {
-          "modal.opened": "📝 Create modal opened",
-          "modal.cancelled": "❌ Creation cancelled (discarded changes)"
+          "modal.opened": "Create modal opened",
+          "modal.cancelled": "Creation cancelled (discarded changes)"
         },
-        "summary": "❌ Create cancelled"
+        "summary": "Create cancelled"
       }
     },
     {
@@ -50,10 +50,10 @@
       "description": "User cancelled task creation",
       "template": {
         "events": {
-          "modal.opened": "📝 Create modal opened",
-          "modal.cancelled": "❌ Creation cancelled"
+          "modal.opened": "Create modal opened",
+          "modal.cancelled": "Creation cancelled"
         },
-        "summary": "❌ Create cancelled"
+        "summary": "Create cancelled"
       }
     }
   ]

@@ -12,9 +12,9 @@
       "description": "Task selected for viewing (with status)",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}} ({{task.status}})"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})"
         },
-        "summary": "📋 Viewing: {{task.id}}"
+        "summary": "Viewing: {{task.id}}"
       }
     },
     {
@@ -23,9 +23,9 @@
       "description": "Task selected for viewing",
       "template": {
         "events": {
-          "task.selected": "👆 Selected task {{task.id}}"
+          "task.selected": "Selected task {{task.id}}"
         },
-        "summary": "📋 Viewing: {{task.id}}"
+        "summary": "Viewing: {{task.id}}"
       }
     },
     {
@@ -34,10 +34,10 @@
       "description": "User loaded more tasks (pagination)",
       "template": {
         "events": {
-          "kanban.load.more": "📄 Loading more tasks (offset: {{offset}}, limit: {{limit}})",
-          "kanban.loaded": "📊 Now showing {{tasks.count}} tasks"
+          "kanban.load.more": "Loading more tasks (offset: {{offset}}, limit: {{limit}})",
+          "kanban.loaded": "Now showing {{tasks.count}} tasks"
         },
-        "summary": "📄 Loaded more tasks"
+        "summary": "Loaded more tasks"
       }
     },
     {
@@ -46,9 +46,9 @@
       "description": "User switched to different status tab",
       "template": {
         "events": {
-          "column.selected": "📑 Switched to {{column.status}} (from {{column.previous}})"
+          "column.selected": "Switched to {{column.status}} (from {{column.previous}})"
         },
-        "summary": "📑 Viewing: {{column.status}}"
+        "summary": "Viewing: {{column.status}}"
       }
     },
     {
@@ -57,9 +57,9 @@
       "description": "User cleared filters",
       "template": {
         "events": {
-          "filter.cleared": "🔄 Cleared filters"
+          "filter.cleared": "Cleared filters"
         },
-        "summary": "🔄 Filters cleared"
+        "summary": "Filters cleared"
       }
     },
     {
@@ -68,9 +68,9 @@
       "description": "User searched for tasks",
       "template": {
         "events": {
-          "search.performed": "🔎 Searched for \"{{search.query}}\" → {{results.count}} results"
+          "search.performed": "Searched for \"{{search.query}}\" - {{results.count}} results"
         },
-        "summary": "🔎 Search: {{results.count}} results"
+        "summary": "Search: {{results.count}} results"
       }
     },
     {
@@ -79,9 +79,9 @@
       "description": "User clicked empty state action",
       "template": {
         "events": {
-          "empty.action.clicked": "👆 Clicked empty state action: {{action.type}}"
+          "empty.action.clicked": "Clicked empty state action: {{action.type}}"
         },
-        "summary": "👆 Empty action: {{action.type}}"
+        "summary": "Empty action: {{action.type}}"
       }
     },
     {
@@ -90,9 +90,9 @@
       "description": "User closed the task detail panel",
       "template": {
         "events": {
-          "task.deselected": "👋 Closed task {{task.id}}"
+          "task.deselected": "Closed task {{task.id}}"
         },
-        "summary": "👋 Task closed"
+        "summary": "Task closed"
       }
     },
     {
@@ -101,9 +101,9 @@
       "description": "User requested Claude assignment",
       "template": {
         "events": {
-          "task.assign.requested": "🤖 Requested Claude assignment for {{task.id}}"
+          "task.assign.requested": "Requested Claude assignment for {{task.id}}"
         },
-        "summary": "🤖 Assign to Claude: {{task.id}}"
+        "summary": "Assign to Claude: {{task.id}}"
       }
     }
   ]

@@ -12,11 +12,11 @@
       "description": "Backlog board initialized and tasks loaded",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized",
-          "kanban.loading": "⏳ Loading backlog",
-          "kanban.loaded": "📊 Loaded {{tasks.count}} tasks in {{columns.count}} columns"
+          "panel.initialized": "Panel initialized",
+          "kanban.loading": "Loading backlog",
+          "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns"
         },
-        "summary": "✅ Board loaded: {{tasks.count}} tasks"
+        "summary": "Board loaded: {{tasks.count}} tasks"
       }
     },
     {
@@ -25,11 +25,11 @@
       "description": "Backlog board initialized with no tasks",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized",
-          "kanban.loading": "⏳ Loading backlog",
-          "kanban.loaded": "📊 No tasks found"
+          "panel.initialized": "Panel initialized",
+          "kanban.loading": "Loading backlog",
+          "kanban.loaded": "No tasks found"
         },
-        "summary": "📭 Empty board"
+        "summary": "Empty board"
       }
     },
     {
@@ -38,11 +38,11 @@
       "description": "Non-backlog project detected",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized",
-          "kanban.loading": "⏳ Checking project type",
-          "kanban.skipped": "⏭️ Skipped - not a backlog project"
+          "panel.initialized": "Panel initialized",
+          "kanban.loading": "Checking project type",
+          "kanban.skipped": "Skipped - not a backlog project"
         },
-        "summary": "ℹ️ Not a backlog project"
+        "summary": "Not a backlog project"
       }
     },
     {
@@ -51,11 +51,11 @@
       "description": "Board failed to load",
       "template": {
         "events": {
-          "panel.initialized": "🚀 Panel initialized",
-          "kanban.loading": "⏳ Loading tasks...",
-          "kanban.load.error": "❌ Load failed: {{error.type}} - {{error.message}}"
+          "panel.initialized": "Panel initialized",
+          "kanban.loading": "Loading tasks...",
+          "kanban.load.error": "Load failed: {{error.type}} - {{error.message}}"
         },
-        "summary": "❌ Load error: {{error.type}}"
+        "summary": "Load error: {{error.type}}"
       }
     }
   ]
