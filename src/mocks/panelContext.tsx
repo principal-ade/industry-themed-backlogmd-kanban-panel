@@ -132,36 +132,8 @@ export const createMockContext = (
         path: '/Users/developer/my-project',
       },
     },
-    slices: mockSlices,
-    // Note: adapters removed - use actions for file operations instead
-    getSlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return mockSlices.get(name) as DataSlice<T> | undefined;
-    },
-    getWorkspaceSlice: <T,>(name: string): DataSlice<T> | undefined => {
-      const slice = mockSlices.get(name);
-      return slice?.scope === 'workspace' ? (slice as DataSlice<T>) : undefined;
-    },
-    getRepositorySlice: <T,>(name: string): DataSlice<T> | undefined => {
-      const slice = mockSlices.get(name);
-      return slice?.scope === 'repository'
-        ? (slice as DataSlice<T>)
-        : undefined;
-    },
-    hasSlice: (name: string, scope?: 'workspace' | 'repository'): boolean => {
-      const slice = mockSlices.get(name);
-      if (!slice) return false;
-      if (!scope) return true;
-      return slice.scope === scope;
-    },
-    isSliceLoading: (
-      name: string,
-      scope?: 'workspace' | 'repository'
-    ): boolean => {
-      const slice = mockSlices.get(name);
-      if (!slice) return false;
-      if (scope && slice.scope !== scope) return false;
-      return slice.loading;
-    },
+    // Note: v0.5.0 removed slice accessor methods (getSlice, getRepositorySlice, etc.)
+    // Slices are now accessed directly as typed properties on context
     refresh: async (
       scope?: 'workspace' | 'repository',
       slice?: string

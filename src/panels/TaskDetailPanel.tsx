@@ -197,11 +197,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   );
 
   // Read repository capabilities (Claude workflow detection)
-  const repoCapabilities = context.getRepositorySlice<{
-    hasClaudeWorkflow: boolean;
-    claudeWorkflowPath?: string;
-  }>('repoCapabilities');
-  const hasClaudeWorkflow = repoCapabilities?.data?.hasClaudeWorkflow ?? false;
+  // Accessed directly from typed context (v0.5.0+ API)
+  const hasClaudeWorkflow = context.repoCapabilities?.data?.hasClaudeWorkflow ?? false;
 
   // Handle "Assign to Claude" button click
   const handleAssignToClaude = useCallback(() => {

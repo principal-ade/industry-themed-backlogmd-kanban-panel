@@ -46,8 +46,16 @@ export type { FileTree } from '@principal-ai/repository-abstraction';
 import type { FileTree } from '@principal-ai/repository-abstraction';
 
 // ============================================================================
-// Typed Panel Interfaces (v0.4.2+)
+// Typed Panel Interfaces (v0.5.0+)
 // ============================================================================
+
+/**
+ * Repository capabilities slice data
+ */
+export interface RepoCapabilitiesData {
+  hasClaudeWorkflow: boolean;
+  claudeWorkflowPath?: string;
+}
 
 /**
  * Typed context for KanbanPanel and TaskDetailPanel
@@ -58,6 +66,8 @@ import type { FileTree } from '@principal-ai/repository-abstraction';
  */
 export interface KanbanPanelContext {
   fileTree: DataSlice<FileTree>;
+  /** Optional: Repository capabilities (Claude workflow detection) */
+  repoCapabilities?: DataSlice<RepoCapabilitiesData>;
 }
 
 /**
