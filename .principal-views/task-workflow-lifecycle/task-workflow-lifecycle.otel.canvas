@@ -20,7 +20,6 @@
             "has.file.system": { "type": "boolean", "required": true }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -42,7 +41,6 @@
             "is.backlog.project": { "type": "boolean", "required": true }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -66,7 +64,6 @@
             "has.more": { "type": "boolean", "required": false }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -88,7 +85,6 @@
             "reason": { "type": "string", "required": false }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -111,7 +107,6 @@
             "error.message": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "error", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -134,7 +129,6 @@
             "limit": { "type": "number", "required": true }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -156,7 +150,6 @@
             "action.type": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/EmptyState.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/components/BoardEmptyState.tsx"] }
       }
     },
@@ -179,7 +172,6 @@
             "task.status": { "type": "string", "required": false }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -202,7 +194,6 @@
             "from.status": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -226,7 +217,6 @@
             "to.status": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/KanbanColumn.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -249,7 +239,6 @@
             "from.status": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskCard.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -271,7 +260,6 @@
             "filters.count": { "type": "number", "required": false }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -294,7 +282,6 @@
             "results.count": { "type": "number", "required": false }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -317,7 +304,6 @@
             "column.previous": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/KanbanPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -340,7 +326,6 @@
             "task.id": { "type": "string", "required": false }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -363,7 +348,6 @@
             "had.changes": { "type": "boolean", "required": false }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -387,7 +371,6 @@
             "file.path": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
         "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx"] }
       }
     },
@@ -410,7 +393,6 @@
             "updated.fields": { "type": "string", "required": false }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
         "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -432,7 +414,6 @@
             "task.id": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/TaskDetailPanel.tsx"],
         "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     },
@@ -457,7 +438,6 @@
             "error.message": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/kanban/components/TaskModal.tsx"],
         "otel": { "kind": "event", "category": "error", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
       }
     },
@@ -479,7 +459,6 @@
             "task.id": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/TaskDetailPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     },
@@ -501,7 +480,6 @@
             "task.id": { "type": "string", "required": true }
           }
         },
-        "sources": ["src/panels/TaskDetailPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     },
@@ -524,7 +502,6 @@
             "task.title": { "type": "string", "required": false }
           }
         },
-        "sources": ["src/panels/TaskDetailPanel.tsx"],
         "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
       }
     }
