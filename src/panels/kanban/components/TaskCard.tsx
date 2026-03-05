@@ -74,6 +74,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     minHeight: '44px',
     touchAction: 'none',
     userSelect: 'none',
+    fontFamily: theme.fonts.body,
     // When dragging, the original card stays in place but becomes a placeholder
     // The DragOverlay handles the visual movement
     opacity: isDragging ? 0.4 : 1,

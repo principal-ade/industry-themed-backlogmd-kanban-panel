@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { AlertCircle, Plus, Search, X, Milestone as MilestoneIcon, RefreshCw, KanbanSquare } from 'lucide-react';
-import { useTheme } from '@principal-ade/industry-theme';
+import { useTheme, ThemeProvider } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import type { KanbanPanelPropsTyped } from '../types';
 import {
@@ -1144,18 +1144,21 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
           </div>
 
           {/* Drag overlay - rendered in portal to avoid layout shifts */}
+          {/* Wrapped in ThemeProvider to preserve theme context through portal */}
           {typeof document !== 'undefined' &&
             createPortal(
-              <DragOverlay
-                dropAnimation={{
-                  duration: 200,
-                  easing: 'ease',
-                }}
-              >
-                {activeTask ? (
-                  <TaskCard task={activeTask} isDragOverlay />
-                ) : null}
-              </DragOverlay>,
+              <ThemeProvider theme={theme}>
+                <DragOverlay
+                  dropAnimation={{
+                    duration: 200,
+                    easing: 'ease',
+                  }}
+                >
+                  {activeTask ? (
+                    <TaskCard task={activeTask} isDragOverlay />
+                  ) : null}
+                </DragOverlay>
+              </ThemeProvider>,
               document.body
             )}
         </DndContext>
