@@ -12,9 +12,9 @@
       "description": "Task created successfully",
       "template": {
         "events": {
-          "modal.opened": "Create modal opened",
-          "task.created": "Created task {{task.id}} in {{task.status}}",
-          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks)"
+          "modal.opened": "{{modal.mode}} modal opened{{#task.id}} for {{task.id}}{{/task.id}}",
+          "task.created": "Created task {{task.id}} in {{task.status}} ({{file.path}})",
+          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks in {{columns.count}} columns, has more: {{has.more}})"
         },
         "summary": "Task created: {{task.id}}"
       }
@@ -25,9 +25,9 @@
       "description": "Failed to create task",
       "template": {
         "events": {
-          "modal.opened": "Create modal opened",
+          "modal.opened": "{{modal.mode}} modal opened{{#task.id}} for {{task.id}}{{/task.id}}",
           "task.created": "Attempted to create task",
-          "task.save.error": "Save failed: {{error.type}} - {{error.message}}"
+          "task.save.error": "{{operation}} failed for {{task.id}}: {{error.type}} - {{error.message}}"
         },
         "summary": "Create failed: {{error.type}}"
       }
@@ -38,8 +38,8 @@
       "description": "User cancelled task creation with unsaved changes",
       "template": {
         "events": {
-          "modal.opened": "Create modal opened",
-          "modal.cancelled": "Creation cancelled (discarded changes)"
+          "modal.opened": "{{modal.mode}} modal opened{{#task.id}} for {{task.id}}{{/task.id}}",
+          "modal.cancelled": "{{modal.mode}} cancelled (had changes: {{had.changes}})"
         },
         "summary": "Create cancelled"
       }
@@ -50,8 +50,8 @@
       "description": "User cancelled task creation",
       "template": {
         "events": {
-          "modal.opened": "Create modal opened",
-          "modal.cancelled": "Creation cancelled"
+          "modal.opened": "{{modal.mode}} modal opened{{#task.id}} for {{task.id}}{{/task.id}}",
+          "modal.cancelled": "{{modal.mode}} cancelled (had changes: {{had.changes}})"
         },
         "summary": "Create cancelled"
       }

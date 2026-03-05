@@ -12,9 +12,9 @@
       "description": "Backlog board initialized and tasks loaded",
       "template": {
         "events": {
-          "panel.initialized": "Panel initialized",
-          "kanban.loading": "Loading backlog",
-          "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns"
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
+          "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
+          "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns (has more: {{has.more}})"
         },
         "summary": "Board loaded: {{tasks.count}} tasks"
       }
@@ -25,9 +25,9 @@
       "description": "Backlog board initialized with no tasks",
       "template": {
         "events": {
-          "panel.initialized": "Panel initialized",
-          "kanban.loading": "Loading backlog",
-          "kanban.loaded": "No tasks found"
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
+          "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
+          "kanban.loaded": "No tasks found (has more: {{has.more}})"
         },
         "summary": "Empty board"
       }
@@ -38,9 +38,9 @@
       "description": "Non-backlog project detected",
       "template": {
         "events": {
-          "panel.initialized": "Panel initialized",
-          "kanban.loading": "Checking project type",
-          "kanban.skipped": "Skipped - not a backlog project"
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
+          "kanban.loading": "Checking project type (is backlog: {{is.backlog.project}})",
+          "kanban.skipped": "Skipped: {{reason}}"
         },
         "summary": "Not a backlog project"
       }
@@ -51,8 +51,8 @@
       "description": "Board failed to load",
       "template": {
         "events": {
-          "panel.initialized": "Panel initialized",
-          "kanban.loading": "Loading tasks...",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
+          "kanban.loading": "Loading tasks... (is backlog: {{is.backlog.project}})",
           "kanban.load.error": "Load failed: {{error.type}} - {{error.message}}"
         },
         "summary": "Load error: {{error.type}}"

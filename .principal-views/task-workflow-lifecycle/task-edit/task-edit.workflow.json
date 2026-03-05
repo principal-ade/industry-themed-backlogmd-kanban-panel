@@ -13,8 +13,8 @@
       "template": {
         "events": {
           "task.drag.started": "Started dragging {{task.id}} from {{from.status}}",
-          "task.moved": "Dropped in {{to.status}}",
-          "task.updated": "Status persisted"
+          "task.moved": "{{task.id}} moved from {{from.status}} to {{to.status}}",
+          "task.updated": "Status persisted for {{task.id}}"
         },
         "summary": "Moved: {{from.status}} to {{to.status}}"
       }
@@ -26,7 +26,7 @@
       "template": {
         "events": {
           "task.drag.started": "Started dragging {{task.id}} from {{from.status}}",
-          "task.drag.cancelled": "Drag cancelled"
+          "task.drag.cancelled": "Drag cancelled for {{task.id}} (was in {{from.status}})"
         },
         "summary": "Drag cancelled"
       }
@@ -37,10 +37,10 @@
       "description": "Task edited successfully via modal with field details",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}",
-          "modal.opened": "Edit modal opened for {{task.id}}",
-          "task.updated": "Updated task ({{updated.fields}})",
-          "kanban.loaded": "Board refreshed"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "modal.opened": "{{modal.mode}} modal opened for {{task.id}}",
+          "task.updated": "Updated {{task.id}} ({{updated.fields}})",
+          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks in {{columns.count}} columns, has more: {{has.more}})"
         },
         "summary": "Task edited: {{task.id}}"
       }
@@ -51,10 +51,10 @@
       "description": "Task edited successfully via modal",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}",
-          "modal.opened": "Edit modal opened for {{task.id}}",
-          "task.updated": "Updated task",
-          "kanban.loaded": "Board refreshed"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "modal.opened": "{{modal.mode}} modal opened for {{task.id}}",
+          "task.updated": "Updated {{task.id}}",
+          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks in {{columns.count}} columns, has more: {{has.more}})"
         },
         "summary": "Task edited: {{task.id}}"
       }
@@ -65,10 +65,10 @@
       "description": "Failed to save task edits via modal",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}",
-          "modal.opened": "Edit modal opened",
-          "task.updated": "Attempted to update task",
-          "task.save.error": "Save failed: {{error.type}} - {{error.message}}"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "modal.opened": "{{modal.mode}} modal opened",
+          "task.updated": "Attempted to update {{task.id}}",
+          "task.save.error": "{{operation}} failed for {{task.id}}: {{error.type}} - {{error.message}}"
         },
         "summary": "Edit failed: {{error.type}}"
       }
@@ -79,9 +79,9 @@
       "description": "User cancelled task edit via modal with unsaved changes",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}",
-          "modal.opened": "Edit modal opened",
-          "modal.cancelled": "Edit cancelled (discarded changes)"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "modal.opened": "{{modal.mode}} modal opened",
+          "modal.cancelled": "{{modal.mode}} cancelled (had changes: {{had.changes}})"
         },
         "summary": "Edit cancelled"
       }
@@ -92,9 +92,9 @@
       "description": "User cancelled task edit via modal",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}",
-          "modal.opened": "Edit modal opened",
-          "modal.cancelled": "Edit cancelled"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "modal.opened": "{{modal.mode}} modal opened",
+          "modal.cancelled": "{{modal.mode}} cancelled (had changes: {{had.changes}})"
         },
         "summary": "Edit cancelled"
       }

@@ -35,7 +35,7 @@
       "template": {
         "events": {
           "kanban.load.more": "Loading more tasks (offset: {{offset}}, limit: {{limit}})",
-          "kanban.loaded": "Now showing {{tasks.count}} tasks"
+          "kanban.loaded": "Now showing {{tasks.count}} tasks across {{columns.count}} columns (has more: {{has.more}})"
         },
         "summary": "Loaded more tasks"
       }
@@ -57,7 +57,7 @@
       "description": "User cleared filters",
       "template": {
         "events": {
-          "filter.cleared": "Cleared filters"
+          "filter.cleared": "Cleared {{filters.count}} filters"
         },
         "summary": "Filters cleared"
       }
@@ -101,7 +101,7 @@
       "description": "User requested Claude assignment",
       "template": {
         "events": {
-          "task.assign.requested": "Requested Claude assignment for {{task.id}}"
+          "task.assign.requested": "Requested Claude assignment for {{task.id}}: {{task.title}}"
         },
         "summary": "Assign to Claude: {{task.id}}"
       }

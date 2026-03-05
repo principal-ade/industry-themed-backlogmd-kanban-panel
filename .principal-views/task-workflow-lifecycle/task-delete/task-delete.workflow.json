@@ -14,7 +14,7 @@
         "events": {
           "delete.modal.opened": "Opened delete confirmation for {{task.id}}",
           "task.deleted": "Deleted task {{task.id}}",
-          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks)"
+          "kanban.loaded": "Board refreshed ({{tasks.count}} tasks in {{columns.count}} columns, has more: {{has.more}})"
         },
         "summary": "Task deleted: {{task.id}}"
       }
@@ -26,7 +26,7 @@
       "template": {
         "events": {
           "task.deleted": "Attempted to delete {{task.id}}",
-          "task.save.error": "Delete failed: {{error.type}} - {{error.message}}"
+          "task.save.error": "{{operation}} failed for {{task.id}}: {{error.type}} - {{error.message}}"
         },
         "summary": "Delete failed: {{error.type}}"
       }
