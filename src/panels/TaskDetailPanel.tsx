@@ -362,6 +362,42 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     };
   }, [events, selectedTask?.id]);
 
+  // Listen for programmatic delete control events
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribers = [
+      // Open delete modal programmatically
+      (events as PanelEventEmitter).on('task:delete-open-modal', (event) => {
+        // Skip if emitted by this panel
+        if (event.source === 'task-detail-panel') return;
+
+        const payload = event.payload as { taskId?: string };
+        // Only respond if this is for the currently selected task
+        if (selectedTask && (!payload?.taskId || payload.taskId === selectedTask.id)) {
+          handleOpenDeleteModal();
+        }
+      }),
+
+      // Confirm delete programmatically
+      (events as PanelEventEmitter).on('task:delete-confirm', (event) => {
+        // Skip if emitted by this panel
+        if (event.source === 'task-detail-panel') return;
+
+        const payload = event.payload as { taskId?: string };
+        // Only respond if modal is open and this is for the currently selected task
+        if (isDeleteModalOpen && selectedTask && (!payload?.taskId || payload.taskId === selectedTask.id)) {
+          handleDeleteConfirm();
+        }
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [events, selectedTask, isDeleteModalOpen, handleOpenDeleteModal, handleDeleteConfirm]);
 
   // Handle back/close
   const handleBack = useCallback(() => {

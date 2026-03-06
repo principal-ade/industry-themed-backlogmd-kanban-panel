@@ -193,20 +193,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     () => kanbanPanelRef.current?.focus()
   );
 
-  // Subscribe to task:selected events from other panels
-  useEffect(() => {
-    if (!events) return;
-
-    const unsubscribe = events.on('task:selected', (event) => {
-      const payload = event.payload as { taskId?: string };
-      if (payload?.taskId) {
-        setSelectedTaskId(payload.taskId);
-      }
-    });
-
-    return unsubscribe;
-  }, [events]);
-
   // Shared Core instance for both kanban and milestone data
   const {
     core,
@@ -390,7 +376,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     }
   }, [getTaskById, moveTaskOptimistic]);
 
-  const handleTaskClick = (task: Task) => {
+  const handleTaskClick = useCallback((task: Task) => {
     setSelectedTaskId(task.id);
 
     // Emit telemetry event with its own span
@@ -417,7 +403,39 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
         payload: { taskId: task.id, task },
       });
     }
-  };
+  }, [events]);
+
+  // Subscribe to task:selected and task:deselected events from other panels
+  // This triggers the same flow as a user click, including telemetry
+  useEffect(() => {
+    if (!events) return;
+
+    const unsubscribeSelected = events.on('task:selected', (event) => {
+      // Skip events emitted by this panel to avoid infinite loops
+      if (event.source === 'kanban-panel') return;
+
+      const payload = event.payload as { taskId?: string };
+      if (payload?.taskId) {
+        const task = getTaskById(payload.taskId);
+        if (task) {
+          // Trigger full selection flow (telemetry + event emission)
+          handleTaskClick(task);
+        } else {
+          // Task not loaded yet, just set the ID
+          setSelectedTaskId(payload.taskId);
+        }
+      }
+    });
+
+    const unsubscribeDeselected = events.on('task:deselected', () => {
+      setSelectedTaskId(null);
+    });
+
+    return () => {
+      unsubscribeSelected();
+      unsubscribeDeselected();
+    };
+  }, [events, getTaskById, handleTaskClick]);
 
   // Check if we can initialize (need file operations on actions)
   const canInitialize = Boolean(
