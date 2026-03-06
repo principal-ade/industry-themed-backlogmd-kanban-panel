@@ -1153,6 +1153,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
                     duration: 200,
                     easing: 'ease',
                   }}
+                  style={{ zIndex: 99999 }}
                 >
                   {activeTask ? (
                     <TaskCard task={activeTask} isDragOverlay />
