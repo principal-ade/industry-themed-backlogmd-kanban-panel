@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Core, type Task, type PaginatedResult, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
 import type { KanbanPanelActions, PanelEventEmitter } from '../../../types';
-import { getTracer, getActiveSpan, SpanStatusCode } from '../../../telemetry';
+import { getTracer, getActiveSpan, SpanStatusCode, trace, context as otelContext, type Span } from '../../../telemetry';
 
 /** Per-column pagination state */
 export interface ColumnState {
@@ -71,6 +71,8 @@ interface UseKanbanDataOptions {
   tasksLimit?: number;
   /** Event emitter for panel events */
   events?: PanelEventEmitter;
+  /** Parent span for context propagation (e.g., board.session) */
+  parentSpan?: Span;
 }
 
 const DEFAULT_TASKS_LIMIT = 20;
@@ -91,6 +93,7 @@ export function useKanbanData(
     actions,
     tasksLimit = DEFAULT_TASKS_LIMIT,
     events,
+    parentSpan,
   } = options;
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -143,7 +146,12 @@ export function useKanbanData(
 
     const tracer = getTracer();
 
-    return tracer.startActiveSpan('kanban.load', async (span) => {
+    // Create span context - if parentSpan exists, make this a child of it
+    const parentContext = parentSpan
+      ? trace.setSpan(otelContext.active(), parentSpan)
+      : otelContext.active();
+
+    return otelContext.with(parentContext, () => tracer.startActiveSpan('kanban.load', async (span) => {
       const startTime = Date.now();
       span.addEvent('kanban.loading');
 
@@ -207,8 +215,8 @@ export function useKanbanData(
         setIsLoading(false);
         span.end();
       }
-    });
-  }, [core, tasksLimit, buildColumnStates]);
+    }));
+  }, [core, tasksLimit, buildColumnStates, parentSpan]);
 
   // Load data when Core becomes available
   useEffect(() => {

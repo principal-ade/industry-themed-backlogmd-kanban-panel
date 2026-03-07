@@ -12,7 +12,8 @@
       "description": "Task selected for viewing (with status)",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}} ({{task.status}})"
+          "task.selected": "Selected task {{task.id}} ({{task.status}})",
+          "task.selected.emitted": "Emitted {{task.id}} to TaskDetailPanel"
         },
         "summary": "Viewing: {{task.id}}"
       }
@@ -23,7 +24,8 @@
       "description": "Task selected for viewing",
       "template": {
         "events": {
-          "task.selected": "Selected task {{task.id}}"
+          "task.selected": "Selected task {{task.id}}",
+          "task.selected.emitted": "Emitted {{task.id}} to TaskDetailPanel"
         },
         "summary": "Viewing: {{task.id}}"
       }
@@ -74,14 +76,14 @@
       }
     },
     {
-      "id": "empty-action",
+      "id": "create-task-clicked",
       "priority": 7,
-      "description": "User clicked empty state action",
+      "description": "User clicked add task button",
       "template": {
         "events": {
-          "empty.action.clicked": "Clicked empty state action: {{action.type}}"
+          "create.task.clicked": "Add task clicked (source: {{source}})"
         },
-        "summary": "Empty action: {{action.type}}"
+        "summary": "Create task from {{source}}"
       }
     },
     {
@@ -93,17 +95,6 @@
           "task.deselected": "Closed task {{task.id}}"
         },
         "summary": "Task closed"
-      }
-    },
-    {
-      "id": "task-assign-requested",
-      "priority": 9,
-      "description": "User requested Claude assignment",
-      "template": {
-        "events": {
-          "task.assign.requested": "Requested Claude assignment for {{task.id}}: {{task.title}}"
-        },
-        "summary": "Assign to Claude: {{task.id}}"
       }
     }
   ]

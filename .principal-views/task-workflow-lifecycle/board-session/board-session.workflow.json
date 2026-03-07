@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Board Session",
+  "description": "Complete board initialization lifecycle - from panel mount through core init and task loading",
+  "spanPattern": "board.session",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "success-with-tasks",
+      "priority": 1,
+      "description": "Board initialized successfully with tasks loaded",
+      "template": {
+        "events": {
+          "board.session.started": "Board session started",
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.complete": "Core initialized ({{fileCount}} files, {{duration.ms}}ms)",
+          "kanban.loading": "Loading tasks from backlog",
+          "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns",
+          "board.session.complete": "Session complete"
+        },
+        "summary": "Board ready: {{tasks.count}} tasks loaded"
+      }
+    },
+    {
+      "id": "success-empty",
+      "priority": 2,
+      "description": "Board initialized with no tasks",
+      "template": {
+        "events": {
+          "board.session.started": "Board session started",
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.complete": "Core initialized",
+          "kanban.loading": "Loading tasks from backlog",
+          "kanban.loaded": "No tasks found (0 tasks)",
+          "board.session.complete": "Session complete"
+        },
+        "summary": "Board ready: empty"
+      }
+    },
+    {
+      "id": "core-init-skipped",
+      "priority": 3,
+      "description": "Core initialization skipped (no context, filetree, or not a backlog project)",
+      "template": {
+        "events": {
+          "board.session.started": "Board session started",
+          "backlog.core.init.started": "Checking project",
+          "backlog.core.init.skipped": "Skipped: {{reason}}",
+          "board.session.complete": "Session complete"
+        },
+        "summary": "Skipped: {{reason}}"
+      }
+    },
+    {
+      "id": "core-init-error",
+      "priority": 4,
+      "description": "Core initialization failed",
+      "template": {
+        "events": {
+          "board.session.started": "Board session started",
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.error": "Core init failed: {{error.type}} - {{error.message}}",
+          "board.session.complete": "Session complete (has error: true)"
+        },
+        "summary": "Core init error: {{error.type}}"
+      }
+    },
+    {
+      "id": "kanban-load-error",
+      "priority": 5,
+      "description": "Task loading failed",
+      "template": {
+        "events": {
+          "board.session.started": "Board session started",
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.complete": "Core initialized",
+          "kanban.loading": "Loading tasks from backlog",
+          "kanban.load.error": "Load failed: {{error.type}} - {{error.message}}",
+          "board.session.complete": "Session complete (has error: true)"
+        },
+        "summary": "Load error: {{error.type}}"
+      }
+    }
+  ]
+}

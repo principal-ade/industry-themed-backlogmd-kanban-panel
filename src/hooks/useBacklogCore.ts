@@ -3,7 +3,7 @@ import { Core } from '@backlog-md/core';
 import { PanelFileSystemAdapter } from '../adapters/PanelFileSystemAdapter';
 import type { KanbanPanelContext, KanbanPanelActions } from '../types';
 import type { PanelContextValue } from '@principal-ade/panel-framework-core';
-import { getTracer, SpanStatusCode } from '../telemetry';
+import { getTracer, SpanStatusCode, trace, context as otelContext, type Span } from '../telemetry';
 
 export interface UseBacklogCoreResult {
   /** The shared Core instance (null if not initialized) */
@@ -25,6 +25,8 @@ export interface UseBacklogCoreResult {
 interface UseBacklogCoreOptions {
   context?: PanelContextValue<KanbanPanelContext>;
   actions?: KanbanPanelActions;
+  /** Parent span for context propagation (e.g., board.session) */
+  parentSpan?: Span;
 }
 
 /**
@@ -44,7 +46,7 @@ interface UseBacklogCoreOptions {
  * ```
  */
 export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreResult {
-  const { context, actions } = options || {};
+  const { context, actions, parentSpan } = options || {};
 
   const [core, setCore] = useState<Core | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -80,8 +82,13 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
   const initializeCore = useCallback(async () => {
     const tracer = getTracer();
 
+    // Create span context - if parentSpan exists, make this a child of it
+    const parentContext = parentSpan
+      ? trace.setSpan(otelContext.active(), parentSpan)
+      : otelContext.active();
+
     // Use startActiveSpan so child spans (core.init) are parented correctly
-    return tracer.startActiveSpan('backlog.core.init', async (span) => {
+    return otelContext.with(parentContext, () => tracer.startActiveSpan('backlog.core.init', async (span) => {
       const startTime = Date.now();
 
       try {
@@ -93,7 +100,7 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
           setCore(null);
           setIsInitializing(false);
           setFilePaths([]);
-          span.setAttributes({ 'output.skipped': true, 'output.reason': 'no_context' });
+          span.addEvent('backlog.core.init.skipped', { reason: 'no_context' });
           span.setStatus({ code: SpanStatusCode.OK });
           return;
         }
@@ -105,7 +112,7 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
           setIsBacklogProject(false);
           setCore(null);
           setFilePaths([]);
-          span.setAttributes({ 'output.skipped': true, 'output.reason': 'no_filetree' });
+          span.addEvent('backlog.core.init.skipped', { reason: 'no_filetree' });
           span.setStatus({ code: SpanStatusCode.OK });
           return;
         }
@@ -116,7 +123,7 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
         if (core && fileTreeVersionRef.current === currentVersion) {
           console.log('[useBacklogCore] Already initialized for this version');
           setIsInitializing(false);
-          span.setAttributes({ 'output.skipped': true, 'output.reason': 'already_initialized' });
+          span.addEvent('backlog.core.init.skipped', { reason: 'already_initialized' });
           span.setStatus({ code: SpanStatusCode.OK });
           return;
         }
@@ -151,7 +158,7 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
           console.log('[useBacklogCore] Not a Backlog.md project');
           setIsBacklogProject(false);
           setCore(null);
-          span.setAttributes({ 'output.isBacklogProject': false });
+          span.addEvent('backlog.core.init.skipped', { reason: 'not_backlog_project' });
           span.setStatus({ code: SpanStatusCode.OK });
           return;
         }
@@ -196,8 +203,8 @@ export function useBacklogCore(options?: UseBacklogCoreOptions): UseBacklogCoreR
         setIsInitializing(false);
         span.end();
       }
-    });
-  }, [context, actions, core, fetchFileContent]);
+    }));
+  }, [context, actions, core, fetchFileContent, parentSpan]);
 
   // Initialize on mount or when context changes
   useEffect(() => {

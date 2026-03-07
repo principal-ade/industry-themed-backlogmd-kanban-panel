@@ -27,7 +27,7 @@ import { useMilestoneData } from './milestone/hooks/useMilestoneData';
 import { useBacklogCore } from '../hooks/useBacklogCore';
 import { MilestoneModal } from './milestone/components/MilestoneModal';
 import { Core, type Task, type TaskCreateInput, type TaskUpdateInput, type Milestone, type MilestoneCreateInput, type MilestoneUpdateInput, DEFAULT_TASK_STATUSES } from '@backlog-md/core';
-import { getTracer, getActiveSpan, withSpan, SpanStatusCode } from '../telemetry';
+import { getTracer, getActiveSpan, withSpan, SpanStatusCode, type Span } from '../telemetry';
 
 type ViewMode = 'board' | 'milestones';
 
@@ -77,6 +77,22 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
   // Debounce timer for search telemetry
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Board session span - parent for core init and kanban load
+  const boardSessionSpanRef = useRef<Span | null>(null);
+  const boardSessionStartedRef = useRef(false);
+
+  // Create board.session span on mount (before hooks run)
+  if (!boardSessionStartedRef.current) {
+    boardSessionStartedRef.current = true;
+    const tracer = getTracer();
+    boardSessionSpanRef.current = tracer.startSpan('board.session', {
+      attributes: {
+        'panel.id': 'kanban-panel',
+      },
+    });
+    boardSessionSpanRef.current.addEvent('board.session.started');
+  }
 
   // Emit panel.initialized on mount
   useEffect(() => {
@@ -199,7 +215,7 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     isInitializing: isCoreInitializing,
     isBacklogProject,
     canWrite,
-  } = useBacklogCore({ context, actions });
+  } = useBacklogCore({ context, actions, parentSpan: boardSessionSpanRef.current ?? undefined });
 
   const {
     statusColumns,
@@ -216,10 +232,26 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     actions,
     events,
     tasksLimit: 20,
+    parentSpan: boardSessionSpanRef.current ?? undefined,
   });
 
   // Combined loading state
   const isLoading = isCoreInitializing || isKanbanLoading;
+
+  // End board.session span when initialization completes
+  const boardSessionEndedRef = useRef(false);
+  useEffect(() => {
+    if (!isLoading && boardSessionSpanRef.current && !boardSessionEndedRef.current) {
+      boardSessionEndedRef.current = true;
+      const span = boardSessionSpanRef.current;
+      span.addEvent('board.session.complete', {
+        'is.backlog.project': isBacklogProject,
+        'has.error': Boolean(error),
+      });
+      span.setStatus({ code: error ? SpanStatusCode.ERROR : SpanStatusCode.OK });
+      span.end();
+    }
+  }, [isLoading, isBacklogProject, error]);
 
   // Milestone data hook (always called to satisfy React hook rules)
   const {
@@ -230,29 +262,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
   } = useMilestoneData({
     core,
   });
-
-  // Track ref to emit kanban.skipped only once
-  const hasEmittedSkipped = useRef(false);
-
-  // Emit kanban.skipped when not a backlog project
-  useEffect(() => {
-    if (!isLoading && !isBacklogProject && !hasEmittedSkipped.current) {
-      hasEmittedSkipped.current = true;
-      const tracer = getTracer();
-      const span = tracer.startSpan('board.interaction', {
-        attributes: { 'is.backlog.project': false },
-      });
-      span.addEvent('kanban.skipped', {
-        'reason': 'not_backlog_project',
-      });
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
-    }
-    // Reset when project status changes (e.g., after initialization)
-    if (isBacklogProject) {
-      hasEmittedSkipped.current = false;
-    }
-  }, [isLoading, isBacklogProject]);
 
   // Filter tasks by search query
   const filteredTasksByStatus = useMemo(() => {
@@ -414,14 +423,20 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
       // Skip events emitted by this panel to avoid infinite loops
       if (event.source === 'kanban-panel') return;
 
+      console.log('[KanbanPanel] Received task:selected event:', event.source, event.payload);
+
       const payload = event.payload as { taskId?: string };
       if (payload?.taskId) {
         const task = getTaskById(payload.taskId);
+        console.log('[KanbanPanel] getTaskById result:', payload.taskId, '->', task ? `found: ${task.title}` : 'NOT FOUND');
+
         if (task) {
           // Trigger full selection flow (telemetry + event emission)
+          console.log('[KanbanPanel] Calling handleTaskClick (same as user click)');
           handleTaskClick(task);
         } else {
-          // Task not loaded yet, just set the ID
+          // Task not loaded yet - just set the ID, don't navigate
+          console.log('[KanbanPanel] Task not found, only setting selectedTaskId (NO navigation)');
           setSelectedTaskId(payload.taskId);
         }
       }

@@ -33,21 +33,8 @@
       }
     },
     {
-      "id": "non-backlog",
-      "priority": 3,
-      "description": "Non-backlog project detected",
-      "template": {
-        "events": {
-          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
-          "kanban.loading": "Checking project type (is backlog: {{is.backlog.project}})",
-          "kanban.skipped": "Skipped: {{reason}}"
-        },
-        "summary": "Not a backlog project"
-      }
-    },
-    {
       "id": "error",
-      "priority": 4,
+      "priority": 3,
       "description": "Board failed to load",
       "template": {
         "events": {

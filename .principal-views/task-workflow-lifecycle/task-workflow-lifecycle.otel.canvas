@@ -1,11 +1,181 @@
 {
   "nodes": [
     {
+      "id": "board-session-started",
+      "type": "text",
+      "text": "# Board Session Started\n\nParent span for board initialization",
+      "x": -741,
+      "y": -355,
+      "width": 220,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "initialization",
+        "status": "implemented",
+        "event": {
+          "name": "board.session.started"
+        },
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
+      }
+    },
+    {
+      "id": "board-session-complete",
+      "type": "text",
+      "text": "# Board Session Complete\n\nBoard initialization finished",
+      "x": 97,
+      "y": 238,
+      "width": 220,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "initialization",
+        "status": "implemented",
+        "event": {
+          "name": "board.session.complete"
+        },
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-init-started",
+      "type": "text",
+      "text": "# Core Init Started\n\nInitializing Backlog.md Core",
+      "x": -447,
+      "y": -354,
+      "width": 200,
+      "height": 100,
+      "color": "5",
+      "pv": {
+        "nodeType": "data-loading",
+        "status": "implemented",
+        "event": {
+          "name": "backlog.core.init.started"
+        },
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/hooks/useBacklogCore.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-init-complete",
+      "type": "text",
+      "text": "# Core Init Complete\n\nCore library initialized",
+      "x": -447,
+      "y": -147,
+      "width": 200,
+      "height": 100,
+      "color": "4",
+      "pv": {
+        "nodeType": "data-loaded",
+        "status": "implemented",
+        "event": {
+          "name": "backlog.core.init.complete",
+          "attributes": {
+            "duration.ms": {
+              "type": "number",
+              "required": false
+            },
+            "fileCount": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/hooks/useBacklogCore.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-init-skipped",
+      "type": "text",
+      "text": "# Core Init Skipped\n\nCore initialization skipped",
+      "x": -83,
+      "y": -296,
+      "width": 200,
+      "height": 100,
+      "color": "3",
+      "pv": {
+        "nodeType": "data-loaded",
+        "status": "implemented",
+        "event": {
+          "name": "backlog.core.init.skipped",
+          "attributes": {
+            "reason": {
+              "type": "string",
+              "required": true
+            }
+          }
+        },
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/hooks/useBacklogCore.ts"
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-init-error",
+      "type": "text",
+      "text": "# Core Init Error\n\nCore initialization failed",
+      "x": -84,
+      "y": -436,
+      "width": 200,
+      "height": 100,
+      "color": "1",
+      "pv": {
+        "nodeType": "error",
+        "status": "implemented",
+        "event": {
+          "name": "backlog.core.init.error",
+          "attributes": {
+            "error.type": {
+              "type": "string",
+              "required": true
+            },
+            "error.message": {
+              "type": "string",
+              "required": true
+            }
+          }
+        },
+        "otel": {
+          "kind": "event",
+          "category": "error",
+          "files": [
+            "src/hooks/useBacklogCore.ts"
+          ]
+        }
+      }
+    },
+    {
       "id": "panel-initialized",
       "type": "text",
       "text": "# Panel Initialized\n\nKanban panel mounted and context ready",
-      "x": -200,
-      "y": 0,
+      "x": -744,
+      "y": 27,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -15,20 +185,35 @@
         "event": {
           "name": "panel.initialized",
           "attributes": {
-            "panel.id": { "type": "string", "required": true },
-            "has.file.tree": { "type": "boolean", "required": true },
-            "has.file.system": { "type": "boolean", "required": true }
+            "panel.id": {
+              "type": "string",
+              "required": true
+            },
+            "has.file.tree": {
+              "type": "boolean",
+              "required": true
+            },
+            "has.file.system": {
+              "type": "boolean",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "kanban-loading",
       "type": "text",
       "text": "# Loading Tasks\n\nFetching tasks from backlog",
-      "x": 50,
-      "y": 0,
+      "x": -448,
+      "y": 28,
       "width": 200,
       "height": 100,
       "color": "5",
@@ -36,20 +221,23 @@
         "nodeType": "data-loading",
         "status": "implemented",
         "event": {
-          "name": "kanban.loading",
-          "attributes": {
-            "is.backlog.project": { "type": "boolean", "required": true }
-          }
+          "name": "kanban.loading"
         },
-        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "kanban-loaded",
       "type": "text",
       "text": "# Tasks Loaded\n\nKanban board ready with tasks",
-      "x": 300,
-      "y": 0,
+      "x": 107,
+      "y": 28,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -59,41 +247,36 @@
         "event": {
           "name": "kanban.loaded",
           "attributes": {
-            "tasks.count": { "type": "number", "required": true },
-            "columns.count": { "type": "number", "required": true },
-            "has.more": { "type": "boolean", "required": false }
+            "tasks.count": {
+              "type": "number",
+              "required": true
+            },
+            "columns.count": {
+              "type": "number",
+              "required": true
+            },
+            "has.more": {
+              "type": "boolean",
+              "required": false,
+              "display": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
-      }
-    },
-    {
-      "id": "kanban-skipped",
-      "type": "text",
-      "text": "# Kanban Skipped\n\nNot a backlog project - skipped loading",
-      "x": 50,
-      "y": -140,
-      "width": 200,
-      "height": 100,
-      "color": "3",
-      "pv": {
-        "nodeType": "data-loaded",
-        "status": "implemented",
-        "event": {
-          "name": "kanban.skipped",
-          "attributes": {
-            "reason": { "type": "string", "required": false }
-          }
-        },
-        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "kanban-load-error",
       "type": "text",
       "text": "# Load Error\n\nFailed to load tasks from backlog",
-      "x": 50,
-      "y": 140,
+      "x": -216,
+      "y": 258,
       "width": 200,
       "height": 100,
       "color": "1",
@@ -103,19 +286,31 @@
         "event": {
           "name": "kanban.load.error",
           "attributes": {
-            "error.type": { "type": "string", "required": true },
-            "error.message": { "type": "string", "required": true }
+            "error.type": {
+              "type": "string",
+              "required": true
+            },
+            "error.message": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "error", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "error",
+          "files": [
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "kanban-load-more",
       "type": "text",
       "text": "# Load More\n\nFetching additional tasks (pagination)",
-      "x": 300,
-      "y": 140,
+      "x": -166,
+      "y": -146,
       "width": 200,
       "height": 100,
       "color": "5",
@@ -125,40 +320,62 @@
         "event": {
           "name": "kanban.load.more",
           "attributes": {
-            "offset": { "type": "number", "required": true },
-            "limit": { "type": "number", "required": true }
+            "offset": {
+              "type": "number",
+              "required": true
+            },
+            "limit": {
+              "type": "number",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "lifecycle", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "lifecycle",
+          "files": [
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
-      "id": "empty-action-clicked",
+      "id": "create-task-clicked",
       "type": "text",
-      "text": "# Empty Action Clicked\n\nUser clicked CTA on empty board",
-      "x": 300,
-      "y": -140,
+      "text": "# Create Task Clicked\n\nUser clicked add task button",
+      "x": 543,
+      "y": -537,
       "width": 200,
       "height": 100,
       "color": "2",
       "pv": {
         "nodeType": "interaction",
-        "status": "implemented",
+        "status": "approved",
         "event": {
-          "name": "empty.action.clicked",
+          "name": "create.task.clicked",
           "attributes": {
-            "action.type": { "type": "string", "required": true }
+            "source": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/components/BoardEmptyState.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx",
+            "src/panels/kanban/components/BoardEmptyState.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-selected",
       "type": "text",
       "text": "# Task Selected\n\nUser clicked on a task card",
-      "x": 550,
-      "y": -140,
+      "x": 539,
+      "y": -201,
       "width": 200,
       "height": 100,
       "color": "2",
@@ -168,19 +385,61 @@
         "event": {
           "name": "task.selected",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "task.status": { "type": "string", "required": false }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "task.status": {
+              "type": "string",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
+      }
+    },
+    {
+      "id": "task-selected-emitted",
+      "type": "text",
+      "text": "# Event Emitted\n\ntask:selected sent to TaskDetailPanel",
+      "x": 820,
+      "y": -202,
+      "width": 200,
+      "height": 100,
+      "color": "6",
+      "pv": {
+        "nodeType": "interaction",
+        "status": "approved",
+        "event": {
+          "name": "task.selected.emitted",
+          "attributes": {
+            "task.id": {
+              "type": "string",
+              "required": true
+            }
+          }
+        },
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-drag-started",
       "type": "text",
       "text": "# Drag Started\n\nUser started dragging a task",
-      "x": 550,
-      "y": 0,
+      "x": 540,
+      "y": -711,
       "width": 200,
       "height": 100,
       "color": "2",
@@ -190,19 +449,31 @@
         "event": {
           "name": "task.drag.started",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "from.status": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "from.status": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-moved",
       "type": "text",
       "text": "# Task Moved\n\nUser dropped task in new column",
-      "x": 800,
-      "y": -70,
+      "x": 943,
+      "y": -659,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -212,20 +483,35 @@
         "event": {
           "name": "task.moved",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "from.status": { "type": "string", "required": true },
-            "to.status": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "from.status": {
+              "type": "string",
+              "required": true
+            },
+            "to.status": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "task-drag-cancelled",
       "type": "text",
       "text": "# Drag Cancelled\n\nUser cancelled drag operation",
-      "x": 800,
-      "y": 70,
+      "x": 945,
+      "y": -807,
       "width": 200,
       "height": 100,
       "color": "3",
@@ -235,19 +521,31 @@
         "event": {
           "name": "task.drag.cancelled",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "from.status": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "from.status": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "filter-cleared",
       "type": "text",
       "text": "# Filter Cleared\n\nUser cleared active filters",
-      "x": 550,
-      "y": 260,
+      "x": 828,
+      "y": 273,
       "width": 200,
       "height": 100,
       "color": "6",
@@ -257,18 +555,27 @@
         "event": {
           "name": "filter.cleared",
           "attributes": {
-            "filters.count": { "type": "number", "required": false }
+            "filters.count": {
+              "type": "number",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "search-performed",
       "type": "text",
       "text": "# Search Performed\n\nUser searched for tasks",
-      "x": 550,
-      "y": 380,
+      "x": 540,
+      "y": 274,
       "width": 200,
       "height": 100,
       "color": "6",
@@ -278,19 +585,31 @@
         "event": {
           "name": "search.performed",
           "attributes": {
-            "search.query": { "type": "string", "required": true },
-            "results.count": { "type": "number", "required": false }
+            "search.query": {
+              "type": "string",
+              "required": true
+            },
+            "results.count": {
+              "type": "number",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "column-selected",
       "type": "text",
       "text": "# Column Selected\n\nUser switched to different status tab",
-      "x": 550,
-      "y": 500,
+      "x": 539,
+      "y": 124,
       "width": 200,
       "height": 100,
       "color": "6",
@@ -300,19 +619,31 @@
         "event": {
           "name": "column.selected",
           "attributes": {
-            "column.status": { "type": "string", "required": true },
-            "column.previous": { "type": "string", "required": true }
+            "column.status": {
+              "type": "string",
+              "required": true
+            },
+            "column.previous": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "modal-opened",
       "type": "text",
       "text": "# Modal Opened\n\nTask modal opened for create/edit",
-      "x": 1050,
-      "y": -140,
+      "x": 1073,
+      "y": -537,
       "width": 200,
       "height": 100,
       "color": "6",
@@ -322,19 +653,31 @@
         "event": {
           "name": "modal.opened",
           "attributes": {
-            "modal.mode": { "type": "string", "required": true },
-            "task.id": { "type": "string", "required": false }
+            "modal.mode": {
+              "type": "string",
+              "required": true
+            },
+            "task.id": {
+              "type": "string",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "modal-cancelled",
       "type": "text",
       "text": "# Modal Cancelled\n\nUser closed modal without saving",
-      "x": 1050,
-      "y": 140,
+      "x": 1074,
+      "y": -380,
       "width": 200,
       "height": 100,
       "color": "3",
@@ -344,19 +687,31 @@
         "event": {
           "name": "modal.cancelled",
           "attributes": {
-            "modal.mode": { "type": "string", "required": true },
-            "had.changes": { "type": "boolean", "required": false }
+            "modal.mode": {
+              "type": "string",
+              "required": true
+            },
+            "had.changes": {
+              "type": "boolean",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-created",
       "type": "text",
       "text": "# Task Created\n\nNew task added to backlog",
-      "x": 1300,
-      "y": -140,
+      "x": 1369,
+      "y": -468,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -366,20 +721,35 @@
         "event": {
           "name": "task.created",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "task.status": { "type": "string", "required": true },
-            "file.path": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "task.status": {
+              "type": "string",
+              "required": true
+            },
+            "file.path": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "mutation",
+          "files": [
+            "src/panels/KanbanPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-updated",
       "type": "text",
       "text": "# Task Updated\n\nTask details modified",
-      "x": 1300,
-      "y": 0,
+      "x": 1466,
+      "y": -657,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -389,19 +759,32 @@
         "event": {
           "name": "task.updated",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "updated.fields": { "type": "string", "required": false }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "updated.fields": {
+              "type": "string",
+              "required": false
+            }
           }
         },
-        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "mutation",
+          "files": [
+            "src/panels/KanbanPanel.tsx",
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "task-deleted",
       "type": "text",
       "text": "# Task Deleted\n\nTask removed from backlog",
-      "x": 1300,
-      "y": 140,
+      "x": 1217,
+      "y": -242,
       "width": 200,
       "height": 100,
       "color": "4",
@@ -411,18 +794,27 @@
         "event": {
           "name": "task.deleted",
           "attributes": {
-            "task.id": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "mutation", "files": ["src/panels/TaskDetailPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "mutation",
+          "files": [
+            "src/panels/TaskDetailPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "task-save-error",
       "type": "text",
       "text": "# Save Error\n\nFailed to save task changes",
-      "x": 1300,
-      "y": 280,
+      "x": 1807,
+      "y": -370,
       "width": 200,
       "height": 100,
       "color": "1",
@@ -432,21 +824,40 @@
         "event": {
           "name": "task.save.error",
           "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "operation": { "type": "string", "required": true },
-            "error.type": { "type": "string", "required": true },
-            "error.message": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            },
+            "operation": {
+              "type": "string",
+              "required": true
+            },
+            "error.type": {
+              "type": "string",
+              "required": true
+            },
+            "error.message": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "error", "files": ["src/panels/KanbanPanel.tsx", "src/panels/kanban/hooks/useKanbanData.ts"] }
+        "otel": {
+          "kind": "event",
+          "category": "error",
+          "files": [
+            "src/panels/KanbanPanel.tsx",
+            "src/panels/kanban/hooks/useKanbanData.ts"
+          ]
+        }
       }
     },
     {
       "id": "task-deselected",
       "type": "text",
       "text": "# Task Deselected\n\nUser closed the task detail panel",
-      "x": 550,
-      "y": -280,
+      "x": 538,
+      "y": -49,
       "width": 200,
       "height": 100,
       "color": "2",
@@ -456,18 +867,27 @@
         "event": {
           "name": "task.deselected",
           "attributes": {
-            "task.id": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/TaskDetailPanel.tsx"
+          ]
+        }
       }
     },
     {
       "id": "delete-modal-opened",
       "type": "text",
       "text": "# Delete Modal Opened\n\nUser opened delete confirmation",
-      "x": 1050,
-      "y": 280,
+      "x": 542,
+      "y": -369,
       "width": 200,
       "height": 100,
       "color": "6",
@@ -477,36 +897,56 @@
         "event": {
           "name": "delete.modal.opened",
           "attributes": {
-            "task.id": { "type": "string", "required": true }
+            "task.id": {
+              "type": "string",
+              "required": true
+            }
           }
         },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
-      }
-    },
-    {
-      "id": "task-assign-requested",
-      "type": "text",
-      "text": "# Assign to Claude\n\nUser requested Claude assignment",
-      "x": 1050,
-      "y": 0,
-      "width": 200,
-      "height": 100,
-      "color": "2",
-      "pv": {
-        "nodeType": "interaction",
-        "status": "implemented",
-        "event": {
-          "name": "task.assign.requested",
-          "attributes": {
-            "task.id": { "type": "string", "required": true },
-            "task.title": { "type": "string", "required": false }
-          }
-        },
-        "otel": { "kind": "event", "category": "interaction", "files": ["src/panels/TaskDetailPanel.tsx"] }
+        "otel": {
+          "kind": "event",
+          "category": "interaction",
+          "files": [
+            "src/panels/TaskDetailPanel.tsx"
+          ]
+        }
       }
     }
   ],
   "edges": [
+    {
+      "id": "session-started-to-core-init",
+      "fromNode": "board-session-started",
+      "toNode": "core-init-started",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "init core",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "core-init-started-to-complete",
+      "fromNode": "core-init-started",
+      "toNode": "core-init-complete",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "success",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "core-init-complete-to-loading",
+      "fromNode": "core-init-complete",
+      "toNode": "kanban-loading",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "core ready",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
     {
       "id": "init-to-loading",
       "fromNode": "panel-initialized",
@@ -514,7 +954,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "fetch tasks",
-      "pv": { "edgeType": "trigger" }
+      "pv": {
+        "edgeType": "trigger"
+      }
     },
     {
       "id": "loading-to-loaded",
@@ -523,7 +965,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "success",
-      "pv": { "edgeType": "flow" }
+      "pv": {
+        "edgeType": "flow"
+      }
     },
     {
       "id": "loading-to-error",
@@ -532,61 +976,20 @@
       "fromSide": "bottom",
       "toSide": "top",
       "label": "failure",
-      "pv": { "edgeType": "flow" }
+      "pv": {
+        "edgeType": "flow"
+      }
     },
     {
-      "id": "loading-to-skipped",
-      "fromNode": "kanban-loading",
-      "toNode": "kanban-skipped",
-      "fromSide": "top",
-      "toSide": "bottom",
-      "label": "not backlog",
-      "pv": { "edgeType": "flow" }
-    },
-    {
-      "id": "loaded-to-load-more",
-      "fromNode": "kanban-loaded",
-      "toNode": "kanban-load-more",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "paginate",
-      "pv": { "edgeType": "trigger" }
-    },
-    {
-      "id": "load-more-to-loaded",
-      "fromNode": "kanban-load-more",
-      "toNode": "kanban-loaded",
-      "fromSide": "top",
-      "toSide": "bottom",
-      "label": "append",
-      "pv": { "edgeType": "update" }
-    },
-    {
-      "id": "loaded-to-empty-action",
-      "fromNode": "kanban-loaded",
-      "toNode": "empty-action-clicked",
-      "fromSide": "top",
-      "toSide": "bottom",
-      "label": "empty state",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "loaded-to-selected",
-      "fromNode": "kanban-loaded",
-      "toNode": "task-selected",
+      "id": "selected-to-emitted",
+      "fromNode": "task-selected",
+      "toNode": "task-selected-emitted",
       "fromSide": "right",
       "toSide": "left",
-      "label": "click task",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "loaded-to-drag-started",
-      "fromNode": "kanban-loaded",
-      "toNode": "task-drag-started",
-      "fromSide": "right",
-      "toSide": "left",
-      "label": "start drag",
-      "pv": { "edgeType": "interaction" }
+      "label": "emit event",
+      "pv": {
+        "edgeType": "emit"
+      }
     },
     {
       "id": "drag-to-moved",
@@ -595,7 +998,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "drop",
-      "pv": { "edgeType": "flow" }
+      "pv": {
+        "edgeType": "flow"
+      }
     },
     {
       "id": "drag-to-cancelled",
@@ -604,7 +1009,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "cancel",
-      "pv": { "edgeType": "flow" }
+      "pv": {
+        "edgeType": "flow"
+      }
     },
     {
       "id": "moved-to-updated",
@@ -613,61 +1020,20 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "persist",
-      "pv": { "edgeType": "trigger" }
+      "pv": {
+        "edgeType": "trigger"
+      }
     },
     {
-      "id": "loaded-to-search",
-      "fromNode": "kanban-loaded",
-      "toNode": "search-performed",
-      "fromSide": "bottom",
-      "toSide": "left",
-      "label": "search",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "loaded-to-column-selected",
-      "fromNode": "kanban-loaded",
-      "toNode": "column-selected",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "switch tab",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "search-to-cleared",
-      "fromNode": "search-performed",
-      "toNode": "filter-cleared",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "clear",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "selected-to-modal",
-      "fromNode": "task-selected",
+      "id": "create-task-to-modal",
+      "fromNode": "create-task-clicked",
       "toNode": "modal-opened",
       "fromSide": "right",
       "toSide": "left",
-      "label": "edit",
-      "pv": { "edgeType": "trigger" }
-    },
-    {
-      "id": "empty-to-modal",
-      "fromNode": "empty-action-clicked",
-      "toNode": "modal-opened",
-      "fromSide": "right",
-      "toSide": "left",
-      "label": "create",
-      "pv": { "edgeType": "trigger" }
-    },
-    {
-      "id": "modal-to-created",
-      "fromNode": "modal-opened",
-      "toNode": "task-created",
-      "fromSide": "right",
-      "toSide": "left",
-      "label": "save new",
-      "pv": { "edgeType": "trigger" }
+      "label": "open modal",
+      "pv": {
+        "edgeType": "trigger"
+      }
     },
     {
       "id": "modal-to-updated",
@@ -676,7 +1042,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "save edit",
-      "pv": { "edgeType": "trigger" }
+      "pv": {
+        "edgeType": "trigger"
+      }
     },
     {
       "id": "modal-to-cancelled",
@@ -685,79 +1053,9 @@
       "fromSide": "bottom",
       "toSide": "top",
       "label": "cancel",
-      "pv": { "edgeType": "flow" }
-    },
-    {
-      "id": "created-to-error",
-      "fromNode": "task-created",
-      "toNode": "task-save-error",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "failure",
-      "pv": { "edgeType": "flow" }
-    },
-    {
-      "id": "updated-to-error",
-      "fromNode": "task-updated",
-      "toNode": "task-save-error",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "failure",
-      "pv": { "edgeType": "flow" }
-    },
-    {
-      "id": "deleted-to-error",
-      "fromNode": "task-deleted",
-      "toNode": "task-save-error",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "failure",
-      "pv": { "edgeType": "flow" }
-    },
-    {
-      "id": "created-to-loaded",
-      "fromNode": "task-created",
-      "toNode": "kanban-loaded",
-      "fromSide": "left",
-      "toSide": "right",
-      "label": "refresh",
-      "pv": { "edgeType": "update" }
-    },
-    {
-      "id": "updated-to-loaded",
-      "fromNode": "task-updated",
-      "toNode": "kanban-loaded",
-      "fromSide": "left",
-      "toSide": "right",
-      "label": "refresh",
-      "pv": { "edgeType": "update" }
-    },
-    {
-      "id": "deleted-to-loaded",
-      "fromNode": "task-deleted",
-      "toNode": "kanban-loaded",
-      "fromSide": "left",
-      "toSide": "right",
-      "label": "refresh",
-      "pv": { "edgeType": "update" }
-    },
-    {
-      "id": "selected-to-deselected",
-      "fromNode": "task-selected",
-      "toNode": "task-deselected",
-      "fromSide": "top",
-      "toSide": "bottom",
-      "label": "close",
-      "pv": { "edgeType": "interaction" }
-    },
-    {
-      "id": "selected-to-delete-modal",
-      "fromNode": "task-selected",
-      "toNode": "delete-modal-opened",
-      "fromSide": "right",
-      "toSide": "left",
-      "label": "delete",
-      "pv": { "edgeType": "interaction" }
+      "pv": {
+        "edgeType": "flow"
+      }
     },
     {
       "id": "delete-modal-to-deleted",
@@ -766,16 +1064,9 @@
       "fromSide": "right",
       "toSide": "left",
       "label": "confirm",
-      "pv": { "edgeType": "trigger" }
-    },
-    {
-      "id": "selected-to-assign",
-      "fromNode": "task-selected",
-      "toNode": "task-assign-requested",
-      "fromSide": "right",
-      "toSide": "left",
-      "label": "assign claude",
-      "pv": { "edgeType": "interaction" }
+      "pv": {
+        "edgeType": "trigger"
+      }
     },
     {
       "id": "deselected-to-loaded",
@@ -784,7 +1075,139 @@
       "fromSide": "left",
       "toSide": "top",
       "label": "return",
-      "pv": { "edgeType": "flow" }
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-core-init-started-core-init-error-1772858262496",
+      "fromNode": "core-init-started",
+      "toNode": "core-init-error",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-core-init-started-core-init-skipped-1772858262496",
+      "fromNode": "core-init-started",
+      "toNode": "core-init-skipped",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-kanban-loaded-board-session-complete-1772858262497",
+      "fromNode": "kanban-loaded",
+      "toNode": "board-session-complete",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-kanban-load-more-kanban-loaded-1772861178315",
+      "fromNode": "kanban-load-more",
+      "toNode": "kanban-loaded",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-task-selected-task-deselected-1772861729126",
+      "fromNode": "task-selected",
+      "toNode": "task-deselected",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "pv": {
+        "edgeType": "interaction"
+      }
+    },
+    {
+      "id": "edge-modal-opened-task-created-1772861729126",
+      "fromNode": "modal-opened",
+      "toNode": "task-created",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "trigger"
+      }
+    },
+    {
+      "id": "edge-task-deleted-kanban-loaded-1772861729126",
+      "fromNode": "task-deleted",
+      "toNode": "kanban-loaded",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-task-created-kanban-loaded-1772861729126",
+      "fromNode": "task-created",
+      "toNode": "kanban-loaded",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-task-updated-kanban-loaded-1772861729126",
+      "fromNode": "task-updated",
+      "toNode": "kanban-loaded",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "pv": {
+        "edgeType": "update"
+      }
+    },
+    {
+      "id": "edge-task-deleted-task-save-error-1772861729126",
+      "fromNode": "task-deleted",
+      "toNode": "task-save-error",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-task-created-task-save-error-1772861729126",
+      "fromNode": "task-created",
+      "toNode": "task-save-error",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-task-updated-task-save-error-1772861729126",
+      "fromNode": "task-updated",
+      "toNode": "task-save-error",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "flow"
+      }
+    },
+    {
+      "id": "edge-search-performed-filter-cleared-1772861753685",
+      "fromNode": "search-performed",
+      "toNode": "filter-cleared",
+      "fromSide": "right",
+      "toSide": "left",
+      "pv": {
+        "edgeType": "interaction"
+      }
     }
   ],
   "pv": {
