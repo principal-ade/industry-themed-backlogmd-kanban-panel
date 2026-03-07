@@ -13,6 +13,7 @@
       "template": {
         "events": {
           "board.session.started": "Board session started",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized ({{fileCount}} files, {{duration.ms}}ms)",
           "kanban.loading": "Loading tasks from backlog",
@@ -29,6 +30,7 @@
       "template": {
         "events": {
           "board.session.started": "Board session started",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized",
           "kanban.loading": "Loading tasks from backlog",
@@ -45,6 +47,7 @@
       "template": {
         "events": {
           "board.session.started": "Board session started",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Checking project",
           "backlog.core.init.skipped": "Skipped: {{reason}}",
           "board.session.complete": "Session complete"
@@ -59,6 +62,7 @@
       "template": {
         "events": {
           "board.session.started": "Board session started",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.error": "Core init failed: {{error.type}} - {{error.message}}",
           "board.session.complete": "Session complete (has error: true)"
@@ -73,6 +77,7 @@
       "template": {
         "events": {
           "board.session.started": "Board session started",
+          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized",
           "kanban.loading": "Loading tasks from backlog",

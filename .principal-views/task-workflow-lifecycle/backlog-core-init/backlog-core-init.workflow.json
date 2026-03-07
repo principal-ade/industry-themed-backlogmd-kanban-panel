@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "canvas": ".principal-views/task-workflow-lifecycle/task-workflow-lifecycle.otel.canvas",
+  "name": "Backlog Core Init",
+  "description": "Core library initialization - detects backlog project and initializes Core instance",
+  "spanPattern": "backlog.core.init",
+  "mode": "span-tree",
+  "scenarios": [
+    {
+      "id": "success",
+      "priority": 1,
+      "description": "Core initialized successfully",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.complete": "Core initialized ({{fileCount}} files, {{duration.ms}}ms)"
+        },
+        "summary": "Core ready: {{fileCount}} files"
+      }
+    },
+    {
+      "id": "skipped-already-initialized",
+      "priority": 2,
+      "description": "Skipped because Core was already initialized for this version",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Checking Core status",
+          "backlog.core.init.skipped": "Skipped: {{reason}}"
+        },
+        "summary": "Already initialized"
+      }
+    },
+    {
+      "id": "skipped-not-backlog",
+      "priority": 3,
+      "description": "Skipped because project is not a Backlog.md project",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Checking project type",
+          "backlog.core.init.skipped": "Skipped: {{reason}}"
+        },
+        "summary": "Not a backlog project"
+      }
+    },
+    {
+      "id": "skipped-no-filetree",
+      "priority": 4,
+      "description": "Skipped because file tree is not available",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Checking file tree",
+          "backlog.core.init.skipped": "Skipped: {{reason}}"
+        },
+        "summary": "No file tree"
+      }
+    },
+    {
+      "id": "skipped-no-context",
+      "priority": 5,
+      "description": "Skipped because panel context is not available",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Checking context",
+          "backlog.core.init.skipped": "Skipped: {{reason}}"
+        },
+        "summary": "No context"
+      }
+    },
+    {
+      "id": "error",
+      "priority": 6,
+      "description": "Core initialization failed",
+      "template": {
+        "events": {
+          "backlog.core.init.started": "Initializing Core library",
+          "backlog.core.init.error": "Init failed: {{error.type}} - {{error.message}}"
+        },
+        "summary": "Init error: {{error.type}}"
+      }
+    }
+  ]
+}

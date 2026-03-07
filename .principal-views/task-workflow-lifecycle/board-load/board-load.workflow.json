@@ -12,7 +12,6 @@
       "description": "Backlog board initialized and tasks loaded",
       "template": {
         "events": {
-          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
           "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns (has more: {{has.more}})"
         },
@@ -25,7 +24,6 @@
       "description": "Backlog board initialized with no tasks",
       "template": {
         "events": {
-          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
           "kanban.loaded": "No tasks found (has more: {{has.more}})"
         },
@@ -38,7 +36,6 @@
       "description": "Board failed to load",
       "template": {
         "events": {
-          "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "kanban.loading": "Loading tasks... (is backlog: {{is.backlog.project}})",
           "kanban.load.error": "Load failed: {{error.type}} - {{error.message}}"
         },

@@ -94,21 +94,15 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
     boardSessionSpanRef.current.addEvent('board.session.started');
   }
 
-  // Emit panel.initialized on mount
+  // Emit panel.initialized on mount (add to board.session span)
   useEffect(() => {
-    const tracer = getTracer();
-    const span = tracer.startSpan('panel.lifecycle', {
-      attributes: {
+    if (boardSessionSpanRef.current) {
+      boardSessionSpanRef.current.addEvent('panel.initialized', {
         'panel.id': 'kanban-panel',
-      },
-    });
-    span.addEvent('panel.initialized', {
-      'panel.id': 'kanban-panel',
-      'has.file.tree': Boolean(context?.fileTree?.data),
-      'has.file.system': Boolean(actions?.writeFile),
-    });
-    span.setStatus({ code: SpanStatusCode.OK });
-    span.end();
+        'has.file.tree': Boolean(context?.fileTree?.data),
+        'has.file.system': Boolean(actions?.writeFile),
+      });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 

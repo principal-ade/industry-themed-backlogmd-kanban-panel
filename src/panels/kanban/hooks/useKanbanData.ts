@@ -153,7 +153,9 @@ export function useKanbanData(
 
     return otelContext.with(parentContext, () => tracer.startActiveSpan('kanban.load', async (span) => {
       const startTime = Date.now();
-      span.addEvent('kanban.loading');
+      span.addEvent('kanban.loading', {
+        'is.backlog.project': true,
+      });
 
       setIsLoading(true);
       setError(null);
@@ -188,7 +190,7 @@ export function useKanbanData(
           'tasks.count': allTasks.length,
           'columns.count': newColumnStates.size,
           'tasks.total': total,
-          'tasks.hasMore': paginatedResult.hasMore,
+          'has.more': paginatedResult.hasMore,
         });
         span.setAttributes({
           'output.tasksLoaded': allTasks.length,
@@ -292,6 +294,7 @@ export function useKanbanData(
           'tasks.count': newTasks.length,
           'columns.count': newColumnStates.size,
           'tasks.newlyLoaded': result.items.length,
+          'has.more': result.hasMore,
         });
         span.setAttributes({
           'output.tasksLoaded': result.items.length,
