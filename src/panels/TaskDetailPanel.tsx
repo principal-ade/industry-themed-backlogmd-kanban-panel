@@ -5,8 +5,9 @@ import { useTheme } from '@principal-ade/industry-theme';
 import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { TaskDetailPanelPropsTyped, PanelEventEmitter } from '../types';
-import type { Task } from '@backlog-md/core';
+import type { Task, Core } from '@backlog-md/core';
 import { getTracer, SpanStatusCode, type Span } from '../telemetry';
+import { useBacklogCore } from '../hooks/useBacklogCore';
 
 /** Extract GitHub issue info from a task's references */
 function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
@@ -115,10 +116,12 @@ export interface TaskDetailPanelConfig {
 }
 
 /**
- * Extended props for TaskDetailPanel that includes optional config
+ * Extended props for TaskDetailPanel that includes optional config and core
  */
 export interface TaskDetailPanelProps extends TaskDetailPanelPropsTyped {
   config?: TaskDetailPanelConfig;
+  /** Shared Core instance for task operations (delete, etc.) */
+  core?: Core | null;
 }
 
 /**
@@ -178,7 +181,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
  *
  * Listens for 'task:selected' events from other panels (e.g., KanbanPanel)
  */
-export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, events, actions, config }) => {
+export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, events, actions, config, core: coreProp }) => {
   const { theme } = useTheme();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [claudeAssignment, setClaudeAssignment] = useState<ClaudeAssignmentState>({ status: 'idle' });
@@ -189,6 +192,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
 
   // Extract config options
   const { editable = false } = config ?? {};
+
+  // Use shared Core instance from prop, or create our own via useBacklogCore
+  const { core: hookCore } = useBacklogCore({ context, actions });
+  const core = coreProp ?? hookCore;
 
   // Listen for panel focus events
   usePanelFocusListener(
@@ -268,9 +275,12 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
 
     const span = deleteSpanRef.current;
 
-    // Check if deleteTask action is available
-    if (!actions?.deleteTask) {
-      setDeleteState({ status: 'error', error: 'Delete action not available' });
+    // Check if we can delete - prefer Core, fall back to actions
+    const canDeleteWithCore = Boolean(core);
+    const canDeleteWithActions = Boolean(actions?.deleteTask);
+
+    if (!canDeleteWithCore && !canDeleteWithActions) {
+      setDeleteState({ status: 'error', error: 'Delete not available' });
       if (span) {
         span.addEvent('task.deleted', {
           'task.id': selectedTask.id,
@@ -278,10 +288,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
         span.addEvent('task.save.error', {
           'task.id': selectedTask.id,
           'operation': 'delete',
-          'error.type': 'ActionNotAvailable',
-          'error.message': 'Delete action not available',
+          'error.type': 'DeleteNotAvailable',
+          'error.message': 'Neither Core nor deleteTask action available',
         });
-        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Delete action not available' });
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Delete not available' });
         span.end();
         deleteSpanRef.current = null;
       }
@@ -291,12 +301,19 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     setDeleteState({ status: 'loading' });
 
     try {
-      await actions.deleteTask(selectedTask.id);
+      // Use Core for deletion when available (preferred)
+      if (core) {
+        await core.deleteTask(selectedTask.id);
+      } else if (actions?.deleteTask) {
+        // Fall back to actions.deleteTask for backwards compatibility
+        await actions.deleteTask(selectedTask.id);
+      }
 
       // Add task.deleted event to existing span
       if (span) {
         span.addEvent('task.deleted', {
           'task.id': selectedTask.id,
+          'delete.method': core ? 'core' : 'actions',
         });
         span.setStatus({ code: SpanStatusCode.OK });
         span.end();
@@ -339,7 +356,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
         deleteSpanRef.current = null;
       }
     }
-  }, [actions, selectedTask, events]);
+  }, [core, actions, selectedTask, events]);
 
   // Handle delete cancel (closing modal without confirming)
   const handleDeleteCancel = useCallback(() => {
