@@ -376,7 +376,9 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   useEffect(() => {
     if (!events) return;
 
-    const handleTaskSelected = (event: { payload: TaskSelectedPayload }) => {
+    const handleTaskSelected = (event: { source?: string; payload: TaskSelectedPayload }) => {
+      console.log('[TaskDetailPanel] Received task:selected event from:', event.source, 'payload:', event.payload);
+      console.log('[TaskDetailPanel] event.payload.task:', event.payload.task ? `found: ${event.payload.task.title}` : 'UNDEFINED');
       setSelectedTask(event.payload.task);
       // Reset claude assignment state when a new task is selected
       setClaudeAssignment({ status: 'idle' });

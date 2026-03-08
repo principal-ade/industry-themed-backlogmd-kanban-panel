@@ -16,8 +16,21 @@ Users need to manage tasks visually - selecting tasks to view details, assigning
 ## Design choices
 
 - Events are used for loose coupling between components (Kanban board, detail panel)
-- The `@backlog-md/core` library handles all file operations
 - File tree updates trigger automatic Kanban refresh
+
+## External interface: @backlog-md/core
+
+The panel depends on `@backlog-md/core` as a peer dependency for all task operations:
+
+```
+Panel Component → Core → PanelFileSystemAdapter → Host Actions
+```
+
+- **Core** (`@backlog-md/core`): External library providing task CRUD, parsing, and domain logic. This is the contract we depend on.
+- **PanelFileSystemAdapter**: Bridges Core's `FileSystemAdapter` interface to host panel actions (`readFile`, `writeFile`, `deleteFile`, `createDir`).
+- **Host Actions**: The actual file system implementation provided by the host environment (VS Code extension, web app, etc.)
+
+This adapter pattern allows the panel to work in any host environment that provides the required actions, while Core handles all Backlog.md-specific logic.
 
 ## Common workflow patterns
 

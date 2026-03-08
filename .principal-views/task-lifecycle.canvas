@@ -28,6 +28,16 @@
         "description": "External system",
         "color": "#6b7280",
         "shape": "rectangle"
+      },
+      "library": {
+        "description": "External npm dependency",
+        "color": "#ec4899",
+        "shape": "rectangle"
+      },
+      "adapter": {
+        "description": "Interface bridge/adapter",
+        "color": "#14b8a6",
+        "shape": "rectangle"
       }
     }
   },
@@ -150,29 +160,42 @@
       }
     },
     {
-      "id": "file-system",
+      "id": "backlog-core",
       "type": "text",
-      "text": "File System",
+      "text": "@backlog-md/core",
       "x": 680,
       "y": 500,
-      "width": 140,
-      "height": 60,
-      "pv": {
-        "nodeType": "system",
-        "description": "File system adapter for task file operations"
-      }
-    },
-    {
-      "id": "update-file-tree",
-      "type": "text",
-      "text": "Update File Tree",
-      "x": 450,
-      "y": 620,
       "width": 160,
       "height": 60,
       "pv": {
-        "nodeType": "process",
-        "description": "Updates file tree state to remove deleted file"
+        "nodeType": "library",
+        "description": "External library providing task CRUD operations, parsing, and domain logic"
+      }
+    },
+    {
+      "id": "fs-adapter",
+      "type": "text",
+      "text": "PanelFileSystemAdapter",
+      "x": 900,
+      "y": 500,
+      "width": 180,
+      "height": 60,
+      "pv": {
+        "nodeType": "adapter",
+        "description": "Bridges @backlog-md/core's FileSystemAdapter interface to host panel actions"
+      }
+    },
+    {
+      "id": "host-fs",
+      "type": "text",
+      "text": "Host File System",
+      "x": 1140,
+      "y": 500,
+      "width": 150,
+      "height": 60,
+      "pv": {
+        "nodeType": "system",
+        "description": "Host environment's file system (VS Code, web, etc.) via panel actions"
       }
     },
     {
@@ -180,12 +203,25 @@
       "type": "text",
       "text": "task:deleted",
       "x": 450,
-      "y": 740,
+      "y": 620,
       "width": 160,
       "height": 60,
       "pv": {
         "nodeType": "event",
-        "description": "Emitted after successful task deletion"
+        "description": "Emitted by panel after Core.deleteTask() succeeds"
+      }
+    },
+    {
+      "id": "update-file-tree",
+      "type": "text",
+      "text": "Update File Tree",
+      "x": 450,
+      "y": 740,
+      "width": 160,
+      "height": 60,
+      "pv": {
+        "nodeType": "process",
+        "description": "Host reacts to task:deleted by updating file tree state"
       }
     },
     {
@@ -193,7 +229,7 @@
       "type": "text",
       "text": "Refresh Kanban",
       "x": -71,
-      "y": 620,
+      "y": 740,
       "width": 160,
       "height": 60,
       "pv": {
@@ -245,33 +281,58 @@
       }
     },
     {
-      "id": "process-to-fs",
+      "id": "process-to-core",
       "fromNode": "delete-task-file",
-      "toNode": "file-system",
+      "toNode": "backlog-core",
       "fromSide": "right",
       "toSide": "left",
+      "label": "core.deleteTask()",
       "pv": {
         "edgeType": "call"
       }
     },
     {
-      "id": "delete-to-tree",
-      "fromNode": "delete-task-file",
-      "toNode": "update-file-tree",
-      "fromSide": "bottom",
-      "toSide": "top",
+      "id": "core-to-adapter",
+      "fromNode": "backlog-core",
+      "toNode": "fs-adapter",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "fs.deleteFile()",
       "pv": {
-        "edgeType": "trigger"
+        "edgeType": "call"
       }
     },
     {
-      "id": "tree-to-deleted",
-      "fromNode": "update-file-tree",
+      "id": "adapter-to-host",
+      "fromNode": "fs-adapter",
+      "toNode": "host-fs",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "actions.deleteFile()",
+      "pv": {
+        "edgeType": "call"
+      }
+    },
+    {
+      "id": "process-emits-deleted",
+      "fromNode": "delete-task-file",
       "toNode": "task-deleted-event",
       "fromSide": "bottom",
       "toSide": "top",
+      "label": "emit on success",
       "pv": {
         "edgeType": "emit"
+      }
+    },
+    {
+      "id": "deleted-triggers-tree-update",
+      "fromNode": "task-deleted-event",
+      "toNode": "update-file-tree",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "host reacts",
+      "pv": {
+        "edgeType": "trigger"
       }
     },
     {
@@ -280,6 +341,7 @@
       "toNode": "panel-focus-kanban",
       "fromSide": "left",
       "toSide": "bottom",
+      "label": "refocus UI",
       "pv": {
         "edgeType": "trigger"
       }

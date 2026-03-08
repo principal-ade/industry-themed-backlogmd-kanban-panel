@@ -397,15 +397,19 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
     // Emit task:selected event for other panels (e.g., TaskDetailPanel)
     if (events) {
+      console.log('[KanbanPanel] handleTaskClick - about to emit task:selected for:', task.id);
       events.emit({
         type: 'task:selected',
         source: 'kanban-panel',
         timestamp: Date.now(),
         payload: { taskId: task.id, task },
       });
+      console.log('[KanbanPanel] handleTaskClick - emitted task:selected');
       span.addEvent('task.selected.emitted', {
         'task.id': task.id,
       });
+    } else {
+      console.log('[KanbanPanel] handleTaskClick - events is falsy, NOT emitting');
     }
 
     span.setStatus({ code: SpanStatusCode.OK });
