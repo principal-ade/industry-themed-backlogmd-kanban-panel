@@ -397,19 +397,15 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
 
     // Emit task:selected event for other panels (e.g., TaskDetailPanel)
     if (events) {
-      console.log('[KanbanPanel] handleTaskClick - about to emit task:selected for:', task.id);
       events.emit({
         type: 'task:selected',
         source: 'kanban-panel',
         timestamp: Date.now(),
         payload: { taskId: task.id, task },
       });
-      console.log('[KanbanPanel] handleTaskClick - emitted task:selected');
       span.addEvent('task.selected.emitted', {
         'task.id': task.id,
       });
-    } else {
-      console.log('[KanbanPanel] handleTaskClick - events is falsy, NOT emitting');
     }
 
     span.setStatus({ code: SpanStatusCode.OK });
@@ -425,20 +421,14 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
       // Skip events emitted by this panel to avoid infinite loops
       if (event.source === 'kanban-panel') return;
 
-      console.log('[KanbanPanel] Received task:selected event:', event.source, event.payload);
-
       const payload = event.payload as { taskId?: string };
       if (payload?.taskId) {
         const task = getTaskById(payload.taskId);
-        console.log('[KanbanPanel] getTaskById result:', payload.taskId, '->', task ? `found: ${task.title}` : 'NOT FOUND');
-
         if (task) {
           // Trigger full selection flow (telemetry + event emission)
-          console.log('[KanbanPanel] Calling handleTaskClick (same as user click)');
           handleTaskClick(task);
         } else {
           // Task not loaded yet - just set the ID, don't navigate
-          console.log('[KanbanPanel] Task not found, only setting selectedTaskId (NO navigation)');
           setSelectedTaskId(payload.taskId);
         }
       }

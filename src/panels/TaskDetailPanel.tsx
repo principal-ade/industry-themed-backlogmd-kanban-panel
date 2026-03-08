@@ -342,7 +342,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
 
       // Add error events to existing span
       if (span) {
-        span.addEvent('task.delete.failed', {
+        span.addEvent('task.deleted', {
           'task.id': selectedTask.id,
         });
         span.addEvent('task.save.error', {
@@ -376,9 +376,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   useEffect(() => {
     if (!events) return;
 
-    const handleTaskSelected = (event: { source?: string; payload: TaskSelectedPayload }) => {
-      console.log('[TaskDetailPanel] Received task:selected event from:', event.source, 'payload:', event.payload);
-      console.log('[TaskDetailPanel] event.payload.task:', event.payload.task ? `found: ${event.payload.task.title}` : 'UNDEFINED');
+    const handleTaskSelected = (event: { payload: TaskSelectedPayload }) => {
       setSelectedTask(event.payload.task);
       // Reset claude assignment state when a new task is selected
       setClaudeAssignment({ status: 'idle' });

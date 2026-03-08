@@ -221,7 +221,13 @@
         "nodeType": "data-loading",
         "status": "implemented",
         "event": {
-          "name": "kanban.loading"
+          "name": "kanban.loading",
+          "attributes": {
+            "is.backlog.project": {
+              "type": "boolean",
+              "required": false
+            }
+          }
         },
         "otel": {
           "kind": "event",

@@ -16,7 +16,7 @@
           "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized ({{fileCount}} files, {{duration.ms}}ms)",
-          "kanban.loading": "Loading tasks from backlog",
+          "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
           "kanban.loaded": "Loaded {{tasks.count}} tasks in {{columns.count}} columns",
           "board.session.complete": "Session complete"
         },
@@ -33,7 +33,7 @@
           "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized",
-          "kanban.loading": "Loading tasks from backlog",
+          "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
           "kanban.loaded": "No tasks found (0 tasks)",
           "board.session.complete": "Session complete"
         },
@@ -80,7 +80,7 @@
           "panel.initialized": "Panel {{panel.id}} initialized (tree: {{has.file.tree}}, fs: {{has.file.system}})",
           "backlog.core.init.started": "Initializing Core library",
           "backlog.core.init.complete": "Core initialized",
-          "kanban.loading": "Loading tasks from backlog",
+          "kanban.loading": "Loading backlog (is backlog: {{is.backlog.project}})",
           "kanban.load.error": "Load failed: {{error.type}} - {{error.message}}",
           "board.session.complete": "Session complete (has error: true)"
         },
