@@ -32,6 +32,24 @@ Panel Component → Core → PanelFileSystemAdapter → Host Actions
 
 This adapter pattern allows the panel to work in any host environment that provides the required actions, while Core handles all Backlog.md-specific logic.
 
+## Event-driven orchestration
+
+The panel uses events for loose coupling between itself and the host:
+
+```
+Panel                          Host
+──────                         ────
+Delete Task File
+    │
+    ├──► core.deleteTask() ──► (file deleted via adapter)
+    │
+    └──► emit task:deleted ──► Update File Tree
+                                    │
+                                    └──► Refresh Kanban
+```
+
+Key insight: The panel emits `task:deleted` **after** Core completes successfully. The host then reacts by updating the file tree state, which triggers the Kanban board to refresh.
+
 ## Common workflow patterns
 
 1. **View and edit**: Select task -> View details -> Make changes -> Auto-save
