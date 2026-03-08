@@ -342,7 +342,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
 
       // Add error events to existing span
       if (span) {
-        span.addEvent('task.deleted', {
+        span.addEvent('task.delete.failed', {
           'task.id': selectedTask.id,
         });
         span.addEvent('task.save.error', {
