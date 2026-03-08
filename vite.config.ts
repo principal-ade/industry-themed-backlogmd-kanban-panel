@@ -45,6 +45,7 @@ export default defineConfig(({ mode: _mode }) => ({
         'react-dom',
         'react/jsx-runtime',
         '@opentelemetry/api',
+        '@backlog-md/core',
       ],
       output: {
         globals: {
