@@ -394,8 +394,6 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
       'task.id': task.id,
       'task.status': task.status || 'unknown',
     });
-    span.setStatus({ code: SpanStatusCode.OK });
-    span.end();
 
     // Emit task:selected event for other panels (e.g., TaskDetailPanel)
     if (events) {
@@ -405,7 +403,13 @@ export const KanbanPanel: React.FC<KanbanPanelPropsTyped> = ({
         timestamp: Date.now(),
         payload: { taskId: task.id, task },
       });
+      span.addEvent('task.selected.emitted', {
+        'task.id': task.id,
+      });
     }
+
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
   }, [events]);
 
   // Subscribe to task:selected and task:deselected events from other panels

@@ -6,7 +6,7 @@ import { usePanelFocusListener } from '@principal-ade/panel-layouts';
 import { DocumentView } from 'themed-markdown';
 import type { TaskDetailPanelPropsTyped, PanelEventEmitter } from '../types';
 import type { Task } from '@backlog-md/core';
-import { getTracer, SpanStatusCode } from '../telemetry';
+import { getTracer, SpanStatusCode, type Span } from '../telemetry';
 
 /** Extract GitHub issue info from a task's references */
 function getGitHubIssueFromRefs(references?: string[]): { number: number; url: string } | null {
@@ -185,6 +185,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: 'idle' });
   const panelRef = useRef<HTMLDivElement>(null);
+  const deleteSpanRef = useRef<Span | null>(null);
 
   // Extract config options
   const { editable = false } = config ?? {};
@@ -247,16 +248,16 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   const handleOpenDeleteModal = useCallback(() => {
     if (!selectedTask) return;
 
-    // Emit telemetry event
+    // Start task.delete span (will be ended on confirm or cancel)
     const tracer = getTracer();
-    const span = tracer.startSpan('detail.interaction', {
+    const span = tracer.startSpan('task.delete', {
       attributes: { 'task.id': selectedTask.id },
     });
+    deleteSpanRef.current = span;
+
     span.addEvent('delete.modal.opened', {
       'task.id': selectedTask.id,
     });
-    span.setStatus({ code: SpanStatusCode.OK });
-    span.end();
 
     setIsDeleteModalOpen(true);
   }, [selectedTask]);
@@ -265,9 +266,25 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedTask) return;
 
+    const span = deleteSpanRef.current;
+
     // Check if deleteTask action is available
     if (!actions?.deleteTask) {
       setDeleteState({ status: 'error', error: 'Delete action not available' });
+      if (span) {
+        span.addEvent('task.deleted', {
+          'task.id': selectedTask.id,
+        });
+        span.addEvent('task.save.error', {
+          'task.id': selectedTask.id,
+          'operation': 'delete',
+          'error.type': 'ActionNotAvailable',
+          'error.message': 'Delete action not available',
+        });
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Delete action not available' });
+        span.end();
+        deleteSpanRef.current = null;
+      }
       return;
     }
 
@@ -276,16 +293,15 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     try {
       await actions.deleteTask(selectedTask.id);
 
-      // Emit telemetry event for successful deletion
-      const tracer = getTracer();
-      const span = tracer.startSpan('task.mutation', {
-        attributes: { 'task.id': selectedTask.id },
-      });
-      span.addEvent('task.deleted', {
-        'task.id': selectedTask.id,
-      });
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
+      // Add task.deleted event to existing span
+      if (span) {
+        span.addEvent('task.deleted', {
+          'task.id': selectedTask.id,
+        });
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+        deleteSpanRef.current = null;
+      }
 
       setDeleteState({ status: 'success' });
       setIsDeleteModalOpen(false);
@@ -306,8 +322,38 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
       setDeleteState({ status: 'error', error: errorMessage });
+
+      // Add error events to existing span
+      if (span) {
+        span.addEvent('task.deleted', {
+          'task.id': selectedTask.id,
+        });
+        span.addEvent('task.save.error', {
+          'task.id': selectedTask.id,
+          'operation': 'delete',
+          'error.type': error instanceof Error ? error.name : 'Unknown',
+          'error.message': errorMessage,
+        });
+        span.setStatus({ code: SpanStatusCode.ERROR, message: errorMessage });
+        span.end();
+        deleteSpanRef.current = null;
+      }
     }
   }, [actions, selectedTask, events]);
+
+  // Handle delete cancel (closing modal without confirming)
+  const handleDeleteCancel = useCallback(() => {
+    const span = deleteSpanRef.current;
+    if (span) {
+      span.addEvent('delete.modal.cancelled', {
+        'task.id': selectedTask?.id,
+      });
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+      deleteSpanRef.current = null;
+    }
+    setIsDeleteModalOpen(false);
+  }, [selectedTask]);
 
   // Listen for task:selected events
   useEffect(() => {
@@ -401,6 +447,17 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
 
   // Handle back/close
   const handleBack = useCallback(() => {
+    // If delete modal was open, close the span
+    const deleteSpan = deleteSpanRef.current;
+    if (deleteSpan) {
+      deleteSpan.addEvent('delete.modal.cancelled', {
+        'task.id': selectedTask?.id,
+      });
+      deleteSpan.setStatus({ code: SpanStatusCode.OK });
+      deleteSpan.end();
+      deleteSpanRef.current = null;
+    }
+
     // Emit telemetry event before clearing state
     if (selectedTask) {
       const tracer = getTracer();
@@ -449,6 +506,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
           <h3
             style={{
               margin: '0 0 8px 0',
+              fontFamily: theme.fonts.body,
               fontSize: theme.fontSizes[3],
               color: theme.colors.text,
               fontWeight: theme.fontWeights.semibold,
@@ -459,6 +517,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
           <p
             style={{
               margin: 0,
+              fontFamily: theme.fonts.body,
               fontSize: theme.fontSizes[1],
               color: theme.colors.textSecondary,
             }}
@@ -850,7 +909,7 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
           >
             {/* Backdrop */}
             <div
-              onClick={() => setIsDeleteModalOpen(false)}
+              onClick={handleDeleteCancel}
               style={{
                 position: 'absolute',
                 inset: 0,
@@ -883,15 +942,16 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
                 <h2
                   style={{
                     margin: 0,
+                    fontFamily: theme.fonts.body,
                     fontSize: theme.fontSizes[4],
-                    fontWeight: 600,
-                    color: theme.colors.text,
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.warning,
                   }}
                 >
                   Delete Task?
                 </h2>
                 <button
-                  onClick={() => setIsDeleteModalOpen(false)}
+                  onClick={handleDeleteCancel}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -913,12 +973,13 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
                 <p
                   style={{
                     margin: 0,
+                    fontFamily: theme.fonts.body,
                     fontSize: theme.fontSizes[2],
                     color: theme.colors.text,
                     lineHeight: 1.5,
                   }}
                 >
-                  Are you sure you want to delete <strong>"{selectedTask.title}"</strong>? This action cannot be undone.
+                  Are you sure you want to delete <strong style={{ color: theme.colors.primary }}>"{selectedTask.title}"</strong>? This action cannot be undone.
                 </p>
 
                 {/* Error message */}
@@ -930,8 +991,9 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
                       backgroundColor: `${theme.colors.error}15`,
                       border: `1px solid ${theme.colors.error}`,
                       borderRadius: theme.radii[2],
-                      color: theme.colors.error,
+                      fontFamily: theme.fonts.body,
                       fontSize: theme.fontSizes[1],
+                      color: theme.colors.error,
                     }}
                   >
                     {deleteState.error || 'Failed to delete task'}
@@ -951,12 +1013,13 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
               >
                 <button
                   type="button"
-                  onClick={() => setIsDeleteModalOpen(false)}
+                  onClick={handleDeleteCancel}
                   disabled={deleteState.status === 'loading'}
                   style={{
                     padding: '10px 20px',
+                    fontFamily: theme.fonts.body,
                     fontSize: theme.fontSizes[2],
-                    fontWeight: 500,
+                    fontWeight: theme.fontWeights.medium,
                     border: `1px solid ${theme.colors.border}`,
                     borderRadius: theme.radii[2],
                     backgroundColor: 'transparent',
@@ -976,8 +1039,9 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
                     alignItems: 'center',
                     gap: '8px',
                     padding: '10px 20px',
+                    fontFamily: theme.fonts.body,
                     fontSize: theme.fontSizes[2],
-                    fontWeight: 500,
+                    fontWeight: theme.fontWeights.medium,
                     border: 'none',
                     borderRadius: theme.radii[2],
                     backgroundColor: theme.colors.error,

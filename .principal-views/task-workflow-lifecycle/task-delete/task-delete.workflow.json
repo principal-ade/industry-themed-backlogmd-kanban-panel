@@ -25,6 +25,7 @@
       "description": "Failed to delete task",
       "template": {
         "events": {
+          "delete.modal.opened": "Opened delete confirmation for {{task.id}}",
           "task.deleted": "Attempted to delete {{task.id}}",
           "task.save.error": "{{operation}} failed for {{task.id}}: {{error.type}} - {{error.message}}"
         },
