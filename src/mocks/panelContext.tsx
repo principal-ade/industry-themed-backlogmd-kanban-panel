@@ -203,6 +203,12 @@ export const createMockActions = (
       return files.has(path);
     },
 
+    // Task operations (for TaskDetailPanel delete functionality)
+    deleteTask: async (taskId: string): Promise<void> => {
+      // eslint-disable-next-line no-console
+      console.log('[Mock] Deleting task:', taskId);
+    },
+
     ...overrides,
   };
 };

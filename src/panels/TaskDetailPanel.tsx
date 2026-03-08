@@ -282,9 +282,6 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
     if (!canDeleteWithCore && !canDeleteWithActions) {
       setDeleteState({ status: 'error', error: 'Delete not available' });
       if (span) {
-        span.addEvent('task.deleted', {
-          'task.id': selectedTask.id,
-        });
         span.addEvent('task.save.error', {
           'task.id': selectedTask.id,
           'operation': 'delete',
@@ -340,11 +337,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ context, event
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
       setDeleteState({ status: 'error', error: errorMessage });
 
-      // Add error events to existing span
+      // Add error event to existing span (task.deleted not emitted since delete failed)
       if (span) {
-        span.addEvent('task.deleted', {
-          'task.id': selectedTask.id,
-        });
         span.addEvent('task.save.error', {
           'task.id': selectedTask.id,
           'operation': 'delete',
