@@ -40,13 +40,25 @@ export default defineConfig(({ mode: _mode }) => ({
     },
     rollupOptions: {
       // Externalize peer dependencies - these come from the host application
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        '@opentelemetry/api',
-        '@backlog-md/core',
-      ],
+      external: (id) => {
+        const externals = [
+          'react',
+          'react-dom',
+          'react/jsx-runtime',
+          '@opentelemetry/api',
+          '@backlog-md/core',
+          // Panel framework dependencies (must be external to avoid SSR issues with react-resizable-panels)
+          '@principal-ade/panel-framework-core',
+          '@principal-ade/panel-layouts',
+          '@principal-ade/panels',
+          '@principal-ade/industry-theme',
+          '@principal-ade/utcp-panel-event',
+          '@principal-ai/repository-abstraction',
+          '@industry-theme/markdown-panels',
+          'react-resizable-panels',
+        ];
+        return externals.some(ext => id === ext || id.startsWith(ext + '/'));
+      },
       output: {
         globals: {
           react: 'React',
